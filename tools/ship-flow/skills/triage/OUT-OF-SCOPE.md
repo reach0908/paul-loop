@@ -87,6 +87,9 @@ The maintainer may:
 Only when an **enhancement** (not a bug) is rejected as `wontfix` and the relevant local-write and
 external-update actions are authorized. A proposed rejection is review material until then. The flow:
 
+Already implemented requests are not rejections: cite their implementation without adding a record
+here. Similar or incomplete implementations still need normal triage.
+
 1. Maintainer decides a feature request is out of scope
 2. Check if a matching `.out-of-scope/` file already exists
 3. If yes: append the new issue to the "Prior requests" list

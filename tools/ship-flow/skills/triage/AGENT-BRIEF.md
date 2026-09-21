@@ -133,7 +133,8 @@ checked for matches.
   and match incoming issues against them by concept similarity
 
 **Acceptance criteria:**
-- [ ] Closing a feature as wontfix creates/updates a file in `.out-of-scope/`
+- [ ] Closing a rejected enhancement as wontfix creates/updates a file in `.out-of-scope/` within the authorized scope
+- [ ] Already implemented requests cite implementation evidence without a rejection record
 - [ ] The file includes the decision, reasoning, and link to the closed issue
 - [ ] If a matching `.out-of-scope/` file already exists, the new issue is
       appended to its "Prior requests" list rather than creating a duplicate

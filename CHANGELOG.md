@@ -5,6 +5,17 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.1
+
+- Backport upstream triage's existing-implementation check and prototype's optional single-file
+  HTML logic walkthrough, retaining authorization and verification boundaries.
+- Keep the minimum-implementation discipline inside TDD and code review: trace callers, reuse
+  existing/standard/native capabilities, and preserve meaningful regression coverage.
+- Deduplicate ship-feature's repeated authorization and publication instructions into its existing
+  contracts. Preserve all required gates, reviewers and hard termination; retain producer-worktree
+  evidence before cleanup when authorized lesson capture or reverification is still pending.
+- Correct the vendor fork description and local hashes. No engine or memory runtime contract changes.
+
 ## loop-engine 0.14.1
 
 A gate for the failure that produced 0.6.3 one commit earlier: **a plugin file edited without that

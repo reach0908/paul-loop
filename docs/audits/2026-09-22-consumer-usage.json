@@ -1,0 +1,198 @@
+{
+  "observed_at": "2026-09-21T16:28:28.898256+00:00",
+  "window_utc": [
+    "2026-08-23T00:00:00",
+    "2026-09-23T00:00:00"
+  ],
+  "scope": "9 saved local project roots plus registered worktrees; no archive or whole-disk scan; no DB, env or prompt contents",
+  "limitations": [
+    "Registered missing paths are not observed zero-usage checkouts.",
+    "Session, subagent and verdict events are not unique completed tasks.",
+    "No DB, archives, relocated logs, custom LOOP_DIR, deleted worktrees or all native memory stores inspected.",
+    "Source tests and installed config are not behavioral efficacy evidence."
+  ],
+  "projects": [
+    {
+      "project": "Signal Feed",
+      "registered_paths": 8,
+      "existing_paths": 8,
+      "missing_paths": 0,
+      "run_files": 41,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.ended": 45,
+        "run.started": 91,
+        "compaction": 67,
+        "subagent.started": 13,
+        "subagent.stopped": 22,
+        "permission.requested": 35
+      },
+      "last_event": "2026-09-21T16:22:59.663Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Rabbit Hole",
+      "registered_paths": 2,
+      "existing_paths": 1,
+      "missing_paths": 1,
+      "run_files": 35,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.started": 139,
+        "run.ended": 45,
+        "compaction": 177,
+        "permission.requested": 4,
+        "subagent.started": 94,
+        "subagent.stopped": 189,
+        "verdict.passed": 86,
+        "verdict.failed": 15
+      },
+      "last_event": "2026-09-21T12:47:46.090Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Digging",
+      "registered_paths": 35,
+      "existing_paths": 2,
+      "missing_paths": 33,
+      "run_files": 33,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.started": 246,
+        "run.ended": 42,
+        "compaction": 376,
+        "verdict.passed": 389,
+        "subagent.started": 815,
+        "subagent.stopped": 812,
+        "verdict.failed": 132,
+        "permission.requested": 280
+      },
+      "last_event": "2026-09-21T16:09:48.155Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Voice Keyboard",
+      "registered_paths": 1,
+      "existing_paths": 1,
+      "missing_paths": 0,
+      "run_files": 1,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.ended": 1
+      },
+      "last_event": "2026-09-09T19:00:01.076Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Zine",
+      "registered_paths": 9,
+      "existing_paths": 9,
+      "missing_paths": 0,
+      "run_files": 6,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.started": 7,
+        "verdict.failed": 23,
+        "verdict.passed": 82
+      },
+      "last_event": "2026-09-05T16:33:28.401Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Mentoring",
+      "registered_paths": 1,
+      "existing_paths": 1,
+      "missing_paths": 0,
+      "run_files": 6,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.started": 9,
+        "run.ended": 7,
+        "compaction": 1,
+        "permission.requested": 42
+      },
+      "last_event": "2026-09-16T15:07:04.829Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "Bathroom Vocab",
+      "registered_paths": 1,
+      "existing_paths": 1,
+      "missing_paths": 0,
+      "run_files": 0,
+      "lesson_files": 0,
+      "events_in_window": {},
+      "last_event": null,
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "paul-loop provider",
+      "registered_paths": 3,
+      "existing_paths": 3,
+      "missing_paths": 0,
+      "run_files": 3,
+      "lesson_files": 0,
+      "events_in_window": {
+        "run.started": 3,
+        "run.ended": 1,
+        "subagent.started": 5,
+        "subagent.stopped": 16
+      },
+      "last_event": "2026-09-21T16:28:08.777Z",
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    },
+    {
+      "project": "paul-agents provider",
+      "registered_paths": 1,
+      "existing_paths": 1,
+      "missing_paths": 0,
+      "run_files": 0,
+      "lesson_files": 0,
+      "events_in_window": {},
+      "last_event": null,
+      "read_errors": 0,
+      "parse_errors": 0,
+      "oversize_files": 0
+    }
+  ],
+  "host_observation": {
+    "codex_enabled": [
+      "loop-engine@zine-codex",
+      "ship-flow@zine-codex"
+    ],
+    "codex_loop_memory_entry_present": false,
+    "claude_installed": [
+      {
+        "id": "loop-engine@paul-loop",
+        "versions": [
+          "0.15.0"
+        ],
+        "scope": "Zine project"
+      },
+      {
+        "id": "ship-flow@paul-loop",
+        "versions": [
+          "0.11.0"
+        ],
+        "scope": "Zine project"
+      }
+    ],
+    "claude_loop_memory_entry_present": false
+  }
+}

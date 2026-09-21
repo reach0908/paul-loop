@@ -19,7 +19,7 @@
       "localPath": "tools/ship-flow/skills/code-review/SKILL.md",
       "computedHash": "cc5879fa4b71dd0b90ce8e3c79aa8450d49e87e2039b6f1010279abafe4469a1",
       "fork": {
-        "reason": "Upstream's only substantive change to this skill deletes the line that makes the two reviews run as parallel sub-agents. Receiving it would collapse the Standards/Spec split this plugin relies on.",
+        "reason": "Preserve local authorization, incomplete-review handling and bounded fallback for the Standards/Spec split. Upstream c55ee460 also runs parallel sub-agents; parallelism itself is no longer a divergence.",
         "since": "2026-08-26"
       }
     },
@@ -88,7 +88,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/prototype/SKILL.md",
       "localPath": "tools/ship-flow/skills/prototype/SKILL.md",
-      "computedHash": "c8b66cd1861bb8ce03392d64634ade7671f7b4bb79eef9d0bbea944e6eb308b7"
+      "computedHash": "b171c24fb86b2721c9111701bf6116068ed6afd0713ea5fbcb2352516e36d996"
     },
     "research": {
       "source": "mattpocock/skills",
@@ -120,7 +120,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/tdd/SKILL.md",
       "localPath": "tools/ship-flow/skills/tdd/SKILL.md",
-      "computedHash": "b3a81f52a4dd08f41106112b88b67b16eaf0ff869af91526584a319c91253941"
+      "computedHash": "1e949b0ba1540ee7de8c518248d87c150f16136c688143e0e9fb299459bf95b8"
     },
     "teach": {
       "source": "mattpocock/skills",
@@ -163,7 +163,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/triage/SKILL.md",
       "localPath": "tools/ship-flow/skills/triage/SKILL.md",
-      "computedHash": "694d0229193d6f679a0a0bf11d64b5ce4c339a1b192b812aff9f1f641c7b71d2"
+      "computedHash": "e3d939797e9594aa8325f825983c724ee2b8927c88a6ee3b53edeabf55d4a24b"
     },
     "wait-what": {
       "source": "mattpocock/skills",

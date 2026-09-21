@@ -1,6 +1,6 @@
 # Logic Prototype
 
-A tiny interactive terminal app that lets the user drive a state model by hand. Use this when the question is about **business logic, state transitions, or data shape** — the kind of thing that looks reasonable on paper but only feels wrong once you push it through real cases.
+A tiny interactive terminal app or shareable HTML demo that lets the user drive a state model by hand. Use this when the question is about **business logic, state transitions, or data shape** — the kind of thing that looks reasonable on paper but only feels wrong once you push it through real cases.
 
 ## When this is the right shape
 
@@ -19,14 +19,17 @@ Before writing code, write down what state model and what question you're protot
 
 ### 2. Pick the language
 
-Use whatever the host project uses. If the project has no obvious runtime, choose an available lightweight one for an authorized
+For a terminal prototype, use whatever the host project uses. If the project has no obvious runtime, choose an available lightweight one for an authorized
 reversible prototype and state the choice; ask only when runtime constraints change the outcome.
 
 Match the project's existing conventions for tooling — don't add a new package manager or runtime just for the prototype.
+The self-contained HTML path in step 4 uses browser JavaScript, including when the host uses another language.
 
 ### 3. Isolate the logic in a portable module
 
-Put the actual logic — the bit that's answering the question — behind a small, pure interface that could be lifted out and dropped into the real codebase later. The TUI around it is throwaway; the logic module shouldn't be.
+Put the actual logic — the bit that's answering the question — behind a small, pure interface.
+The terminal shell imports that module; the HTML shell may keep it in the same file's script block.
+Both shells are throwaway. The model can inform production work, subject to the language and evidence limits below.
 
 The right shape depends on the question:
 
@@ -35,12 +38,26 @@ The right shape depends on the question:
 - **A small set of pure functions** over a plain data type. Good when there's no implicit current state — just transformations.
 - **A class or module with a clear method surface** when the logic genuinely owns ongoing internal state.
 
-Pick whichever shape best fits the question being asked, *not* whichever is easiest to wire to a TUI. Keep it pure: no I/O, no terminal code, no `console.log` for control flow. The TUI imports it and calls into it; nothing flows the other direction.
+Pick whichever shape best fits the question being asked, *not* whichever is easiest to wire to a shell.
+Keep it pure: no I/O, terminal code, DOM access or `console.log` for control flow. The shell calls the
+model; nothing flows the other direction.
 
 This is what makes the prototype useful past its own lifetime. When the question's been answered, the validated logic informs a separately authorized production change with real tests and review.
 Remove only owned throwaway files within cleanup scope; a prototype verdict is not release approval.
 
-### 4. Build the smallest TUI that exposes the state
+### 4. Expose the state with the smallest usable shell
+
+Use the terminal path below for developer-only exploration. If non-developers need to participate
+or the result needs to be shared as a file, use one self-contained HTML/CSS/JS file instead:
+
+- Open directly in a browser, with no framework, bundler, server or external assets.
+- Show the question and current state in domain language, then one native button per action.
+- Include resettable happy-path, edge-case and forbidden-action scenarios. Each starts from known
+  state; show the result of each action. Tabs and animation are unnecessary.
+- Keep the model independent of DOM handlers. A separately written JavaScript model of non-JS
+  production logic is design evidence, not proof that the production implementation works.
+
+For HTML, steps 5–6 mean opening and handing over the file; the remaining scope rules still apply.
 
 Build it as a **lightweight TUI** — on every tick, clear the screen (`console.clear()` / `print("\033[2J\033[H")` / equivalent) and re-render the whole frame. The user should always see one stable view, not an ever-growing scrollback.
 
