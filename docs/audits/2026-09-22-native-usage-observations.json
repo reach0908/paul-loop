@@ -1,0 +1,1163 @@
+{
+  "observed_at_utc": "2026-09-21T23:21:27.667436+00:00",
+  "selection": "One session per exact project cwd, newest file modification time in September; last up to ten completed turns started since 2026-09-15 UTC. Purposive, not representative.",
+  "token_method": "Sum per-response token_usage_record.usage once per response_id, attributed by turn_id; do not sum cumulative token_count.",
+  "tool_method": "First call/output pair per call_id, timestamps inside selected turn. Union overlapping intervals, clip end to turn. This is host-observed tool round-trip occupancy, not process CPU time or total async runtime.",
+  "request_marker_method": "Path/command references in tool call arguments only, not execution success or semantic use. Final citations use assistant final_answer messages only.",
+  "projects": [
+    {
+      "cwd": "/Users/jinhokim/Documents/ChatGPT/인플루언서 기반 RSS 피드 서비스",
+      "session_id": "01a0c629-41e1-7231-863b-79c40f110d44",
+      "source_file": "/Users/jinhokim/.codex/sessions/2026/09/22/rollout-2026-09-22T07-49-47-01a0c629-41e1-7231-863b-79c40f110d44.jsonl",
+      "snapshot_bytes": 5472539,
+      "snapshot_sha256": "21d7425346bd70a19850c0bc2fd72b75a42500eca88ba7fbadf4d2a1067157cd",
+      "cli_version_at_session_start": "0.155.0-alpha.9.2",
+      "malformed_lines": 0,
+      "usage_response_id_conflicts": 0,
+      "summary": {
+        "completed_turns": 3,
+        "elapsed_median_seconds": 138.962,
+        "elapsed_max_seconds": 996.569,
+        "elapsed_total_seconds": 1216.7069999999999,
+        "observed_tool_interval_seconds": 63.341,
+        "tokens": {
+          "input_tokens": 6909536,
+          "cached_input_tokens": 6530816,
+          "output_tokens": 33458,
+          "total_tokens": 6942994
+        },
+        "cached_input_fraction": 0.9452,
+        "native_memory_citation_turns": 3,
+        "native_memory_path_request_turns": 3,
+        "ship_flow_skill_path_request_turns": 0,
+        "loop_memory_path_request_turns": 0,
+        "verdict_command_request_turns": 0,
+        "tool_calls": 52,
+        "paired_tool_calls": 52
+      },
+      "turns": [
+        {
+          "turn_id": "01a0c629-7b3e-7a41-bc10-8caa43afae05",
+          "started_at": 1790031002,
+          "completed_at": 1790031141,
+          "duration_ms": 138962,
+          "observed_completion_ts": 1790031141.6,
+          "observed_start_ts": 1790031002.691,
+          "models_and_efforts": [
+            [
+              "gpt-6-astra",
+              "xhigh"
+            ]
+          ],
+          "token_records": 8,
+          "tokens": {
+            "input_tokens": 485456,
+            "cached_input_tokens": 424704,
+            "output_tokens": 3573,
+            "total_tokens": 489029
+          },
+          "tool_calls": 7,
+          "paired_tool_calls": 7,
+          "observed_tool_interval_seconds": 10.039,
+          "tool_names": {
+            "exec": 7
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 2,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c62f-ea13-7732-9ee4-b65822423149",
+          "started_at": 1790031424,
+          "completed_at": 1790032420,
+          "duration_ms": 996569,
+          "observed_completion_ts": 1790032420.605,
+          "observed_start_ts": 1790031424.036,
+          "models_and_efforts": [
+            [
+              "gpt-6-astra",
+              "xhigh"
+            ]
+          ],
+          "token_records": 44,
+          "tokens": {
+            "input_tokens": 6103871,
+            "cached_input_tokens": 5792768,
+            "output_tokens": 28113,
+            "total_tokens": 6131984
+          },
+          "tool_calls": 42,
+          "paired_tool_calls": 42,
+          "observed_tool_interval_seconds": 50.148,
+          "tool_names": {
+            "exec": 42
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 1,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c63f-1eff-7073-a954-5fed2330560b",
+          "started_at": 1790032420,
+          "completed_at": 1790032501,
+          "duration_ms": 81176,
+          "observed_completion_ts": 1790032501.841,
+          "observed_start_ts": 1790032420.66,
+          "models_and_efforts": [
+            [
+              "gpt-6-astra",
+              "xhigh"
+            ]
+          ],
+          "token_records": 4,
+          "tokens": {
+            "input_tokens": 320209,
+            "cached_input_tokens": 313344,
+            "output_tokens": 1772,
+            "total_tokens": 321981
+          },
+          "tool_calls": 3,
+          "paired_tool_calls": 3,
+          "observed_tool_interval_seconds": 3.154,
+          "tool_names": {
+            "exec": 3
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 1,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        }
+      ]
+    },
+    {
+      "cwd": "/Users/jinhokim/dev/digging-n-ditto",
+      "session_id": "01a07780-7d5e-7df3-a458-1ec7f9ffa01c",
+      "source_file": "/Users/jinhokim/.codex/sessions/2026/09/07/rollout-2026-09-07T01-15-04-01a07780-7d5e-7df3-a458-1ec7f9ffa01c.jsonl",
+      "snapshot_bytes": 1152806707,
+      "snapshot_sha256": "4252b7e57074a8f682d9d9d549d28d58043e3810690b29a1d027edca8cf8f298",
+      "cli_version_at_session_start": "0.153.4",
+      "malformed_lines": 0,
+      "usage_response_id_conflicts": 0,
+      "summary": {
+        "completed_turns": 10,
+        "elapsed_median_seconds": 1314.291,
+        "elapsed_max_seconds": 50956.601,
+        "elapsed_total_seconds": 93950.705,
+        "observed_tool_interval_seconds": 54803.6,
+        "tokens": {
+          "input_tokens": 707161486,
+          "cached_input_tokens": 696447232,
+          "output_tokens": 1277907,
+          "total_tokens": 708439393
+        },
+        "cached_input_fraction": 0.9848,
+        "native_memory_citation_turns": 9,
+        "native_memory_path_request_turns": 0,
+        "ship_flow_skill_path_request_turns": 8,
+        "loop_memory_path_request_turns": 0,
+        "verdict_command_request_turns": 3,
+        "tool_calls": 4655,
+        "paired_tool_calls": 4655
+      },
+      "turns": [
+        {
+          "turn_id": "01a0a858-2cbb-7ed0-832e-e4b06ee0a500",
+          "started_at": 1789530746,
+          "completed_at": 1789538992,
+          "duration_ms": 8246058,
+          "observed_completion_ts": 1789538992.148,
+          "observed_start_ts": 1789530746.073,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 396,
+          "tokens": {
+            "input_tokens": 53466599,
+            "cached_input_tokens": 52363264,
+            "output_tokens": 115143,
+            "total_tokens": 53581742
+          },
+          "tool_calls": 393,
+          "paired_tool_calls": 393,
+          "observed_tool_interval_seconds": 4708.764,
+          "tool_names": {
+            "exec": 374,
+            "wait": 19
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 2,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 8
+          }
+        },
+        {
+          "turn_id": "01a0a8ec-1920-7202-bc0c-8f1af37e2b31",
+          "started_at": 1789540440,
+          "completed_at": 1789553423,
+          "duration_ms": 12982968,
+          "observed_completion_ts": 1789553423.371,
+          "observed_start_ts": 1789540440.378,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 648,
+          "tokens": {
+            "input_tokens": 96642260,
+            "cached_input_tokens": 95260672,
+            "output_tokens": 235732,
+            "total_tokens": 96877992
+          },
+          "tool_calls": 643,
+          "paired_tool_calls": 643,
+          "observed_tool_interval_seconds": 6977.104,
+          "tool_names": {
+            "exec": 605,
+            "wait": 38
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 8,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 10
+          }
+        },
+        {
+          "turn_id": "01a0aa80-b99d-75d3-9b9d-ced6edb45e75",
+          "started_at": 1789566957,
+          "completed_at": 1789567238,
+          "duration_ms": 280660,
+          "observed_completion_ts": 1789567238.66,
+          "observed_start_ts": 1789566957.999,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 12,
+          "tokens": {
+            "input_tokens": 2221014,
+            "cached_input_tokens": 2044928,
+            "output_tokens": 4312,
+            "total_tokens": 2225326
+          },
+          "tool_calls": 11,
+          "paired_tool_calls": 11,
+          "observed_tool_interval_seconds": 164.585,
+          "tool_names": {
+            "exec": 6,
+            "wait": 5
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 2,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0aa85-2717-76e1-abf7-b29cb84411d8",
+          "started_at": 1789567248,
+          "completed_at": 1789567812,
+          "duration_ms": 564097,
+          "observed_completion_ts": 1789567812.265,
+          "observed_start_ts": 1789567248.167,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 37,
+          "tokens": {
+            "input_tokens": 3197907,
+            "cached_input_tokens": 3095296,
+            "output_tokens": 18833,
+            "total_tokens": 3216740
+          },
+          "tool_calls": 35,
+          "paired_tool_calls": 35,
+          "observed_tool_interval_seconds": 119.009,
+          "tool_names": {
+            "exec": 35
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 5,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0aaa0-5b3d-7560-88b5-4cc92d9d3fd8",
+          "started_at": 1789569031,
+          "completed_at": 1789569418,
+          "duration_ms": 387074,
+          "observed_completion_ts": 1789569418.22,
+          "observed_start_ts": 1789569031.146,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 20,
+          "tokens": {
+            "input_tokens": 2172296,
+            "cached_input_tokens": 2101248,
+            "output_tokens": 6389,
+            "total_tokens": 2178685
+          },
+          "tool_calls": 19,
+          "paired_tool_calls": 19,
+          "observed_tool_interval_seconds": 226.53,
+          "tool_names": {
+            "exec": 14,
+            "wait": 5
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 1,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0aaa6-5f1f-7243-ba67-b9d4389602ed",
+          "started_at": 1789569425,
+          "completed_at": 1789569583,
+          "duration_ms": 157995,
+          "observed_completion_ts": 1789569583.199,
+          "observed_start_ts": 1789569425.203,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 11,
+          "tokens": {
+            "input_tokens": 1567598,
+            "cached_input_tokens": 1535232,
+            "output_tokens": 4387,
+            "total_tokens": 1571985
+          },
+          "tool_calls": 10,
+          "paired_tool_calls": 10,
+          "observed_tool_interval_seconds": 49.705,
+          "tool_names": {
+            "exec": 10
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0aab7-c43d-77b2-8e15-bb8c5f14f1f7",
+          "started_at": 1789570565,
+          "completed_at": 1789572629,
+          "duration_ms": 2064486,
+          "observed_completion_ts": 1789572629.69,
+          "observed_start_ts": 1789570565.202,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 86,
+          "tokens": {
+            "input_tokens": 10711800,
+            "cached_input_tokens": 10446336,
+            "output_tokens": 28671,
+            "total_tokens": 10740471
+          },
+          "tool_calls": 84,
+          "paired_tool_calls": 84,
+          "observed_tool_interval_seconds": 1189.262,
+          "tool_names": {
+            "exec": 81,
+            "wait": 3
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 3,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0ab47-cae5-7330-847b-259293d0f427",
+          "started_at": 1789580004,
+          "completed_at": 1789630960,
+          "duration_ms": 50956601,
+          "observed_completion_ts": 1789630960.888,
+          "observed_start_ts": 1789580004.179,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 2755,
+          "tokens": {
+            "input_tokens": 431436716,
+            "cached_input_tokens": 425842944,
+            "output_tokens": 672708,
+            "total_tokens": 432109424
+          },
+          "tool_calls": 2737,
+          "paired_tool_calls": 2737,
+          "observed_tool_interval_seconds": 30967.409,
+          "tool_names": {
+            "exec": 2735,
+            "wait": 2
+          },
+          "final_messages": 0,
+          "final_messages_with_native_memory_citation": 0,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 4,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 3
+          }
+        },
+        {
+          "turn_id": "01a0c3f4-7637-7782-ac67-8c8ffe3343f4",
+          "started_at": 1789993973,
+          "completed_at": 1789994260,
+          "duration_ms": 287330,
+          "observed_completion_ts": 1789994260.666,
+          "observed_start_ts": 1789993973.336,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 12,
+          "tokens": {
+            "input_tokens": 1471721,
+            "cached_input_tokens": 1341440,
+            "output_tokens": 6853,
+            "total_tokens": 1478574
+          },
+          "tool_calls": 11,
+          "paired_tool_calls": 11,
+          "observed_tool_interval_seconds": 4.817,
+          "tool_names": {
+            "exec": 11
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c3fa-eb99-73f3-9c94-b226a8d7fb8d",
+          "started_at": 1789994396,
+          "completed_at": 1790012420,
+          "duration_ms": 18023436,
+          "observed_completion_ts": 1790012420.099,
+          "observed_start_ts": 1789994396.616,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 718,
+          "tokens": {
+            "input_tokens": 104273575,
+            "cached_input_tokens": 102415872,
+            "output_tokens": 184879,
+            "total_tokens": 104458454
+          },
+          "tool_calls": 712,
+          "paired_tool_calls": 712,
+          "observed_tool_interval_seconds": 10396.415,
+          "tool_names": {
+            "exec": 712
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 1,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        }
+      ]
+    },
+    {
+      "cwd": "/Users/jinhokim/dev/job-interview-helper",
+      "session_id": "01a0a85d-86c9-76c0-ae94-09ea600830a7",
+      "source_file": "/Users/jinhokim/.codex/sessions/2026/09/16/rollout-2026-09-16T12-58-16-01a0a85d-86c9-76c0-ae94-09ea600830a7.jsonl",
+      "snapshot_bytes": 27435665,
+      "snapshot_sha256": "477af75c1fb0d5de84054c8546c58e1b638ab4e401e84311f40521ea7bca1b2d",
+      "cli_version_at_session_start": "0.154.0-alpha.6.2",
+      "malformed_lines": 0,
+      "usage_response_id_conflicts": 0,
+      "summary": {
+        "completed_turns": 10,
+        "elapsed_median_seconds": 247.034,
+        "elapsed_max_seconds": 977.65,
+        "elapsed_total_seconds": 2787.84,
+        "observed_tool_interval_seconds": 270.28,
+        "tokens": {
+          "input_tokens": 36968791,
+          "cached_input_tokens": 35914880,
+          "output_tokens": 113508,
+          "total_tokens": 37082299
+        },
+        "cached_input_fraction": 0.9715,
+        "native_memory_citation_turns": 10,
+        "native_memory_path_request_turns": 1,
+        "ship_flow_skill_path_request_turns": 0,
+        "loop_memory_path_request_turns": 0,
+        "verdict_command_request_turns": 0,
+        "tool_calls": 243,
+        "paired_tool_calls": 243
+      },
+      "turns": [
+        {
+          "turn_id": "01a0a885-0711-7711-8bdb-4d88e599f55a",
+          "started_at": 1789533685,
+          "completed_at": 1789533931,
+          "duration_ms": 246178,
+          "observed_completion_ts": 1789533931.708,
+          "observed_start_ts": 1789533685.529,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 16,
+          "tokens": {
+            "input_tokens": 1615005,
+            "cached_input_tokens": 1587200,
+            "output_tokens": 12155,
+            "total_tokens": 1627160
+          },
+          "tool_calls": 15,
+          "paired_tool_calls": 15,
+          "observed_tool_interval_seconds": 3.201,
+          "tool_names": {
+            "exec": 15
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0a89b-2cd2-70b1-aa3a-4f692a7011cd",
+          "started_at": 1789535136,
+          "completed_at": 1789536114,
+          "duration_ms": 977650,
+          "observed_completion_ts": 1789536114.646,
+          "observed_start_ts": 1789535136.997,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 82,
+          "tokens": {
+            "input_tokens": 11210560,
+            "cached_input_tokens": 10729728,
+            "output_tokens": 42759,
+            "total_tokens": 11253319
+          },
+          "tool_calls": 80,
+          "paired_tool_calls": 80,
+          "observed_tool_interval_seconds": 58.581,
+          "tool_names": {
+            "exec": 80
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0a8b3-04ac-77c2-bf12-b7e96152845e",
+          "started_at": 1789536699,
+          "completed_at": 1789536947,
+          "duration_ms": 247889,
+          "observed_completion_ts": 1789536947.47,
+          "observed_start_ts": 1789536699.58,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 29,
+          "tokens": {
+            "input_tokens": 4445406,
+            "cached_input_tokens": 4377344,
+            "output_tokens": 7706,
+            "total_tokens": 4453112
+          },
+          "tool_calls": 28,
+          "paired_tool_calls": 28,
+          "observed_tool_interval_seconds": 53.893,
+          "tool_names": {
+            "exec": 28
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0a8be-5362-7a52-b1f7-239fede6b919",
+          "started_at": 1789537440,
+          "completed_at": 1789537507,
+          "duration_ms": 66899,
+          "observed_completion_ts": 1789537507.534,
+          "observed_start_ts": 1789537440.635,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 4,
+          "tokens": {
+            "input_tokens": 753994,
+            "cached_input_tokens": 741120,
+            "output_tokens": 2867,
+            "total_tokens": 756861
+          },
+          "tool_calls": 3,
+          "paired_tool_calls": 3,
+          "observed_tool_interval_seconds": 6.033,
+          "tool_names": {
+            "exec": 3
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0a8c0-6867-7663-9d88-a56f8a6c138f",
+          "started_at": 1789537577,
+          "completed_at": 1789537858,
+          "duration_ms": 281326,
+          "observed_completion_ts": 1789537858.416,
+          "observed_start_ts": 1789537577.091,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 21,
+          "tokens": {
+            "input_tokens": 3968521,
+            "cached_input_tokens": 3895680,
+            "output_tokens": 12229,
+            "total_tokens": 3980750
+          },
+          "tool_calls": 19,
+          "paired_tool_calls": 19,
+          "observed_tool_interval_seconds": 21.663,
+          "tool_names": {
+            "exec": 19
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0ab43-ae2e-7b10-bf81-9a1bbe559027",
+          "started_at": 1789579734,
+          "completed_at": 1789579887,
+          "duration_ms": 152911,
+          "observed_completion_ts": 1789579887.623,
+          "observed_start_ts": 1789579734.715,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 10,
+          "tokens": {
+            "input_tokens": 713713,
+            "cached_input_tokens": 625152,
+            "output_tokens": 7619,
+            "total_tokens": 721332
+          },
+          "tool_calls": 9,
+          "paired_tool_calls": 9,
+          "observed_tool_interval_seconds": 2.96,
+          "tool_names": {
+            "exec": 9
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 1,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c3f4-5f14-7773-902d-dde2d3c6cc48",
+          "started_at": 1789993967,
+          "completed_at": 1789994258,
+          "duration_ms": 291007,
+          "observed_completion_ts": 1789994258.425,
+          "observed_start_ts": 1789993967.416,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 39,
+          "tokens": {
+            "input_tokens": 5281675,
+            "cached_input_tokens": 5112064,
+            "output_tokens": 9261,
+            "total_tokens": 5290936
+          },
+          "tool_calls": 38,
+          "paired_tool_calls": 38,
+          "observed_tool_interval_seconds": 65.219,
+          "tool_names": {
+            "exec": 38
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c3fa-d3ec-7700-b4e3-fb02f01123b1",
+          "started_at": 1789994390,
+          "completed_at": 1789994498,
+          "duration_ms": 107460,
+          "observed_completion_ts": 1789994498.065,
+          "observed_start_ts": 1789994390.606,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 9,
+          "tokens": {
+            "input_tokens": 1613713,
+            "cached_input_tokens": 1586944,
+            "output_tokens": 4522,
+            "total_tokens": 1618235
+          },
+          "tool_calls": 8,
+          "paired_tool_calls": 8,
+          "observed_tool_interval_seconds": 2.597,
+          "tool_names": {
+            "exec": 8
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c3fd-b790-7432-8342-f5198d9d79d7",
+          "started_at": 1789994579,
+          "completed_at": 1789994978,
+          "duration_ms": 398991,
+          "observed_completion_ts": 1789994978.868,
+          "observed_start_ts": 1789994579.876,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 45,
+          "tokens": {
+            "input_tokens": 7310861,
+            "cached_input_tokens": 7205632,
+            "output_tokens": 13627,
+            "total_tokens": 7324488
+          },
+          "tool_calls": 43,
+          "paired_tool_calls": 43,
+          "observed_tool_interval_seconds": 56.133,
+          "tool_names": {
+            "exec": 43
+          },
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {
+            "native_memory_path_requests": 0,
+            "ship_flow_skill_path_requests": 0,
+            "loop_memory_path_requests": 0,
+            "verdict_command_requests": 0
+          }
+        },
+        {
+          "turn_id": "01a0c405-6802-7b22-b6c6-a1cdf60cbc88",
+          "started_at": 1789995083,
+          "completed_at": 1789995101,
+          "duration_ms": 17529,
+          "observed_completion_ts": 1789995101.329,
+          "observed_start_ts": 1789995083.799,
+          "models_and_efforts": [
+            [
+              "gpt-5.6-luna",
+              "xhigh"
+            ]
+          ],
+          "token_records": 1,
+          "tokens": {
+            "input_tokens": 55343,
+            "cached_input_tokens": 54016,
+            "output_tokens": 763,
+            "total_tokens": 56106
+          },
+          "tool_calls": 0,
+          "paired_tool_calls": 0,
+          "observed_tool_interval_seconds": 0,
+          "tool_names": {},
+          "final_messages": 1,
+          "final_messages_with_native_memory_citation": 1,
+          "request_markers": {}
+        }
+      ]
+    }
+  ],
+  "hosts": {
+    "observed_at_utc": "2026-09-21T23:20:32.012324+00:00",
+    "codex_app": {
+      "app_version": "26.915.31945",
+      "build": "9922",
+      "binary_version": "codex-cli 0.155.0-alpha.9.2",
+      "plugins": [
+        {
+          "pluginId": "loop-engine@zine-codex",
+          "name": "loop-engine",
+          "marketplaceName": "zine-codex",
+          "version": "0.15.0+zine.1",
+          "installed": true,
+          "enabled": true,
+          "source": {
+            "source": "local",
+            "path": "/Users/jinhokim/dev/zine/plugins/loop-engine"
+          }
+        },
+        {
+          "pluginId": "ship-flow@zine-codex",
+          "name": "ship-flow",
+          "marketplaceName": "zine-codex",
+          "version": "0.11.0+zine.1",
+          "installed": true,
+          "enabled": true,
+          "source": {
+            "source": "local",
+            "path": "/Users/jinhokim/dev/zine/plugins/ship-flow"
+          }
+        }
+      ]
+    },
+    "codex_shell": {
+      "binary_version": "codex-cli 0.146.0",
+      "plugins": [
+        {
+          "pluginId": "loop-engine@zine-codex",
+          "name": "loop-engine",
+          "marketplaceName": "zine-codex",
+          "version": "0.15.0+zine.1",
+          "installed": true,
+          "enabled": true,
+          "source": {
+            "source": "local",
+            "path": "/Users/jinhokim/dev/zine/plugins/loop-engine"
+          }
+        },
+        {
+          "pluginId": "ship-flow@zine-codex",
+          "name": "ship-flow",
+          "marketplaceName": "zine-codex",
+          "version": "0.11.0+zine.1",
+          "installed": true,
+          "enabled": true,
+          "source": {
+            "source": "local",
+            "path": "/Users/jinhokim/dev/zine/plugins/ship-flow"
+          }
+        }
+      ]
+    },
+    "codex_config": {
+      "features": {
+        "hooks": true,
+        "memories": true
+      },
+      "enabled_relevant_plugins": {
+        "loop-engine@zine-codex": true,
+        "ship-flow@zine-codex": true
+      }
+    },
+    "claude": {
+      "binary_version": "2.1.278 (Claude Code)",
+      "global_autoMemoryEnabled": "unset",
+      "global_disable_auto_memory_env": "unset",
+      "relevant_plugins_from_zine_cwd": [
+        {
+          "id": "loop-engine@paul-loop",
+          "version": "0.15.0",
+          "scope": "project",
+          "enabled": false,
+          "installPath": "/Users/jinhokim/.claude/plugins/cache/paul-loop/loop-engine/0.15.0",
+          "projectPath": "/Users/jinhokim/dev/zine"
+        },
+        {
+          "id": "ship-flow@paul-loop",
+          "version": "0.11.0",
+          "scope": "project",
+          "enabled": false,
+          "installPath": "/Users/jinhokim/.claude/plugins/cache/paul-loop/ship-flow/0.11.0",
+          "projectPath": "/Users/jinhokim/dev/zine"
+        }
+      ]
+    }
+  },
+  "collector": {
+    "path_at_audit": "/tmp/paul-loop-native-usage-audit.py",
+    "sha256": "2b9b78ad416602dfb4f82841ba8462c651bd7fe2048139bfd3faf6266f5402d7",
+    "self_checks": [
+      "overlapping interval union",
+      "empty interval union",
+      "response-id deduplication",
+      "task boundary presence and ordering"
+    ],
+    "temporary_only": true
+  },
+  "longest_turn_followup": {
+    "session_id": "01a07780-7d5e-7df3-a458-1ec7f9ffa01c",
+    "turn_id": "01a0ab47-cae5-7330-847b-259293d0f427",
+    "seconds": 50956.601,
+    "distinct_tool_calls": 2737,
+    "nested_tool_request_mentions": {
+      "write_stdin": 1137,
+      "exec_command": 1514,
+      "apply_patch": 91
+    },
+    "note": "Counts of distinct tools.* method names in each tool-call argument; a request mention is not success, unnecessary polling, or exclusive elapsed time."
+  },
+  "canonical_project_snapshots": [
+    {
+      "project": "Rabbit Hole",
+      "root": "/Users/jinhokim/dev/job-interview-helper",
+      "scope": "Canonical root only; all retained ledger events, not a task count or complete worktree audit.",
+      "event_counts": {
+        "run.started": 139,
+        "run.ended": 46,
+        "compaction": 177,
+        "permission.requested": 4,
+        "subagent.started": 94,
+        "subagent.stopped": 189,
+        "verdict.passed": 86,
+        "verdict.failed": 15
+      },
+      "latest_by_type": {
+        "run.started": "2026-09-21T12:47:46.090Z",
+        "run.ended": "2026-09-21T17:33:57.270Z",
+        "compaction": "2026-09-21T12:46:44.622Z",
+        "permission.requested": "2026-09-16T05:34:46.408Z",
+        "subagent.started": "2026-09-13T16:35:14.470Z",
+        "subagent.stopped": "2026-09-13T16:35:49.201Z",
+        "verdict.passed": "2026-09-13T16:33:13.989Z",
+        "verdict.failed": "2026-09-13T16:28:57.566Z"
+      },
+      "malformed_lines": 0,
+      "otel_jsonl_files": 0,
+      "registry": {
+        "schemaVersion": 1,
+        "runtime": "codex",
+        "plugins": {
+          "loop-engine": {
+            "path": "/Users/jinhokim/.codex/plugins/cache/zine-codex/loop-engine/0.15.0+zine.1",
+            "version": "0.15.0+zine.1"
+          },
+          "ship-flow": {
+            "path": "/Users/jinhokim/.codex/plugins/cache/zine-codex/ship-flow/0.11.0+zine.1",
+            "version": "0.11.0+zine.1"
+          }
+        }
+      }
+    },
+    {
+      "project": "Digging",
+      "root": "/Users/jinhokim/dev/digging-n-ditto",
+      "scope": "Canonical root only; all retained ledger events, not a task count or complete worktree audit.",
+      "event_counts": {
+        "run.started": 247,
+        "run.ended": 44,
+        "compaction": 376,
+        "verdict.passed": 389,
+        "subagent.started": 815,
+        "subagent.stopped": 812,
+        "verdict.failed": 132,
+        "permission.requested": 280
+      },
+      "latest_by_type": {
+        "run.started": "2026-09-21T22:32:37.163Z",
+        "run.ended": "2026-09-21T22:34:45.383Z",
+        "compaction": "2026-09-21T16:07:19.176Z",
+        "verdict.passed": "2026-09-16T10:03:57.810Z",
+        "subagent.started": "2026-09-21T12:43:59.129Z",
+        "subagent.stopped": "2026-09-21T12:47:53.104Z",
+        "verdict.failed": "2026-09-16T09:29:08.619Z",
+        "permission.requested": "2026-09-16T14:39:19.813Z"
+      },
+      "malformed_lines": 0,
+      "otel_jsonl_files": 0,
+      "registry": {
+        "schemaVersion": 1,
+        "runtime": "codex",
+        "plugins": {
+          "loop-engine": {
+            "path": "/Users/jinhokim/.codex/plugins/cache/zine-codex/loop-engine/0.15.0+zine.1",
+            "version": "0.15.0+zine.1"
+          },
+          "ship-flow": {
+            "path": "/Users/jinhokim/.codex/plugins/cache/zine-codex/ship-flow/0.11.0+zine.1",
+            "version": "0.11.0+zine.1"
+          }
+        }
+      }
+    },
+    {
+      "project": "Signal Feed",
+      "root": "/Users/jinhokim/Documents/ChatGPT/인플루언서 기반 RSS 피드 서비스",
+      "scope": "Canonical root only; all retained ledger events, not a task count or complete worktree audit.",
+      "event_counts": {
+        "run.ended": 50,
+        "run.started": 104,
+        "compaction": 74,
+        "subagent.started": 13,
+        "subagent.stopped": 22,
+        "permission.requested": 37
+      },
+      "latest_by_type": {
+        "run.ended": "2026-09-21T22:56:32.748Z",
+        "run.started": "2026-09-21T23:16:30.738Z",
+        "compaction": "2026-09-21T23:15:38.870Z",
+        "subagent.started": "2026-09-21T11:56:27.647Z",
+        "subagent.stopped": "2026-09-21T12:06:52.716Z",
+        "permission.requested": "2026-09-21T22:45:02.221Z"
+      },
+      "malformed_lines": 0,
+      "otel_jsonl_files": 0,
+      "registry": null
+    },
+    {
+      "project": "Zine",
+      "root": "/Users/jinhokim/dev/zine",
+      "scope": "Canonical root only; all retained ledger events, not a task count or complete worktree audit.",
+      "event_counts": {},
+      "latest_by_type": {},
+      "malformed_lines": 0,
+      "otel_jsonl_files": 0,
+      "registry": {
+        "schemaVersion": 1,
+        "runtime": "codex",
+        "plugins": {
+          "loop-engine": {
+            "path": "../plugins/loop-engine",
+            "version": "0.15.0+zine.1"
+          },
+          "ship-flow": {
+            "path": "../plugins/ship-flow",
+            "version": "0.11.0+zine.1"
+          }
+        }
+      }
+    }
+  ],
+  "canonical_snapshot_observed_at_utc": "2026-09-21T23:22:14.851221+00:00"
+}
