@@ -5,6 +5,14 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.1
+
+- `triage`가 도메인 개념으로 기존 구현을 검색하고 동작 근거를 확인한다. 이미 구현된 요청은
+  거절 기록에 추가하지 않으며, 부분 구현·확인 불충분·버그 재현과 기존 승인 범위를 구별한다.
+- `prototype`의 TUI 기본값을 유지하면서 비개발자 참여·파일 공유가 필요한 논리 검토에 단일
+  HTML 선택지를 추가했다. 자유 조작 후 안내 시나리오는 초기 상태를 재설정하며, 재작성된
+  JavaScript 모델을 원본 구현의 검증 근거로 사용하지 않는다.
+
 ## loop-engine 0.14.1
 
 A gate for the failure that produced 0.6.3 one commit earlier: **a plugin file edited without that

@@ -73,6 +73,10 @@ Show counts and a one-line summary per issue. Let the maintainer pick.
 ## Triage a specific issue
 
 1. **Gather context.** Read the full issue (body, comments, labels, reporter, dates). Parse any prior triage notes so you don't re-ask resolved questions. Explore the codebase using the project's domain glossary, respecting ADRs in the area. Read `.out-of-scope/*.md` and surface any prior rejection that resembles this issue.
+   Search for existing implementation by domain concept, not only the request's wording, and report
+   where you looked. Confirm that it satisfies the requested behavior; similar names or partial code
+   are not proof. Keep incomplete or unverified behavior under investigation, and still reproduce bugs
+   in Step 2 before recommending that a request is already implemented.
 
 2. **Reproduce (bugs only).** Before any grilling, attempt reproduction: read the reporter's steps, trace the relevant code, run tests or commands. Report what happened — successful repro with code path, failed repro, or insufficient detail (a strong `needs-info` signal). A confirmed repro makes a much stronger agent brief.
 
@@ -89,8 +93,9 @@ Show counts and a one-line summary per issue. Let the maintainer pick.
    - `ready-for-agent` — post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
    - `ready-for-human` — same structure as an agent brief, but note why it can't be delegated (judgment calls, external access, design decisions, manual testing).
    - `needs-info` — post triage notes (template below).
-   - `wontfix` (bug) — polite explanation, then close.
-   - `wontfix` (enhancement) — write to `.out-of-scope/`, link to it from a comment, then close ([OUT-OF-SCOPE.md](OUT-OF-SCOPE.md)).
+   - `wontfix` (already implemented) — cite the existing implementation and behavior evidence, then close. Do not create or append to `.out-of-scope/`: implemented behavior is not a rejected feature.
+   - `wontfix` (rejected bug) — polite explanation, then close.
+   - `wontfix` (rejected enhancement) — write to `.out-of-scope/`, link to it from a comment, then close ([OUT-OF-SCOPE.md](OUT-OF-SCOPE.md)).
    - `needs-triage` — apply the role. Optional comment if there's partial progress.
 
 ## Quick state override

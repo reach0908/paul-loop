@@ -18,6 +18,8 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const generated = buildPackages(root);
+const shipVersion = JSON.parse(generated.get(manifest).content.toString('utf8')).version;
+const nextShipVersion = shipVersion.replace(/\d+$/, patch => String(Number(patch) + 1));
 
 // An executable fake at the real PATH/CLI seam, using the official 0.146.0 JSON shapes.
 // It never reads the user's home/configuration and fails on any unapproved command.
@@ -121,10 +123,10 @@ function updateJson(build, rel, change, rehash = true) {
 
 // Model another reviewed release without changing provider source/manifests.
 function nextRelease(build) {
-  updateJson(build, manifest, value => { value.version = '0.11.1'; });
-  updateJson(build, 'claude/plugins/ship-flow/.claude-plugin/plugin.json', value => { value.version = '0.11.1'; });
+  updateJson(build, manifest, value => { value.version = nextShipVersion; });
+  updateJson(build, 'claude/plugins/ship-flow/.claude-plugin/plugin.json', value => { value.version = nextShipVersion; });
   updateJson(build, 'provenance.json', value => {
-    value.sourceVersions['ship-flow'] = '0.11.1'; value.sourceCommit = 'b'.repeat(40);
+    value.sourceVersions['ship-flow'] = nextShipVersion; value.sourceCommit = 'b'.repeat(40);
     value.sourceHashes['tools/ship-flow/.claude-plugin/plugin.json'].sha256 = sha(readFileSync(join(build, 'claude/plugins/ship-flow/.claude-plugin/plugin.json')));
   });
 }
@@ -245,7 +247,7 @@ test('owned same-root update retains exact prior directory backup; replay and pl
   assert.equal(updated.activation.before['ship-flow'].enabled, true);
   assert.equal(updated.activation.after['ship-flow'].enabled, true);
   assert.deepEqual(snapshot(updated.backup), prior);
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, '0.11.1');
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, nextShipVersion);
   assert.ok(f.calls().slice(count).every(c => c.args[1] !== 'marketplace' || c.args[2] !== 'add'));
   const installed = snapshot(f.target), repeat = good(f.invoke(['--apply']));
   assert.equal(repeat.publication, 'already-current'); assert.equal(repeat.backup, null);
@@ -277,7 +279,7 @@ for (const [name, change, pattern] of blockedActivations) test(`${name} preserve
   assert.deepEqual(snapshot(statePath), activationBefore);
   assert.deepEqual(f.calls().slice(calls).map(c => c.args), [['plugin', 'marketplace', 'list', '--json'], ['plugin', 'list', '--json']]);
   assert.ok(!readdirSync(f.temp).some(p => /\.stage-|\.backup-|\.lock$/.test(p)));
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, '0.11.0');
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, shipVersion);
 });
 
 test('disabled core blocks an already-current apply without reinstalling or changing activation', t => {
@@ -412,7 +414,7 @@ test('a concurrent edit during CLI preflight is preserved and blocks publication
   const calls = f.calls().length;
   bad(f.invoke(['--apply'], { FAKE_FAIL: 'mutate-target' }), /Hash\/mode mismatch/);
   assert.equal(readFileSync(join(f.target, 'plugins/loop-engine/NOTICE'), 'utf8'), 'concurrent local edit');
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, '0.11.0');
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, shipVersion);
   assert.equal(f.calls().length, calls + 2);
 });
 
@@ -433,7 +435,7 @@ test('CLI failure after update retains backup and reports the actual partial sta
   bad(result, /published; retained for inspection\/retry/);
   const backups = readdirSync(f.temp).filter(p => p.includes('.backup-'));
   assert.equal(backups.length, 1); assert.deepEqual(snapshot(join(f.temp, backups[0])), prior);
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, '0.11.1');
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, nextShipVersion);
   assert.match(result.stderr, /loop-engine@paul-loop-codex/);
   good(f.invoke(['--apply'])); assert.equal(readdirSync(f.temp).filter(p => p.includes('.backup-')).length, 1);
 });

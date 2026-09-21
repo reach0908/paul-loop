@@ -88,7 +88,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/prototype/SKILL.md",
       "localPath": "tools/ship-flow/skills/prototype/SKILL.md",
-      "computedHash": "c8b66cd1861bb8ce03392d64634ade7671f7b4bb79eef9d0bbea944e6eb308b7"
+      "computedHash": "6eb461b7be0fa551dd1f434567b222ce5d1654f8221fdff12eaecb3c8d3a77a2"
     },
     "research": {
       "source": "mattpocock/skills",
@@ -163,7 +163,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/triage/SKILL.md",
       "localPath": "tools/ship-flow/skills/triage/SKILL.md",
-      "computedHash": "694d0229193d6f679a0a0bf11d64b5ce4c339a1b192b812aff9f1f641c7b71d2"
+      "computedHash": "73f00bb9ed2fc334b5945287364c7530d0a57110cc3b9601444d6040cab43182"
     },
     "wait-what": {
       "source": "mattpocock/skills",
