@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.1**, ship-flow **0.11.2**, loop-memory **0.7.0**.
+> **Source versions:** loop-engine **0.15.2**, ship-flow **0.11.2**, loop-memory **0.7.0**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -41,6 +41,7 @@ use those dated reports for subsequent CI, installation and native-session resul
 | Run a check and retain its actual result | `verdict-run.sh -- <existing verify command>` |
 | Fix a recurring failure within a budget | `loop-fix.sh` with a real verifier, stopping limits and the applicable guards |
 | Reuse a verified fix | File lessons via `lessons.mjs`; no embedding service or database needed |
+| Keep lesson history after worktree cleanup | `lessons preserve --id <key>`, then `lessons history --id <key>`; historical hints only |
 | Deliver a feature through the full review/PR workflow | `ship-flow:ship-feature`; its required gates still apply |
 | Semantic recall beyond file lessons | Optional `loop-memory`, after measuring a retrieval need |
 

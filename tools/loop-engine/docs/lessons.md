@@ -105,6 +105,34 @@ pipes this through `2>/dev/null`), but write one stderr line each:
 
 ## Wired into the loop
 
+### Preserve before removing a worktree
+
+Run `lessons preserve --id <lesson-key>` in the producing worktree before removing it. The command
+checks the active lesson's original local FAIL/PASS receipts and producer seal, then saves a
+content-addressed snapshot under the repository's Git common directory at `loop/lesson-history/`.
+`--lessons <dir>` selects the existing source lesson store. Repeated preservation does not create
+another copy or increase recurrence counts. `LOOP_LEARNING_OFF=1` disables preservation.
+
+In another worktree of the same local repository, use `lessons history --id <lesson-key>` or
+`lessons history --signature-file <current-verdict.txt>` to read the saved JSON after cleanup.
+An empty array means no matching history; unreadable, corrupt or foreign-repository history exits 2.
+The snapshots contain the original evidence and lesson text, with `current_verified: false` and
+`lesson.verified: false`. They never enter ordinary recall, promotion, semantic graduation or the
+current verifier state. A real current failure remains FAIL after history lookup.
+
+History describes what was admitted **at preservation time**, not the source's later lifecycle or
+the current code. Re-check any suggested fix with the current verifier. Current verified lessons
+still require their own genuine local FAIL/fix/PASS receipts; copying historical evidence cannot
+replace that process. Invalidated, rejected, retired or unbacked lessons cannot be preserved as new
+active history. No automatic cleanup, import, activation or cross-repository transfer is performed.
+
+This is a local archive: Git does not push it, a new clone does not inherit it, and deleting the
+Git common directory deletes it. Repository identity is bound to that directory's physical path;
+relocation is not a supported migration. Checksums detect corruption, not a malicious same-user
+writer who can rewrite both content and checksums. The history scan is linear in local snapshots.
+
+### Automatic run integration
+
 ```bash
 loop-fix.sh --verify "npm test" --fix '<agent>' --protect "**/*.test.*" --guard-mutation --lessons .loop/lessons
 ```
