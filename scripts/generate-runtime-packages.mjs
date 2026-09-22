@@ -100,13 +100,14 @@ export function buildPackages(root) {
           const instructions = files.get(`${out}/${rolePath}`).content.toString('utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
           const skillPath = `skills/${name}/SKILL.md`;
           if (name === 'publisher') explicitSkills.add(dirname(skillPath));
-          const roleIntro = 'Run this role in a fresh subagent using the reviewed project-agent template. If required isolation is unavailable, report that role as blocked to the caller; independent authorized preparation can continue. The SKILL.md itself does not constrain tools. Preserve all explicit approval boundaries.';
-          put(`${out}/${skillPath}`, `---\nname: ${name}\ndescription: ${description.replaceAll('CLAUDE.md', 'AGENTS.md')}\n---\n\n${roleIntro}\n\n${scratchContract}\n\n${rebaseDocLinks(instructions, rolePath, skillPath)}`);
+          const roleDispatch = `Caller: launch a fresh subagent with the reviewed ${name} project-agent template and verify its role identity and required tool/sandbox restrictions from host evidence. A default child or a skill read alone does not establish those restrictions. If required isolation is unavailable, report that role as blocked; independent authorized preparation can continue. If you are already the assigned executor under that template, perform the role below and return to your caller. The SKILL.md itself does not constrain tools. Preserve all explicit approval boundaries.`;
+          const roleExecutor = `You are the ${name} role executor. Perform this role in your current session and return its findings to the caller. Do not delegate this same role again or require a subagent tool merely to execute it. Your caller is responsible for selecting this reviewed template in a fresh subagent and verifying required isolation from host evidence; these instructions alone do not prove it. Report any observed role or permission mismatch and leave affected checks incomplete. Keep all role-specific BLOCK criteria and explicit approval boundaries.`;
+          put(`${out}/${skillPath}`, `---\nname: ${name}\ndescription: ${description.replaceAll('CLAUDE.md', 'AGENTS.md')}\n---\n\n${roleDispatch}\n\n${scratchContract}\n\n${rebaseDocLinks(instructions, rolePath, skillPath)}`);
           // TOML templates are self-contained even after moving to a consumer's .codex/agents.
           // Keep review source read-only; temporary fixture access is a separate host capability.
           const sandbox = name === 'publisher' ? 'workspace-write' : 'read-only';
           const required = ['skills/AUTHORIZATION.md', ...(name === 'publisher' ? ['skills/ship-feature/PUBLISH-HANDOFF.md'] : [])];
-          const embedded = embedRoleResources(`${roleIntro}\n\n${instructions}`, rolePath,
+          const embedded = embedRoleResources(`${roleExecutor}\n\n${instructions}`, rolePath,
             path => files.get(`${out}/${path}`)?.content.toString('utf8'), required);
           put(`${out}/agent-templates/${name}.toml`, `name = ${JSON.stringify(name)}\ndescription = ${JSON.stringify(description)}\nsandbox_mode = ${JSON.stringify(sandbox)}\ndeveloper_instructions = ${JSON.stringify(embedded)}\n`);
         }

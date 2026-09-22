@@ -204,6 +204,9 @@ test('relocated native role templates embed required contracts and keep scratch 
     const toml = files.get(prefix+`agent-templates/${role}.toml`).content.toString();
     const relocated = join(dir, 'consumer/.codex/agents',role+'.toml'); write(relocated,toml);
     const instructions = JSON.parse(/^developer_instructions = (.*)$/m.exec(readFileSync(relocated,'utf8'))[1]);
+    assert.match(instructions, new RegExp(`You are the ${role} role executor`));
+    assert.doesNotMatch(instructions, /Run this role in a fresh subagent/);
+    assert.match(instructions, /Do not delegate this same role again/);
     assert.ok(instructions.includes(contract), role+' must carry full shared contract');
     if (role === 'publisher') assert.ok(instructions.includes(handoff));
     assert.deepEqual(localMarkdownLinks(instructions), [], role+' cannot require relative plugin resource files in a consumer');
@@ -211,6 +214,9 @@ test('relocated native role templates embed required contracts and keep scratch 
     assert.match(instructions,/continue independent authorized checks/);
     assert.match(toml,role==='publisher'?/sandbox_mode = "workspace-write"/:/sandbox_mode = "read-only"/);
     const skill = files.get(prefix+`skills/${role}/SKILL.md`).content.toString();
+    assert.match(skill, /Caller: launch a fresh subagent/);
+    assert.match(skill, /verify its role identity and required tool\/sandbox restrictions/);
+    assert.match(skill, /already the assigned executor/);
     assert.ok(localMarkdownLinks(skill).some(link=>link.target==='../AUTHORIZATION.md'));
   }
   // Embedded dependency closure is portable even when a required resource links to another one.
