@@ -2,7 +2,7 @@
 
 기준: 2026-09-22 KST. [장기 실행 진단](2026-09-22-long-run-diagnosis.md)의 소비 프로젝트 후속 작업이다.
 
-**최신 상태:** [DS 기준 재캡처와 후속 전체 검증](2026-09-22-digging-baseline-refresh.md)에서 DS freshness는 해결됐다. build·DB·integration을 지난 전체 명령은 Home runtime의 geometry 실패를 route matrix가 거부하여 **FAIL / exit 1**이었다. 아래는 그 이전 DS 실패 실행의 기록이며, 전체 runtime PASS는 아직 없다. [이전 구조화된 실행 결과](2026-09-22-digging-full-verification.json)도 보존한다.
+**최신 상태:** [계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md)에서 Home/Search의 CSS 회귀와 11개 visual producer의 구현 identity를 수정했고 Home/Search/Club focused runtime이 통과했다. 전체 runtime PASS는 아직 없다. [직전 DS 갱신·전체 실패](2026-09-22-digging-baseline-refresh.md)와 [그 이전 실행 결과](2026-09-22-digging-full-verification.json)는 보존한다.
 
 ## 변경과 현재 상태
 

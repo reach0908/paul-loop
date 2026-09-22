@@ -1,0 +1,223 @@
+{
+  "date": "2026-09-22",
+  "consumerRoot": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto",
+  "consumerRunHead": "d37f82a9d61890c590b2f8643a48d5c4d7c0e628",
+  "consumerSavedHead": "9706ce14af5aad7e2d988bdb468a064f10ea7a8b",
+  "originMain": "5d5f39efdf24fc091f79620689fa4f210d56a4da",
+  "status": "FOCUSED_PASS_FULL_NOT_RUN",
+  "fullCommandAttemptsThisTurn": 0,
+  "change": {
+    "files": 14,
+    "insertions": 77,
+    "deletions": 15,
+    "approvedGeometryFixturesChanged": false,
+    "designApprovalChanged": false,
+    "fingerprintPathRulesChanged": false,
+    "providerRuntimeChanged": false,
+    "consumerInstallationsChanged": false
+  },
+  "verification": {
+    "focused": {
+      "pass": 38,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 7734.160792
+    },
+    "lint": {
+      "exit": 0,
+      "errors": 0,
+      "warnings": 3
+    },
+    "runtime": [
+      {
+        "name": "search",
+        "status": 0,
+        "durationMs": 26200
+      },
+      {
+        "name": "home",
+        "status": 0,
+        "durationMs": 21806
+      },
+      {
+        "name": "club",
+        "status": 0,
+        "durationMs": 36792
+      }
+    ],
+    "negative": {
+      "sourceDrift": {
+        "producerExit": 1,
+        "assertion": "CLUB_SOURCE_DRIFT_REJECTION_PASS",
+        "runId": "source-drift-1790061076072"
+      },
+      "earlierEnvironmentBlockedAttempt": {
+        "preflight": "live_rows_present",
+        "target": "ddt-cutover-local",
+        "databaseWrites": false
+      },
+      "searchBeforeWrap": {
+        "exit": 1,
+        "failures": 2,
+        "reason": "D-SEARCH-FLOW-390 flow_clip"
+      }
+    },
+    "fingerprint": {
+      "algorithm": "sha256",
+      "digest": "2f459fa74d0bc0eb0037e8e76c4eb80c548fbf6fec5aff1c131c2d14083d183d",
+      "files": 765
+    },
+    "fixed": {
+      "algorithm": "sha256",
+      "digest": "c5db14d3e5d662d884eca95be6b9e6d7747d1081a59ad709786e7d403d247544",
+      "files": 773
+    },
+    "results": [
+      {
+        "file": "12-pixel-perfect-baseline.txt",
+        "marker": "PIXEL_BASELINE_RUNTIME_PASS",
+        "implementationMatch": true,
+        "sourceStable": true,
+        "targetReset": true
+      },
+      {
+        "file": "13-pixel-perfect-search.txt",
+        "marker": "PIXEL_SEARCH_RUNTIME_PASS",
+        "implementationMatch": true,
+        "sourceStable": true,
+        "targetReset": true
+      },
+      {
+        "file": "15-pixel-perfect-club.txt",
+        "marker": "PIXEL_CLUB_RUNTIME_PASS",
+        "implementationMatch": true,
+        "sourceStable": true,
+        "targetReset": true
+      }
+    ],
+    "approvedArtifactsUnchanged": true,
+    "finalPreflight": {
+      "kind": "safe",
+      "evidence": {
+        "targetId": "ddt-mobile-ux-local",
+        "environment": "disposable",
+        "role": "ddt_mobile_ux",
+        "liveRows": 0,
+        "database": "ddt_mobile_ux",
+        "endpoint": "127.0.0.1:55440",
+        "transactionReadOnly": true,
+        "transport": "local",
+        "serverAddress": "127.0.0.1",
+        "serverPort": 55440
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": ".loop/contract-alignment/navigation-red.log",
+      "sha256": "44612b9bdfa8ad36f9418857ad7f9104e5ac21a277de6421fd38838221a5ce9a",
+      "bytes": 1541
+    },
+    {
+      "path": ".loop/contract-alignment/navigation-search-red.log",
+      "sha256": "06ea4d65d56ff30377f66319520b0793ab23b45f2aa0340716fac8c79ccd0873",
+      "bytes": 1543
+    },
+    {
+      "path": ".loop/contract-alignment/fingerprint-red.log",
+      "sha256": "c5bec24de7b16388c1e0966ab0317141d38516ea8a22d1dbf6d8c8605fc68fb3",
+      "bytes": 968
+    },
+    {
+      "path": ".loop/contract-alignment/final-focused.log",
+      "sha256": "dffcd033b4cb06e71fa05d91086b6fa05bd55cc84715ee56ec90e97d4346b74c",
+      "bytes": 10469
+    },
+    {
+      "path": ".loop/contract-alignment/lint.log",
+      "sha256": "3a35a5df45f05ec404923ecc9bf4596f89277c5e20257d269efbf25230c66b98",
+      "bytes": 720
+    },
+    {
+      "path": ".loop/contract-alignment/club-negative-blocked-runtime.log",
+      "sha256": "1cd54e89de2c537073f492c2625532a24fc998516909e99a96c766a4d54151c0",
+      "bytes": 46
+    },
+    {
+      "path": ".loop/contract-alignment/club-negative-check.log",
+      "sha256": "a322e7526f09793b541e30efd4a856fd099a3f821b3f1a4a3cda8514146ef286",
+      "bytes": 64
+    },
+    {
+      "path": ".loop/contract-alignment/club-negative-runtime.log",
+      "sha256": "20335ce78497ac43fa9470466ddc08eba6e7205766027a1b71180fc233ab2879",
+      "bytes": 60
+    },
+    {
+      "path": ".loop/contract-alignment/check-club-source-drift.mjs",
+      "sha256": "0ef1e68d739f553a6eb181a9fc2b176fcaef04b01c298c2a4c73b5f390202324",
+      "bytes": 2421
+    },
+    {
+      "path": ".loop/contract-alignment/runtime-results.json",
+      "sha256": "82e5d29221a688d04499fd62574ab75dbc13af2db5e4ddc437bbc7158f3f826b",
+      "bytes": 215
+    },
+    {
+      "path": ".loop/contract-alignment/runtime-before-wrap-results.json",
+      "sha256": "e00073973ca3e7ceda1489ab918bcc672a4ce9f4e9df823342fe8467f07fbcba",
+      "bytes": 215
+    },
+    {
+      "path": ".loop/contract-alignment/final-identity.json",
+      "sha256": "26cb24759696e046591f39edbd2f88dba0af9bbb3e3f8fbbda0ebecab77920ae",
+      "bytes": 1326
+    },
+    {
+      "path": ".loop/contract-alignment/observed/12-pixel-perfect-baseline.txt",
+      "sha256": "bff4e47795d8e89f98648e2e0d9be505b7cfa78aca251380d86b89d83e8d6deb",
+      "bytes": 77098
+    },
+    {
+      "path": ".loop/contract-alignment/observed/13-pixel-perfect-search.txt",
+      "sha256": "5512d8866da1ab9b908317e89fc2b515dc6adb3b11b33c82a91d5b089e9373bc",
+      "bytes": 100296
+    },
+    {
+      "path": ".loop/contract-alignment/observed/15-pixel-perfect-club.txt",
+      "sha256": "07820271650ff46ddeb8918cdecf5f4126e28386565281df92a5fd4055fa60a0",
+      "bytes": 208137
+    },
+    {
+      "path": ".loop/contract-alignment/observed/search-flow-clip.txt",
+      "sha256": "19913c46549c4fab41a14dd0bd7f9225562a9a911d695f16df0a92410d7fe346",
+      "bytes": 64544
+    },
+    {
+      "path": ".loop/contract-alignment/observed/club-source-drift.txt",
+      "sha256": "578ec1cab5b4564e11f9d3b5dfab607551b1ad80f5fe241d44b32b2387d7ac43",
+      "bytes": 208045
+    }
+  ],
+  "generationPaths": [
+    "delivery/implementation/evidence/pixel-compare/home-search-runtime/contract-alignment-wrap-20260922",
+    "delivery/implementation/evidence/pixel-compare/club-runtime/contract-alignment-wrap-20260922",
+    "delivery/implementation/evidence/pixel-compare/club-runtime/source-drift-1790061076072"
+  ],
+  "evidenceStorage": {
+    "archivedTrackedReceipts": 3,
+    "restoredHistoricalReceipts": true,
+    "historicalReceiptsAreCurrentPassEvidence": false,
+    "localUntrackedArtifactsPreserved": true
+  },
+  "scope": {
+    "published": false,
+    "fullPass": false,
+    "remainingCanonicalVisualProducers": 8,
+    "integrationRevalidated": false,
+    "dsScreenshotReadbackAfterFix": false,
+    "longRunSpeedupMeasured": false,
+    "loopMemoryEfficacyMeasured": false
+  },
+  "next": "Revalidate remaining visual, DS and integration receipts for the final source, then run the configured full verifier once."
+}

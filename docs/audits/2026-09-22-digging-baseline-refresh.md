@@ -2,7 +2,9 @@
 
 기준: 2026-09-22 KST. [이전 전체 검증 실패](2026-09-22-digging-verification-entrypoint.md#전체-검증-후속-실행)의 후속 작업이다.
 
-**결과:** DS 재캡처·readback과 freshness는 통과했다. 전체 검증은 **27분 20초, FAIL / exit 1**이며 Home runtime의 실제 geometry 실패를 route matrix가 거부했다. [구조화된 결과와 원본 해시](2026-09-22-digging-baseline-refresh.json)에 남겼다.
+**후속 상태:** [승인 계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md)에서 Home 원인을 토큰 이관 회귀로 확정해 수정했다. Home/Search/Club focused runtime은 PASS이며 전체 검증 PASS는 아직 없다. 아래의 계약 선택 가능성은 당시 잠정 진단으로, 후속 보고서가 교정한다.
+
+**당시 결과:** DS 재캡처·readback과 freshness는 통과했다. 전체 검증은 **27분 20초, FAIL / exit 1**이며 Home runtime의 실제 geometry 실패를 route matrix가 거부했다. [구조화된 결과와 원본 해시](2026-09-22-digging-baseline-refresh.json)에 남겼다.
 
 ## 해결한 범위
 
