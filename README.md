@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.0**, ship-flow **0.11.1**, loop-memory **0.7.0**.
+> **Source versions:** loop-engine **0.15.0**, ship-flow **0.11.2**, loop-memory **0.7.0**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -33,6 +33,23 @@ The [release record](docs/audits/2026-09-05-release-results.md) and
 artifacts, installed versions, and observed runtime behavior.
 The compatibility document's qualification table retains its implementation-time observations;
 use those dated reports for subsequent CI, installation and native-session results.
+
+## Start with the part you need
+
+| Need | Smallest existing path |
+|---|---|
+| Run a check and retain its actual result | `verdict-run.sh -- <existing verify command>` |
+| Fix a recurring failure within a budget | `loop-fix.sh` with a real verifier, stopping limits and the applicable guards |
+| Reuse a verified fix | File lessons via `lessons.mjs`; no embedding service or database needed |
+| Deliver a feature through the full review/PR workflow | `ship-flow:ship-feature`; its required gates still apply |
+| Semantic recall beyond file lessons | Optional `loop-memory`, after measuring a retrieval need |
+
+Check usage before adding infrastructure. `run-metrics.mjs --runs-dir <project>/.loop/runs --json`
+summarizes existing engine telemetry. `node <memory-artifact>/dist/cli.js liveness --root <project>
+--runs 100 --json` reads memory hook events without contacting the database or embedder. Inspect
+timestamps, skipped/error reasons and missing data: a liveness exit 0 or an installed plugin does
+not prove useful recall. Even an `injected` event proves delivery of context, not that it helped.
+Use the project's configured launcher/installed artifact; do not borrow another project's setup.
 
 ## What's in `loop-engine`
 
@@ -97,7 +114,8 @@ loop-fix.sh --verify "pnpm typecheck" --stall 3 --infra-retries 2 --budget-sec 9
 ### `lessons.mjs` — record only what a verifier actually confirmed, recall it next time
 
 ```bash
-lessons.mjs record --signature "FAIL: ..." --verified --fix "..." --title "..." --lessons .loop/lessons
+lessons.mjs record --signature-file <failure.log> --verified --receipt <passing-receipt.json> \
+  --failure-receipt <failing-receipt.json> --fix "..." --title "..." --lessons .loop/lessons
 lessons.mjs recall  --signature "FAIL: ..." --lessons .loop/lessons
 lessons.mjs promote --min-count 3 --lessons .loop/lessons          # recurring candidates
 lessons.mjs challenge --id <key> --verdict accept|reject --reason "..."   # separate skeptical pass
@@ -107,6 +125,8 @@ lessons.mjs retire --id <key> --ref "docs/where-this-got-codified.md"
 
 - A lesson is written only when a **verifier**, not the fixer's own claim, confirmed the fix worked.
   Unverified self-reports are never treated as authoritative on recall.
+- Verified recording requires the actual matching failure and success receipts; a handwritten
+  signature or a passing command alone is insufficient. See [retrospect](tools/ship-flow/skills/retrospect/SKILL.md).
 - `recall` matches on failure signature first, with room for semantic recall on top (see
   [`docs/lessons.md`](tools/loop-engine/docs/lessons.md)).
 - Promotion is a two-step, two-party protocol: `promote` surfaces *candidates* (recurring ≥ N

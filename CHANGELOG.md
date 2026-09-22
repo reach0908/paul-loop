@@ -5,6 +5,16 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.2
+
+- Keep routine questions, local changes and Git operations out of the full delivery workflow.
+  Preserve the requested goal and repository when continuing work.
+- Make the internal publisher and manual-only skills explicit-invocation-only in generated Codex
+  packages, retaining native UI metadata, independent publication and authorization contracts.
+- Apply reuse-first, minimum-implementation guidance in TDD/review; consolidate repeated delivery
+  instructions without dropping required gates. Preserve worktree evidence before cleanup and
+  diagnose failed prerequisites before repeating full verification.
+
 ## ship-flow 0.11.1
 
 - `triage`가 도메인 개념으로 기존 구현을 검색하고 동작 근거를 확인한다. 이미 구현된 요청은

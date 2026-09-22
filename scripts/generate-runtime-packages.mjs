@@ -30,6 +30,7 @@ export function buildPackages(root) {
       const prefix = plugin.source.slice(2) + '/';
       const out = `${runtime}/plugins/${plugin.name}`;
       const manifest = readJson(join(root, prefix, '.claude-plugin/plugin.json'));
+      const explicitSkills = new Set();
       for (const legal of ['LICENSE', 'NOTICE']) put(`${out}/${legal}`, readFileSync(join(root, legal)));
       put(`${out}/runtime/README.md`, readFileSync(join(root, 'docs/runtime-compatibility.md')));
       if (manifest.name !== plugin.name) throw new Error('marketplace plugin name drift');
@@ -56,7 +57,15 @@ export function buildPackages(root) {
           if (rel.endsWith('/SKILL.md')) {
             // Capability flags stay in a visible contract instead of masquerading as native agent options.
             content = content.replace(/^---\n([\s\S]*?)\n---/, (_, frontmatter) => {
-              const shared = frontmatter.split('\n').filter((line) => !/^(context|allowed-tools|disable-model-invocation|agent|model|tools):/.test(line));
+              const manualFlag = /^[ \t]*(?:disable-model-invocation|"disable-model-invocation"|'disable-model-invocation')[ \t]*:[ \t]*(.*)$/;
+              const lines = frontmatter.split('\n'), flags = lines.map(line => manualFlag.exec(line)).filter(Boolean);
+              if (flags.length > 1) throw new Error(`duplicate invocation policy: ${source}`);
+              if (flags.length) {
+                const value = /^(true|false)[ \t]*(?:#.*)?$/.exec(flags[0][1]);
+                if (!value) throw new Error(`unsupported invocation policy: ${source}`);
+                if (value[1] === 'true') explicitSkills.add(dirname(rel));
+              }
+              const shared = lines.filter((line) => !manualFlag.test(line) && !/^(context|allowed-tools|agent|model|tools):/.test(line));
               return `---\n${shared.join('\n')}\ncompatibility: Requires the generated paul-loop Codex runtime and explicit hook trust; see runtime/capabilities.json.\n---`;
             });
             const marker = content.indexOf('\n---', 4) + 4;
@@ -90,6 +99,7 @@ export function buildPackages(root) {
           const rolePath = source.slice(prefix.length);
           const instructions = files.get(`${out}/${rolePath}`).content.toString('utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
           const skillPath = `skills/${name}/SKILL.md`;
+          if (name === 'publisher') explicitSkills.add(dirname(skillPath));
           const roleIntro = 'Run this role in a fresh subagent using the reviewed project-agent template. If required isolation is unavailable, report that role as blocked to the caller; independent authorized preparation can continue. The SKILL.md itself does not constrain tools. Preserve all explicit approval boundaries.';
           put(`${out}/${skillPath}`, `---\nname: ${name}\ndescription: ${description.replaceAll('CLAUDE.md', 'AGENTS.md')}\n---\n\n${roleIntro}\n\n${scratchContract}\n\n${rebaseDocLinks(instructions, rolePath, skillPath)}`);
           // TOML templates are self-contained even after moving to a consumer's .codex/agents.
@@ -99,6 +109,14 @@ export function buildPackages(root) {
           const embedded = embedRoleResources(`${roleIntro}\n\n${instructions}`, rolePath,
             path => files.get(`${out}/${path}`)?.content.toString('utf8'), required);
           put(`${out}/agent-templates/${name}.toml`, `name = ${JSON.stringify(name)}\ndescription = ${JSON.stringify(description)}\nsandbox_mode = ${JSON.stringify(sandbox)}\ndeveloper_instructions = ${JSON.stringify(embedded)}\n`);
+        }
+        for (const skill of explicitSkills) {
+          const path = `${out}/${skill}/agents/openai.yaml`;
+          const metadata = files.get(path)?.content.toString('utf8') || '';
+          // ponytail: only append to an interface block; broader YAML merging needs a parser.
+          const roots = metadata.split('\n').filter(line => line.trim() && !line.startsWith(' ') && !line.startsWith('#'));
+          if (metadata.trim() && (roots.length !== 1 || roots[0].trim() !== 'interface:')) throw new Error(`explicit-invocation policy requires UI-only block metadata: ${path}`);
+          put(path, `${metadata.trimEnd()}${metadata.trim() ? '\n\n' : ''}policy:\n  allow_implicit_invocation: false\n`);
         }
         put(`${out}/.codex-plugin/plugin.json`, json({ name: manifest.name, version: manifest.version, description: manifest.description,
           author: manifest.author, homepage: manifest.homepage, repository: manifest.repository, license: manifest.license,
