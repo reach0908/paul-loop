@@ -54,6 +54,13 @@ necessary disposable fixtures, but the host must also permit that directory (for
 keep audited/live/installed state unchanged, and never widen grants to bypass a denied fixture write.
 Unavailable scratch access makes that check incomplete; independent authorized checks can continue.
 
+The template's sandbox field is a request, not proof that the host applied it. On the September 23
+Codex app CLI observation, a planner inherited `workspace-write` from its parent despite requesting
+`read-only`. Generated executor instructions therefore state the required sandbox and return BLOCK
+before role work when host-provided permissions are missing or different. Callers must still verify
+the actual child permissions; prompt compliance is not sandbox enforcement. See the
+[role-permission observations](https://github.com/reach0908/paul-loop/blob/main/docs/audits/2026-09-23-role-dispatch.md).
+
 A missing native Workflow does not stop the entire task. Follow a skill's documented direct-lane or
 equivalent fallback when it preserves current authorization, required independence and gates. The
 harness-maturity audit explicitly permits bounded direct lanes; this is not independent reviewer

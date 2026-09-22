@@ -207,6 +207,8 @@ test('relocated native role templates embed required contracts and keep scratch 
     assert.match(instructions, new RegExp(`You are the ${role} role executor`));
     assert.doesNotMatch(instructions, /Run this role in a fresh subagent/);
     assert.match(instructions, /Do not delegate this same role again/);
+    assert.ok(instructions.includes(`Required sandbox: ${role==='publisher'?'workspace-write':'read-only'}.`));
+    assert.match(instructions, /If that evidence is missing or different, return BLOCK before role work/);
     assert.ok(instructions.includes(contract), role+' must carry full shared contract');
     if (role === 'publisher') assert.ok(instructions.includes(handoff));
     assert.deepEqual(localMarkdownLinks(instructions), [], role+' cannot require relative plugin resource files in a consumer');
@@ -217,6 +219,7 @@ test('relocated native role templates embed required contracts and keep scratch 
     assert.match(skill, /Caller: launch a fresh subagent/);
     assert.match(skill, /verify its role identity and required tool\/sandbox restrictions/);
     assert.match(skill, /already the assigned executor/);
+    assert.ok(skill.includes(`Required executor sandbox: ${role==='publisher'?'workspace-write':'read-only'}.`));
     assert.ok(localMarkdownLinks(skill).some(link=>link.target==='../AUTHORIZATION.md'));
   }
   // Embedded dependency closure is portable even when a required resource links to another one.
