@@ -5,7 +5,18 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
-## ship-flow 0.11.1
+## ship-flow 0.11.2
+
+- Route questions, bounded local changes and routine Git operations to their own procedure;
+  reserve ship-feature for requested plan-to-PR delivery. Keep continuation within the agreed
+  objective and repository, including provider versus consumer work.
+- Keep publisher internal to an explicit step-5 handoff. Generated Codex packages use native
+  `allow_implicit_invocation: false` for publisher and source skills marked manual-only;
+  explicit invocation, subagent isolation and publication authorization remain required.
+- Preserve source versions in installer update tests instead of hardcoding a past release.
+
+The following earlier local changes also belong to this unreleased source line; the published
+0.11.1 tag contains the upstream triage/prototype backport separately.
 
 - Backport upstream triage's existing-implementation check and prototype's optional single-file
   HTML logic walkthrough, retaining authorization and verification boundaries.
@@ -17,6 +28,12 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
 - Correct the vendor fork description and local hashes. No engine or memory runtime contract changes.
 - Diagnose failed checks and stale evidence prerequisites before restarting full verification;
   preserve long-running process identity, logs and exit results. Required gates remain unchanged.
+
+## ship-flow 0.11.1
+
+- Published the bounded upstream triage/prototype backport in PR #104, with refreshed vendor
+  hashes and version-independent installer fixtures. The broader local simplification work above
+  remains in the 0.11.2 source line.
 
 ## loop-engine 0.14.1
 

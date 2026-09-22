@@ -1,11 +1,11 @@
 ---
 name: ship-feature
-description: This plugin's autonomous-by-default feature delivery sequence and single entrypoint — isolate a worktree, plan, TDD, runtime-verify, self-review, open the PR and STOP for the human to merge, then prepare a harness-improvement PR only when that follow-up is authorized. Risk gating is decided by a deterministic classifier, not the agent's own scoring. Use when the user delegates a task, feature, bug, or tracked issue to take from plan to an open PR (plan → tdd → runtime-verify → review → PR → improve), or asks to "ship"/"deliver"/"land" a feature.
+description: End-to-end feature delivery when the user asks to take a feature, bug or tracked issue from plan to an open PR, or to ship/deliver/land a feature. Isolate, plan, build, verify, review and open the PR; stop for human merge. Research, local edits and routine Git synchronization use their own bounded procedure. Post-merge improvements require authorized scope.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
 
-# ship-feature — this plugin's single entrypoint (autonomous, human only where the gate calls for it)
+# ship-feature — delivery from plan to PR
 
 > **Output language.** Read `outputLanguage` (a BCP-47 tag, e.g. `ko`) from
 > `.claude/ship-flow.config.json` and write **every human-facing prose artifact** — reports, summaries,
@@ -18,6 +18,11 @@ merged PR to a harness-improvement PR** only within the caller's requested scope
 between genuine approval boundaries. Each
 step's *content* belongs to the skill/agent it delegates to — this skill fixes only the **order, the
 gates, and where a human steps in**.
+
+Use this sequence for delegated delivery through PR creation. Questions, research, a bounded local
+fix, or routine commit/push/main synchronization do not need this sequence or its publisher. Use the
+host's repository procedure and the checks required by that change. Explicit invocation still ends
+at the user's requested artifact or verified local patch when that is the authorized endpoint.
 
 Bundled references (read at the point each is needed): [RISK-GATE.md](RISK-GATE.md) ·
 [AC-CONTRACTS.md](AC-CONTRACTS.md) · [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md).
