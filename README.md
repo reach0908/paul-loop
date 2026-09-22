@@ -33,6 +33,8 @@ The [release record](docs/audits/2026-09-05-release-results.md) and
 artifacts, installed versions, and observed runtime behavior.
 The compatibility document's qualification table retains its implementation-time observations;
 use those dated reports for subsequent CI, installation and native-session results.
+For the September research, shipped improvements and remaining effectiveness checks, see the
+[current improvement status](docs/audits/2026-09-23-roadmap-status.md) and its linked research archive.
 
 ## Start with the part you need
 
