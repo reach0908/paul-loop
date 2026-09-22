@@ -10,6 +10,8 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
 - Add explicit `lessons preserve` / `lessons history` for worktree-local verified lessons.
   Retain original evidence in the Git common directory after cleanup without granting current
   verification, recall authority or promotion. Deduplicate snapshots and reject corrupt or foreign history.
+- Start the loop worker only after its PID and every lease owner are durably registered, fixing
+  intermittent startup failures without weakening the checkpoint owner check.
 
 ## loop-engine 0.15.1
 

@@ -39,6 +39,30 @@ Git 공통 디렉터리가 사라지거나 이동하는 경우는 지원하지 �
 내부 BAC-580 memory-source probe는 tsx 부재로 SKIP이며 PASS로 취급하지 않는다.
 최종 커밋 CI는 PR에서 확인한다.
 
+### CI에서 드러난 기존 시작 순서 결함
+
+첫 PR head `ab65bce`의 selftest run `35736667685`에서 기존 lifecycle 두 사례가
+`worker identity is not durably registered`로 실패했다. 나머지 10개 검사와 보존 회귀는
+통과했지만 전체 CI 통과로 취급하지 않는다.
+
+supervisor가 worker를 시작한 뒤 PID와 lease owner를 저장하는 동안 worker의 첫 checkpoint가
+먼저 실행될 수 있었다. PID 저장 직전에 지연을 주입한 실제 subprocess 회귀로 같은 오류를
+재현했다. 전용 fd 3에서 시작 신호를 기다리게 하고, state와 모든 lease 저장 및 deadline 확인
+후에만 신호를 보낸다. 기존 checkpoint의 PID 검증은 유지한다. stdin은 그대로 전달한다.
+등록 실패, 신호 EOF·불일치에서는 verifier를 시작하지 않는 것이 추가 수용 기준이다.
+
+새 집중 회귀 3개는 PASS다. 수정 후 전체 suite도 **80/80, VERDICT PASS / EXIT 0**,
+392,199ms로 완료됐다. lifecycle 내부 26개 모두 PASS다. 수정된 head CI는 PR에서 확인한다. 이 결함 수정은 이번
+기능 검증 중 드러난 engine 시작 문제에 한정하며, 권한 훅 변경이나 소비자 업데이트는 없다.
+
+시작 순서 수정의 Standards 독립 재검토는 미해결 finding 0건이며, 집중 검사 5/5로 등록
+지연·실패, 신호 오류, 절대 deadline, 취소·자손 종료·재개 카운터를 확인했다.
+Spec 독립 재검토도 미해결 finding 0건이며 stdin 전달과 등록 지연 중 budget 만료 시
+verifier 미실행을 별도 fixture로 확인했다.
+수정된 소스의 생성 패키지 재현·lock 일치·strict marketplace/engine manifest 검사도 PASS다.
+새로 발행된 태그를 fetch한 뒤 publish-freshness를 별도 실행해 ship-flow 0.11.2와
+loop-memory 0.7.0의 기존 배포 일치 및 engine 0.15.2 미발행 상태를 확인했다.
+
 ### Standards
 
 P2 1건: 최종 파일에 직접 쓰면 중간 I/O 오류 후 부분 JSON이 남아 재시도도 막힌다.
