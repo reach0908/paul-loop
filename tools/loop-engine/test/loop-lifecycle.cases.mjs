@@ -101,6 +101,53 @@ test('receipt storage failure cannot become a successful lifecycle or silent che
   assert.equal(existsSync(join(root, '.loop/looping')), false); assert.equal(existsSync(join(root, '.loop/lifecycle/lease')), false);
 });
 
+test('worker waits for durable PID registration before its first checkpoint', (t) => {
+  const root = fixture(t);
+  const delayed = `import fs from 'node:fs'; import {syncBuiltinESMExports} from 'node:module';
+    const rename=fs.renameSync; fs.renameSync=(from,to)=>{
+      if (String(to).includes('/lifecycle/') && !String(to).endsWith('/owner.json') && JSON.parse(fs.readFileSync(from)).owner.worker_pid && !fs.existsSync('.loop/registration-delayed')) {
+        fs.writeFileSync('.loop/registration-delayed','yes');
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1500);
+      }
+      return rename(from,to);
+    }; syncBuiltinESMExports();`;
+  const r = cmd(root, [process.execPath, '--import', 'data:text/javascript;base64,' + Buffer.from(delayed).toString('base64'),
+    join(engine, 'lib/loop-lifecycle.mjs'), 'run', loop, '--verify', 'touch .loop/invoked; true']);
+  assert.ok(existsSync(join(root, '.loop/registration-delayed')), r.stdout + r.stderr);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.ok(existsSync(join(root, '.loop/invoked')));
+  assert.equal(state(root).attempt, 1); assert.equal(state(root).status, 'succeeded');
+});
+
+test('failed lease registration cannot dispatch a verifier after the state PID was saved', (t) => {
+  const root = fixture(t);
+  const failed = `import fs from 'node:fs'; import {syncBuiltinESMExports} from 'node:module';
+    const rename=fs.renameSync; fs.renameSync=(from,to)=>{
+      if (String(to).endsWith('/owner.json') && JSON.parse(fs.readFileSync(from)).worker_pid) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1500);
+        throw new Error('injected owner registration failure');
+      }
+      return rename(from,to);
+    }; syncBuiltinESMExports();`;
+  const r = cmd(root, [process.execPath, '--import', 'data:text/javascript;base64,' + Buffer.from(failed).toString('base64'),
+    join(engine, 'lib/loop-lifecycle.mjs'), 'run', loop, '--verify', 'touch .loop/invoked; true']);
+  assert.equal(r.status, 2); assert.match(r.stderr, /injected owner registration failure/);
+  assert.equal(existsSync(join(root, '.loop/invoked')), false);
+  assert.equal(state(root).attempt, 0); assert.equal(state(root).status, 'interrupted');
+  assert.equal(existsSync(join(root, '.loop/lifecycle/lease')), false);
+});
+
+test('worker refuses a missing or wrong supervisor start signal', (t) => {
+  const root = fixture(t);
+  for (const redirect of ['3</dev/null', '3<<< wrong']) {
+    const r = cmd(root, ['/bin/bash', '-c', `exec ${redirect}; exec "$1" --verify 'touch invoked'`, 'fixture', loop],
+      { LOOP_LIFECYCLE_WORKER: '1', LOOP_LIFECYCLE_TOKEN: 'expected' });
+    assert.equal(r.status, 2); assert.match(r.stderr, /missing supervisor start signal/);
+    assert.equal(existsSync(join(root, 'invoked')), false);
+    assert.equal(existsSync(join(root, '.loop')), false);
+  }
+});
+
 test('final handoff requires the PASS receipt even after a successful worker checkpoint', (t) => {
   const root = fixture(t); mkdirSync(join(root, '.loop/fakebin'), { recursive: true });
   const tee = cmd(root, ['which', 'tee']).stdout.trim();

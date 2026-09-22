@@ -60,6 +60,8 @@
 //                   `promote`'s listing annotates lessons crossing CLEAN_RETIRE_THRESHOLD as retirement
 //                   candidates — informational only, never auto-invalidates/retires.
 //   lessons stats   [--category engineering|domain] [--lessons <dir>]
+//   lessons preserve --id <key> [--lessons <dir>]  # preserve active verified history before worktree cleanup
+//   lessons history --id <key> | --signature-file <verdict.txt>  # JSON historical hints, never current PASS
 //
 // category: `engineering` (process/tooling lesson, the default) or `domain` (product/domain lesson).
 // Missing/legacy/malformed values coerce to `engineering` on read (BAC-498 — all pre-existing lessons
@@ -108,15 +110,15 @@ function semanticRecallHint() {
 
 function usage(msg) {
   if (msg) process.stderr.write(`lessons: ${msg}\n`)
-  process.stderr.write('Usage: lessons <record|recall|promote|stats|challenge|retire|invalidate|mark-clean> [options]  (see header)\n')
+  process.stderr.write('Usage: lessons <record|recall|promote|stats|challenge|retire|invalidate|mark-clean|preserve|history> [options]  (see header)\n')
   process.exit(2)
 }
 
 const argv = process.argv.slice(2)
 const cmd = argv.shift()
-if (!cmd || !['record', 'recall', 'promote', 'stats', 'challenge', 'retire', 'invalidate', 'mark-clean'].includes(cmd)) usage(`unknown or missing command ${JSON.stringify(cmd || '')}`)
+if (!cmd || !['record', 'recall', 'promote', 'stats', 'challenge', 'retire', 'invalidate', 'mark-clean', 'preserve', 'history'].includes(cmd)) usage(`unknown or missing command ${JSON.stringify(cmd || '')}`)
 
-if (process.env.LOOP_LEARNING_OFF === '1' && ['record', 'challenge', 'retire', 'invalidate', 'mark-clean'].includes(cmd)) usage('learning_off: lesson mutations disabled');
+if (process.env.LOOP_LEARNING_OFF === '1' && ['record', 'challenge', 'retire', 'invalidate', 'mark-clean', 'preserve'].includes(cmd)) usage('learning_off: lesson mutations disabled');
 
 const opt = { lessons: process.env.LESSONS_DIR || join(process.env.LOOP_DIR || '.loop', 'lessons'), sigFile: '', sig: '', fix: '', title: '', source: '', category: '', iterations: null, verified: false, minCount: 3, includeUnverified: false, id: '', verdict: '', reason: '', by: '', ref: '', codify: false, gate: '', runs: '', supersededBy: '', receipt: '', failureReceipt: '' }
 for (let i = 0; i < argv.length; i++) {
@@ -288,6 +290,17 @@ const nowIso = () => new Date().toISOString()
 const avg = a => a.length ? (a.reduce((x, y) => x + y, 0) / a.length) : null
 
 // ---- commands ----
+if (cmd === 'preserve' || cmd === 'history') {
+  const id = opt.id || (cmd === 'history' ? signatureOf()?.key : '')
+  if (!/^[a-f0-9]{16}$/.test(id || '') || opt.verified) usage(`${cmd} requires --id <lesson-key> (history also accepts a signature); history cannot grant --verified`)
+  try {
+    const { preserveLesson, lessonHistory } = await import('../lib/lesson-history.mjs')
+    const result = cmd === 'preserve' ? withLock(() => preserveLesson(lessonPath(id), id)) : lessonHistory(id)
+    process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+  } catch (e) { usage(e.message) }
+  process.exit(0)
+}
+
 if (cmd === 'record') {
   const s = signatureOf()
   if (!s) usage('record needs --signature-file or --signature with at least one FAIL line')

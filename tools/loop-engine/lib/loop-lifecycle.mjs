@@ -122,13 +122,18 @@ export async function supervise(script, argv) {
     };
     const onTerm = () => stop('CANCELLED'); const onInt = () => stop('CANCELLED');
     process.on('SIGTERM', onTerm); process.on('SIGINT', onInt);
-    child = spawn('/bin/bash', [script, ...forwarded], { cwd, detached: true, stdio: 'inherit', env: {
+    child = spawn('/bin/bash', [script, ...forwarded], { cwd, detached: true, stdio: ['inherit', 'inherit', 'inherit', 'pipe'], env: {
       ...process.env, LOOP_LIFECYCLE_WORKER: '1', LOOP_LIFECYCLE_STATE: stateFile, LOOP_LIFECYCLE_TOKEN: owner.token,
       LOOP_RUN_ID: runId, LOOP_ATTEMPT: String(state.attempt), LOOP_RESUME_ITER: String(state.iteration), LOOP_RESUME_INFRA: String(state.infra_count),
       LOOP_RESUME_STALL: String(state.stall_count), LOOP_RESUME_FP: state.prev_fp, LOOP_RESUME_COUNTS: state.prev_counts,
       LOOP_LIFECYCLE_RESUME: resume ? '1' : '',
       LOOP_DIR: loopDir,
     } });
+    const completed = new Promise((resolveResult) => {
+      child.once('error', (error) => resolveResult({ error }));
+      child.stdio[3].once('error', (error) => resolveResult({ error }));
+      child.once('exit', (code, signal) => resolveResult({ code, signal }));
+    });
     fenced = false;
     owner.worker_pid = child.pid; state.owner = owner; atomicJson(stateFile, state);
     for (const lease of acquired) atomicJson(join(lease, 'owner.json'), owner);
@@ -139,9 +144,9 @@ export async function supervise(script, argv) {
       else deadlineTimer = setTimeout(armDeadline, Math.min(remaining, 2147483647));
     };
     armDeadline();
-    const result = await new Promise((resolveResult, reject) => {
-      child.once('error', reject); child.once('exit', (code, signal) => resolveResult({ code, signal }));
-    });
+    if (!stopping) child.stdio[3].end(`${owner.token}\n`);
+    const result = await completed;
+    if (result.error) throw result.error;
     clearTimeout(deadlineTimer);
     // An exited shell may have left background jobs in its group. Kill before any state/sentinel handoff.
     await fenceGroup();

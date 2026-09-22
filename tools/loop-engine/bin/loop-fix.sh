@@ -185,8 +185,14 @@ if [ "${LOOP_LIFECYCLE_WORKER:-}" != 1 ]; then
   case "${1:-}" in -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
   exec node "$HERE/../lib/loop-lifecycle.mjs" run "$0" "$@"
 fi
+# The supervisor releases fd 3 only after its PID and every lease owner are durable.
+# EOF (including supervisor death) must never dispatch an unregistered verifier.
+if ! IFS= read -r start_token <&3 || [ -z "$start_token" ] || [ "$start_token" != "${LOOP_LIFECYCLE_TOKEN:-}" ]; then
+  echo 'loop-fix: missing supervisor start signal' >&2; exit 2
+fi
+exec 3<&-
 # Consume the marker: a nested loop-fix invocation must acquire its OWN lease, never bypass it.
-unset LOOP_LIFECYCLE_WORKER
+unset LOOP_LIFECYCLE_WORKER start_token
 
 VERIFY=""; FIX=""; MAX_ITER=10; BUDGET=0; STALL=3; LOOP_DIR=".loop"
 PROTECT_LIST=""   # newline-separated globs

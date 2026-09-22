@@ -5,6 +5,14 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.2
+
+- Add explicit `lessons preserve` / `lessons history` for worktree-local verified lessons.
+  Retain original evidence in the Git common directory after cleanup without granting current
+  verification, recall authority or promotion. Deduplicate snapshots and reject corrupt or foreign history.
+- Start the loop worker only after its PID and every lease owner are durably registered, fixing
+  intermittent startup failures without weakening the checkpoint owner check.
+
 ## loop-engine 0.15.1
 
 - Prioritize actual failures over zero-error ESLint warning summaries before truncating `FAIL:`
