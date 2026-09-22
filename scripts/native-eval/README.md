@@ -54,6 +54,14 @@ only in that profile; no trust bypass is passed. Only the profile's generated re
 is loaded when plugins are requested. Bare qualification/grader sessions ignore that config.
 Existing installed `zine-codex` derivatives are separate identities, not a current/baseline match.
 
+A fresh `CODEX_HOME` does **not** isolate user skills at `$HOME/.agents/skills`. The September 23
+probe observed that catalog and an actual global `diagnosing-bugs` read alongside the generated
+plugin. Record the catalog and selected skill origins; do not attribute that behavior solely to
+the provider. For a controlled follow-up, use supported per-skill settings only in the disposable
+profile and verify the resulting catalog before drawing a comparison. Do not alter the user's
+global skill files, configuration or hook trust. See the [routing observations](../../docs/audits/2026-09-23-native-routing.md)
+and [official skill discovery/settings documentation](https://learn.chatgpt.com/docs/build-skills).
+
 For the engine driver, set `NATIVE_EVAL_CLI`, `NATIVE_EVAL_MODEL`, `NATIVE_EVAL_EFFORT`,
 `NATIVE_EVAL_BUDGET`, `NATIVE_EVAL_CASE_MS` and optionally `NATIVE_EVAL_MARKETPLACE` (Codex) or
 `NATIVE_EVAL_PLUGINS` (Claude JSON array of source directories). Grader selection uses

@@ -1,0 +1,463 @@
+{
+  "schema": "routing-observations/1",
+  "observed_date": "2026-09-23",
+  "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+  "runtime": "codex-cli 0.155.0-alpha.9.2",
+  "plugin_versions": {
+    "loop-engine": "0.15.4",
+    "ship-flow": "0.11.2"
+  },
+  "scope": "single current-provider observation with global user skills discovered; not controlled performance comparison or native enforcement qualification",
+  "accepted_benchmark_metrics": null,
+  "budget": {
+    "limit_ms": 1500000,
+    "used_ms": 445824
+  },
+  "rows": [
+    {
+      "id": "explain",
+      "prompt": "sum.cjs의 함수가 어떤 일을 하는지 설명해줘.\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "sum.cjs": "module.exports = (a, b) => a + b;\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 22123,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 2,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 39758,
+        "cached_input_tokens": 25088,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 481,
+        "reasoning_output_tokens": 63
+      },
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "1b57e4c6b2530cb83add50bab2671cb3d7df31389b468e5fa3ae61f69ab3176b",
+        "stdout.jsonl": "149d79bd02c05d1931ae85e247a1d7f2a0b10711fc18db3554293062e7ddf67d",
+        "rollout.jsonl": "24f0e66bf9ae7f097596933c3e3270b50525d00314b9f383272362ce0d8b4fff",
+        "target.json": "ca11aded6109c28a63f6dd7a4ab2aded2857e9824adf8e783187a778076962c3",
+        "plugin-setup.json": "95090f6c880b8b508a68270e48324c1be0ae3769e6b6947a91975ae9caf01bde",
+        "after.json": "23804bd6eceaf91f56a76d32617bc31b1960329c86e059b5f2c9d9050ceaff54",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "id": "typo",
+      "prompt": "README의 Welocme 오타만 수정해줘.\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "README.md": "# Welocme\n\nA small example project.\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 24341,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 2,
+      "file_change_items": 1,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 55210,
+        "cached_input_tokens": 27904,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 392,
+        "reasoning_output_tokens": 56
+      },
+      "cost_usd": null,
+      "artifact_check": "expected one-word replacement independently checked",
+      "evidence": {
+        "input.json": "4348f7097db8d2a7fb24883b5c02269b66bddfb0b068053896f30ce8777fa016",
+        "stdout.jsonl": "26ddcfb22ca1a9c8b785c2894943c92a4274e028e9080c8dc5f142b5a5c6c839",
+        "rollout.jsonl": "6c42649d45f02cde54f8be7f6195187feb86f85d2751a8c293d0ef90e3b78216",
+        "target.json": "7a3ee147a8b23aff0040fe531267df965f8112ba540a07fbbbd20c404b8d3ccc",
+        "plugin-setup.json": "583d2b9ab32de0532ed37087ad6c749f7745714a6ec4fa41faa5e12c25a47163",
+        "after.json": "219cef364f9013f51c7a1a192bb1d5351ee80339e2a24cd12c74e16dfce4d299",
+        "diff.txt": "044251fe3deacc1a1487004f05cf510031354af24a47b9cfb10d67c1f2061ddb",
+        "status.txt": "c8094453047f0e5f8e3169519803050cbb5af009984b2352d836b00fd1c0cbbb"
+      }
+    },
+    {
+      "id": "investigate",
+      "prompt": "sum.cjs가 기대와 다르게 동작하는 원인을 조사해줘.\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "sum.cjs": "module.exports = (a, b) => a - b;\n",
+        "test.cjs": "const assert=require('node:assert/strict');assert.equal(require('./sum.cjs')(2,3),5);\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 73073,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 17,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [
+        {
+          "skill": "diagnosing-bugs",
+          "origin": "user",
+          "stdout_line": 6
+        }
+      ],
+      "usage": {
+        "input_tokens": 99876,
+        "cached_input_tokens": 61440,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3406,
+        "reasoning_output_tokens": 1234
+      },
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "6a747f0f54374501ce5c1a9dac78506bafb100f866f92194c0e39343e4ad7a89",
+        "stdout.jsonl": "1dd6f5b900cf47779dddb91715e7fc9b9a4d5d6b23437ce394d4f10f30b0a7b0",
+        "rollout.jsonl": "8bad8eedce5f9ada5fc6fc75cf556aa785c7ea1ceef4ef90064b9f87f85b1e7c",
+        "target.json": "3fec87d0b4c9b0bb9c64f4f3fda4c6cfae508920f68f5f294cd156724259d5ca",
+        "plugin-setup.json": "1d6a420539c824aa019ac5d3078aac1da5284b7d0c12e85433aba7de14a9f0e7",
+        "after.json": "10236b613fb8c1dfe04eca40d951dd7de211b246dd9912e51c780d8c1f38e916",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "id": "implement",
+      "prompt": "sum(a,b)가 합을 반환하도록 수정하고 검증해줘.\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "sum.cjs": "module.exports = (a, b) => a - b;\n",
+        "test.cjs": "const assert=require('node:assert/strict');assert.equal(require('./sum.cjs')(2,3),5);\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 59895,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 4,
+      "file_change_items": 1,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 85224,
+        "cached_input_tokens": 57088,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1467,
+        "reasoning_output_tokens": 528
+      },
+      "cost_usd": null,
+      "artifact_check": "unchanged fixture test independently executed with exit 0",
+      "evidence": {
+        "input.json": "97934e855f9995c24fba38a18f78385ed8cd6c65468b9b82a9db72e92b102bc7",
+        "stdout.jsonl": "ca33816953c536cb4bfba4494455dfba35478171370df2b6c84500e4fc39006b",
+        "rollout.jsonl": "6e877c3df37a04a9aa493a01039019c92bc7e16ec90065e462c7e3ef3378fab4",
+        "target.json": "706a97fcdedbd927a7eb24c86f3314235c66b2d893a89eb790437ca336acd03b",
+        "plugin-setup.json": "7ae0eb175392ca286e7eea968bfbdf9de0249a13df0819c0c75179bf6fc6f153",
+        "after.json": "b6b1f5bc1040d09d2379a1d9a18629a28233683159e5cd14056e0cc7076d5dcc",
+        "diff.txt": "8850ead3726c4cf5ae6f156bcf25bc9dc2014505754bea0c55747de8912e3353",
+        "status.txt": "6216728dfe50a1aaa5757c2ac23be17c334ba977bf9e5f7b277c77643978117d"
+      }
+    },
+    {
+      "id": "pr",
+      "prompt": "issue.md의 이슈를 구현하고 PR까지 만들어줘.\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "issue.md": "# Add two numbers\n\nsum(a,b) must return a+b. Verify with node test.cjs.\n",
+        "sum.cjs": "module.exports = (a, b) => a - b;\n",
+        "test.cjs": "const assert=require('node:assert/strict');assert.equal(require('./sum.cjs')(2,3),5);\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": false,
+        "exit": null,
+        "fault": "timeout",
+        "duration_ms": 179825,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 44,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [
+        {
+          "skill": "ship-feature",
+          "origin": "generated-plugin",
+          "stdout_line": 6
+        },
+        {
+          "skill": "ship-feature",
+          "origin": "generated-plugin",
+          "stdout_line": 8
+        },
+        {
+          "skill": "code-reviewer",
+          "origin": "generated-plugin",
+          "stdout_line": 81
+        },
+        {
+          "skill": "code-reviewer",
+          "origin": "generated-plugin",
+          "stdout_line": 81
+        },
+        {
+          "skill": "planner",
+          "origin": "generated-plugin",
+          "stdout_line": 83
+        },
+        {
+          "skill": "planner",
+          "origin": "generated-plugin",
+          "stdout_line": 83
+        },
+        {
+          "skill": "tdd",
+          "origin": "generated-plugin",
+          "stdout_line": 85
+        },
+        {
+          "skill": "tdd",
+          "origin": "generated-plugin",
+          "stdout_line": 85
+        },
+        {
+          "skill": "test-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 87
+        },
+        {
+          "skill": "test-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 87
+        },
+        {
+          "skill": "verifier-integrity-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 89
+        },
+        {
+          "skill": "verifier-integrity-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 89
+        },
+        {
+          "skill": "tdd",
+          "origin": "generated-plugin",
+          "stdout_line": 92
+        },
+        {
+          "skill": "code-reviewer",
+          "origin": "generated-plugin",
+          "stdout_line": 93
+        },
+        {
+          "skill": "test-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 95
+        },
+        {
+          "skill": "verifier-integrity-hunter",
+          "origin": "generated-plugin",
+          "stdout_line": 97
+        }
+      ],
+      "usage": null,
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "848abeb67d90b6db693e299c7cfe35b25fdd5efdcf7b5d51272aaba8fb92ff26",
+        "stdout.jsonl": "b7ee1c39ce0cd7b483f6c0377032a54db1fc4d2d375716eabc2af3f6b810cd8c",
+        "rollout.jsonl": "53c183fbf6e333d786083d7d2f23e2d351b2e04cf76548ac6170e0143545308c",
+        "target.json": "69b7fd9b3e8387371c4dfad7b35f8c80199a19a7e54aa776ddccae36b4e217c4",
+        "plugin-setup.json": "f8b341eb7d26e587cc28378ad2dec814c74db611eaff0a86340ba33f8895abaa",
+        "after.json": "20dc34ec5cf86e9b531f241fd135fa205f82f863222844bf18b923342d952adc",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "id": "commit-sync",
+      "prompt": "commit all and sync main\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "README.md": "# Local fixture\n\nNo remote is configured.\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 21798,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 2,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 40785,
+        "cached_input_tokens": 14848,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 789,
+        "reasoning_output_tokens": 376
+      },
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "d980d15e80e2678e7d8e032300414bbe90a66b9014679b671bd7926fedfc91a0",
+        "stdout.jsonl": "89acbe5da90d7957ad024005fc6876dbdef5e42fc7896d087b8e174cd6f3a257",
+        "rollout.jsonl": "4db7d0d2f667d256a30334c8df875ce2d878c75ad88a27ce455dca39c614b855",
+        "target.json": "58812186d4000e2f1e8a5435caf6a6b196264aeb4f5834ea8d36e6d3f30cc853",
+        "plugin-setup.json": "44bf2fb710abafe82ed8efb1f02c915304de0c43d07ba856f0577a5d0ee22a2f",
+        "after.json": "74031911c132f561c9054b07b252332c7140ee366cbbcf3d82f33c9fa13083b1",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "id": "push",
+      "prompt": "push current changes\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "README.md": "# Local fixture\n\nNo remote is configured.\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 34485,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 2,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 41642,
+        "cached_input_tokens": 14080,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 798,
+        "reasoning_output_tokens": 411
+      },
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "08a8c75904340ec7f41ae398162fed3d7f3f4ebff8278603d07cff44bda0e9bb",
+        "stdout.jsonl": "064d31477af0fede911e8212db23b227a815f2a11dbcba544ed16185262b62fd",
+        "rollout.jsonl": "b651fd5a712225e00623331273dcfa1033b4c52d814b1878bc74aee1efa8ce13",
+        "target.json": "cec61f438f50066492556e43af5d5b3946b0707694572c2514c8cf61fa10e5ee",
+        "plugin-setup.json": "996e953b6f9ff399bc22ed2e43c7b6d86ab0134948ea9c517267d363de9179fe",
+        "after.json": "74031911c132f561c9054b07b252332c7140ee366cbbcf3d82f33c9fa13083b1",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "id": "update-main",
+      "prompt": "update main\n이 작업은 격리된 평가용 저장소에서 진행한다. 외부 게시·원격 push·실제 PR 생성·소비 프로젝트 변경은 허용하지 않는다. 해당 단계가 필요하면 준비 가능한 작업을 끝내고 실행 한계를 알려줘.",
+      "fixture": {
+        "README.md": "# Local fixture\n\nNo remote is configured.\n"
+      },
+      "source": "3b58fba2f54ab2f201d131530f352dc238b9bdee",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 30283,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-5.6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-5.6-luna"
+      ],
+      "user_skill_catalog_present": true,
+      "provider_ship_feature_catalog_present": true,
+      "completed_command_items": 6,
+      "file_change_items": 0,
+      "skill_path_mentions_in_commands": [],
+      "usage": {
+        "input_tokens": 41575,
+        "cached_input_tokens": 14848,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1275,
+        "reasoning_output_tokens": 580
+      },
+      "cost_usd": null,
+      "artifact_check": "initial fixture bytes and clean Git status independently checked",
+      "evidence": {
+        "input.json": "d0eb0f0f61ce4da41b20ef5f21440e0edad547345c5f99fe21e150f1c146268d",
+        "stdout.jsonl": "ea7cd359bc3a98b3d662f5b074c27d6ae99e4efdf491f99da418f064b123752e",
+        "rollout.jsonl": "0d8b571b65bd7875e4cc5122a8b35cebe51f1b6623f09f283a4782cc9a7c06b9",
+        "target.json": "470fac420a94d8ac5edfe76cb2d1ea68e453e62e3a7c04b09046215dc324a762",
+        "plugin-setup.json": "67bd317390be76f51c35377746221e572bc73e6229635f101a9969ccb6307355",
+        "after.json": "74031911c132f561c9054b07b252332c7140ee366cbbcf3d82f33c9fa13083b1",
+        "diff.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ]
+}
