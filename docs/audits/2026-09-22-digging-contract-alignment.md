@@ -2,6 +2,8 @@
 
 기준: 2026-09-22 KST. [DS 재캡처 후 전체 검증 실패](2026-09-22-digging-baseline-refresh.md)의 후속이다. 소비 프로젝트의 기존 격리 worktree에서 수정했으며 provider의 runtime·설치판 변경은 아니다.
 
+**후속 결과:** [나머지 화면 검증과 보관함 클릭 복구](2026-09-22-digging-remaining-visual-validation.md)에서 canonical 11개를 최종 소스로 확인했다. 7 PASS / 4 FAIL이며 전체 명령은 DS receipt freshness에서 FAIL했다. 아래는 이 수정 당시의 증거다.
+
 ## 확인한 원인과 수정
 
 이전 보고서의 “제품 레이아웃과 승인 기준 중 무엇을 유지할지 확인”은 잠정 진단이었다. Git 이력과 최종 CSS cascade를 추적하니 **승인 변경이 아니라 토큰 이관 회귀**였다. `design/APPROVAL.md` 및 모바일 F08 disposition은 내비게이션 x/y/width와 hero y를 유지하도록 한다.

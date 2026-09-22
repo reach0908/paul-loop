@@ -2,7 +2,7 @@
 
 기준: 2026-09-22 KST. [장기 실행 진단](2026-09-22-long-run-diagnosis.md)의 소비 프로젝트 후속 작업이다.
 
-**최신 상태:** [계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md)에서 Home/Search의 CSS 회귀와 11개 visual producer의 구현 identity를 수정했고 Home/Search/Club focused runtime이 통과했다. 전체 runtime PASS는 아직 없다. [직전 DS 갱신·전체 실패](2026-09-22-digging-baseline-refresh.md)와 [그 이전 실행 결과](2026-09-22-digging-full-verification.json)는 보존한다.
+**최신 상태:** [나머지 화면 검증과 보관함 클릭 복구](2026-09-22-digging-remaining-visual-validation.md)에서 최종 소스의 canonical visual 11개는 7 PASS / 4 FAIL이었다. 전체 명령도 한 번 실행했으며 DS receipt freshness에서 FAIL했다. [계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md), [직전 DS 갱신·전체 실패](2026-09-22-digging-baseline-refresh.md), [그 이전 실행 결과](2026-09-22-digging-full-verification.json)는 보존한다.
 
 ## 변경과 현재 상태
 
