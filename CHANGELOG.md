@@ -5,6 +5,15 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.1
+
+- Prioritize actual failures over zero-error ESLint warning summaries before truncating `FAIL:`
+  output. Handle colored/task-prefixed warnings; retain warning-only fallback, original logs and
+  exit-based verdicts. Explicit warning-threshold failures remain failed gates in loop-fix.
+- Keep runtime/installer tests version-independent while retaining cache corruption checks.
+  Exclude explicit PASS prose from failure markers and unknown fraction summaries from counts.
+  Advisory SUMMARY counts remain a tail-window estimate, not a multi-suite total.
+
 ## ship-flow 0.11.2
 
 - Keep routine questions, local changes and Git operations out of the full delivery workflow.

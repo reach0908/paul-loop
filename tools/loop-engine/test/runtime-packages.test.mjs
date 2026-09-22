@@ -52,7 +52,7 @@ test('both generated runtimes are deterministic, internally versioned and packag
   writePackages(files, join(dir, 'one')); writePackages(again, join(dir, 'two'));
   writePackages(files, join(dir, 'one'), true);
   const provenance = json(join(dir, 'one/provenance.json'));
-  assert.equal(provenance.sourceVersions['loop-engine'], '0.15.0');
+  assert.equal(provenance.sourceVersions['loop-engine'], json(join(root, 'tools/loop-engine/.claude-plugin/plugin.json')).version);
   assert.ok(provenance.sourceHashes['skills-lock.json']);
   assert.equal(provenance.limitations.liveEndToEnd, 'not-verified');
   for (const runtime of ['claude', 'codex']) {

@@ -1,6 +1,6 @@
 # Runtime packaging and compatibility
 
-This source line declares loop-engine 0.15.0, ship-flow 0.11.2 and loop-memory 0.7.0.
+This source line declares loop-engine 0.15.1, ship-flow 0.11.2 and loop-memory 0.7.0.
 The common core runs shell/Node commands. Runtime adapters package that core for a host; they do
 not turn an instruction into a host capability. A successful schema check, generated artifact,
 agent-eval grade or doctor result is not installation, hook trust, approval, isolation or native E2E evidence.

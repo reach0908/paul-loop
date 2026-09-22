@@ -125,5 +125,17 @@ code=$?
 [ "$code" -eq 1 ] || fail "case7: expected exit 1 on budget, got $code"
 grep -q "done: BUDGET" .loop/history.log || fail "case7: infra-exempt retries must still honour --budget-sec"
 
+# An explicit lint warning threshold is a real failed gate, even with Docker cleanup noise.
+C="$WORK/c8"; mkdir -p "$C"; cd "$C" || fail "cd c8"
+cat > fake-verify.sh <<'EOF'
+#!/bin/sh
+echo "Error response from daemon: No such container: cleanup-noise"
+echo "ESLint found too many warnings (maximum: 0)."
+exit 1
+EOF
+"$LOOPFIX" --verify 'sh fake-verify.sh' --fix 'touch fixer-ran' --max-iter 2 >/dev/null 2>&1
+grep -q "iter(exempt)" .loop/history.log && fail "case8: lint threshold must not receive an infrastructure exemption"
+[ -e fixer-ran ] || fail "case8: lint threshold failure must reach the fixer"
+
 echo "PASS: infra failures are budget-exempt with their own retry cap, no fixer spawn, no lessons pollution"
 exit 0

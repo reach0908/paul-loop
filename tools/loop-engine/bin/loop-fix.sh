@@ -602,7 +602,7 @@ INFRA_RE='Cannot connect to the Docker daemon|Is the docker daemon running|Error
 # 인프라 판정의 2차 조건: 러너 실패 마커(verdict-run FAIL 추출과 동일 목록)가 LOG에 하나라도
 # 있으면 테스트가 실제로 돌아 실패한 것 — 인프라 서명이 곁가지 노이즈(정리용 docker rm 출력 등)
 # 여도 면제하지 않고 fixer에 넘긴다. 인프라 실패는 정의상 테스트가 아예 못 돈 경우가 대부분이다.
-RUNNER_FAIL_RE='(✕|✗|✖|✘|×|not ok|--- FAIL|FAILED|AssertionError|panic:)'
+RUNNER_FAIL_RE='(✕|✗|✖|✘|×|not ok|--- FAIL|FAILED|AssertionError|panic:|ESLint found too many warnings)'
 
 # ── BAC-626 ③: material-progress 이원 시계 (opt-in — 기본 0=off) ───────────────────────────
 # 이벤트 소스 = BAC-570 런 이벤트 원장(.loop/runs/<run-id>.jsonl, cwd 기준 — ledger-append.mjs가

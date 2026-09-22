@@ -114,7 +114,7 @@ if(args.join(' ')==='plugin marketplace list --json'){
  const entry={pluginId:args[2],name,marketplaceName:'paul-loop-codex',version:manifest.version,installed:true,enabled:true,
    source:{source:'local',path:source},marketplaceSource:{sourceType:'local',source:target}};
  if(name==='ship-flow'){
-  if(process.env.FAKE_FAIL==='post-cache')writeFileSync(join(home,'plugins/cache/paul-loop-codex/loop-engine/0.15.0/NOTICE'),'changed by later installation');
+  if(process.env.FAKE_FAIL==='post-cache')writeFileSync(join(home,'plugins/cache/paul-loop-codex/loop-engine',state.installed.find(p=>p.pluginId==='loop-engine@paul-loop-codex').version,'NOTICE'),'changed by later installation');
   if(process.env.FAKE_FAIL==='post-disabled')entry.enabled=false;
   if(process.env.FAKE_FAIL==='post-unknown')delete entry.enabled;
   if(process.env.FAKE_FAIL==='post-version')entry.version='9.9.9';
