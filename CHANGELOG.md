@@ -15,6 +15,8 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
   contracts. Preserve all required gates, reviewers and hard termination; retain producer-worktree
   evidence before cleanup when authorized lesson capture or reverification is still pending.
 - Correct the vendor fork description and local hashes. No engine or memory runtime contract changes.
+- Diagnose failed checks and stale evidence prerequisites before restarting full verification;
+  preserve long-running process identity, logs and exit results. Required gates remain unchanged.
 
 ## loop-engine 0.14.1
 

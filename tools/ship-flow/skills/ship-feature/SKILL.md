@@ -206,6 +206,8 @@ or inconsistent evidence stays unresolved; do not pick whichever result is green
 does not replace the block, state file, and ledger event.
 → **Gate:** `VERDICT: PASS` + whatever `DEEP_GATES:` step 1 identified (re-checked against the actual
 diff with `--from-git`). `VERDICT: FAIL` loops back autonomously.
+Use the shared contract's failure recovery: resolve the failing check and affected evidence inputs
+before another full run; a focused PASS never clears this gate.
 
 > If any `DEEP_GATES:` run against a shared local resource (e.g. a per-worktree docker database), don't
 > run more than one deep gate in this worktree at the same time — a second one recreating the same
