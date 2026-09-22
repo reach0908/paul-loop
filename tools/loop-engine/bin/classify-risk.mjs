@@ -42,7 +42,7 @@
 // `--no-gate` classifies only (0).
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -160,7 +160,13 @@ function resolveRulesPath() {
   if (opt.rulesPath) return opt.rulesPath
   if (process.env.CLASSIFY_RISK_RULES) return process.env.CLASSIFY_RISK_RULES
   const cwdDefault = join(process.cwd(), 'risk-rules.json')
-  return existsSync(cwdDefault) ? cwdDefault : null
+  try {
+    lstatSync(cwdDefault) // A dangling symlink is broken configuration, not absent optional rules.
+    return cwdDefault
+  } catch (e) {
+    if (e.code === 'ENOENT') return null
+    usage(`cannot inspect rules file (${cwdDefault}): ${String(e.message || e).split('\n')[0]}`)
+  }
 }
 
 function loadRulesFile() {

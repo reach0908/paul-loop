@@ -10,8 +10,8 @@
 // Single decision point: this hook doesn't decide AUTO vs REQUIRE itself. Its own scope filter answers
 // only "is this command a merge/deploy surface" (gh pr merge · a repo's deploy-script path · its
 // deploy/redeploy package-manager aliases). Once a surface is confirmed, it mirrors
-// bin/classify-risk.mjs --command (-> gate.mjs) and mirrors its exit code (10 = REQUIRE -> ask/deny, 0
-// = AUTO -> defer). The classification table itself is never duplicated in this hook — change the
+// bin/classify-risk.mjs --command --stage merge|deploy (-> gate.mjs) and mirrors its exit code
+// (10 = REQUIRE -> ask/deny, 0 = AUTO -> defer). The classification table is never duplicated — change the
 // rules in one place (classify-risk) and every consumer follows.
 //
 // deny vs ask: default is "ask" — REQUIRE means human approval, not prohibition. A consuming repo's
@@ -57,7 +57,6 @@ const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 // no cross-package plugin-install resolution needed (contrast: when this hook lived in a consuming
 // repo, it had to go find an installed plugin first).
 const pluginRoot = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');
-const RULES = join(root, 'risk-rules.json');
 const CLASSIFY = join(pluginRoot, 'bin', 'classify-risk.mjs');
 
 function allow() {
@@ -88,7 +87,7 @@ if (payload?.tool_name !== 'Bash') allow();
 const cmd = payload?.tool_input?.command;
 if (typeof cmd !== 'string' || !cmd) allow();
 
-// A scope filter — a subset of classify-risk's COMMAND_RULES (cmd-irreversible). Not a full mirror:
+// A scope filter for classify-risk's human-only stages. Not a full command classifier:
 // classify-risk fails closed (REQUIRE) on no match, so routing every Bash call through it would make
 // even `ls` REQUIRE. So this narrows to "command surfaces that are always REQUIRE" (gh pr merge · a
 // deploy-script path · the repo's canonical deploy aliases) and defers the actual verdict to
@@ -118,13 +117,13 @@ function detectsRiskySurface(command) {
         // gh [global flags] pr [flags] merge — skip flags between subcommands with the same helper.
         const i = firstSubcommand(toks, 1, GH_VALUE_FLAGS);
         if (toks[i] === 'pr' && toks[firstSubcommand(toks, i + 1, GH_VALUE_FLAGS)] === 'merge')
-          return 'command';
+          return 'merge';
       }
       if (toks[0] === 'pnpm') {
         const i = firstSubcommand(toks, 1, PNPM_VALUE_FLAGS);
         const sub =
           toks[i] === 'run' ? toks[firstSubcommand(toks, i + 1, PNPM_VALUE_FLAGS)] : toks[i];
-        if (sub === 'deploy' || sub === 'redeploy') return 'command';
+        if (sub === 'deploy' || sub === 'redeploy') return 'deploy';
       }
     }
     return null;
@@ -152,11 +151,8 @@ if (!existsSync(CLASSIFY)) {
 try {
   // E2BIG guard: a very large command (e.g. a huge heredoc) can fail to spawn at all under the OS argv
   // limit (measured: a 1.3MB command -> E2BIG -> a classification failure that would deny). The
-  // judgment input is capped to the first 100KB. A truncated match can only lose rule matches, which
-  // classify-risk's own unmatched-input fail-closed (REQUIRE) absorbs — the verdict can't flip toward
-  // AUTO from truncation (safe direction, monotone), and the surface itself was already confirmed
-  // against the full string. Kept as "ask" rather than "deny" to preserve REQUIRE's meaning (human
-  // approval, not prohibition).
+  // judgment input is capped to the first 100KB. The human-only stage keeps REQUIRE even if truncation
+  // loses command-rule matches; the surface was already confirmed against the full string.
   const cmdForJudge = cmd.length > 100_000 ? cmd.slice(0, 100_000) : cmd;
   const res = spawnSync(
     process.execPath,
@@ -165,16 +161,16 @@ try {
       '--json',
       '--command',
       cmdForJudge,
-      '--rules',
-      RULES,
+      '--stage',
+      surface === 'merge' ? 'merge' : 'deploy',
       '--action',
       'PreToolUse(Bash) gate',
     ],
-    { encoding: 'utf8', timeout: 10_000 },
+    // Reuse the classifier's env override / optional project rules lookup, anchored to this project.
+    { encoding: 'utf8', timeout: 10_000, cwd: root },
   );
   // Mirror AUTO — this hook never gets independently stricter than classify-risk (single decision
-  // point). Defensive branch — the current scope filter is a strict subset of cmd-irreversible, so
-  // status 0 isn't reachable today; kept for when the filter widens.
+  // point). Defensive branch — human-only stages prevent status 0 today; kept for a wider filter.
   if (res.status === 0) allow();
   // DENY_AND_LOG — the middle tier: default-deny + evidence attached to the PR. Defensive branch — this
   // hook's filtered surfaces (merge/deploy) are all rev=none today, so gate always returns 10 here; kept
@@ -197,7 +193,8 @@ try {
     block(
       'deny',
       `[gate-risky-commands] classify-risk failed to produce a verdict (${cause}) — the surface is ` +
-        `already confirmed, so this fails closed. Repair the loop-engine plugin install (${CLASSIFY}) and retry.`,
+        'already confirmed, so this fails closed. Check CLASSIFY_RISK_RULES or the project risk-rules.json ' +
+        `for missing or invalid configuration, and check the classifier runtime (${CLASSIFY}) before retrying.`,
       'risky-cmd-classify-failed',
     );
   }
