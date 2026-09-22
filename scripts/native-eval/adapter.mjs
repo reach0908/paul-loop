@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, chmodSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, chmodSync, realpathSync, statSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
-import { resolve, join, dirname } from 'node:path';
+import { resolve, join, dirname, basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { bounded, caseBound, DEFAULT_CASE_MS } from './process.mjs';
@@ -18,6 +18,21 @@ export function jsonl(text) {
   return parsed.events;
 }
 function files(root) { return existsSync(root) ? readdirSync(root, { withFileTypes: true }).flatMap(e => e.isDirectory() ? files(join(root, e.name)) : e.isFile() ? [join(root, e.name)] : []) : []; }
+export function codexUserSkills(root = join(homedir(), '.agents/skills')) {
+  const paths = new Set(), visited = new Set();
+  function visit(path) {
+    let real;
+    try { real = realpathSync(path); } catch (e) { if (e.code === 'ENOENT') return; throw e; }
+    if (statSync(real).isDirectory()) {
+      if (visited.has(real)) return;
+      visited.add(real);
+      for (const name of readdirSync(real).sort()) visit(join(real, name));
+    } else if (basename(path) === 'SKILL.md' && statSync(real).isFile()) paths.add(real);
+  }
+  visit(root);
+  const disabled_paths = [...paths].sort();
+  return { root, disabled_paths, config: 'skills.config=[' + disabled_paths.map(path => `{path=${JSON.stringify(path)},enabled=false}`).join(',') + ']' };
+}
 export function safeEnv() {
   const names = new Set(['PATH','HOME','TMPDIR','TMP','TEMP','SHELL','USER','LOGNAME','LANG','LC_ALL','LC_CTYPE','TERM','SystemRoot']);
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => names.has(k)));
@@ -37,7 +52,7 @@ export async function runNative({ runtime, executable = runtime, workspace, outp
   caseBound(timeoutMs);
   const profile = mkdtempSync(join(tmpdir(), 'paul-native-profile-'));
   chmodSync(profile, 0o700);
-  const env = safeEnv(); let args, setup = null;
+  const env = safeEnv(); let args, setup = null, userSkills = null;
   try {
     if (runtime === 'codex') {
       const source = join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'auth.json');
@@ -47,6 +62,8 @@ export async function runNative({ runtime, executable = runtime, workspace, outp
       if (codexProfileSetup) setup = await codexProfileSetup({ profile, env });
       args = ['exec', ...(codexProfileSetup ? [] : ['--ignore-user-config']), '--sandbox', readonly ? 'read-only' : 'workspace-write', '--config', 'approval_policy="never"', '--config', 'features.memories=false', '--config', 'features.apps=false', '--config', 'web_search="disabled"', '--color', 'never', '--json', '-C', workspace];
       if (!codexProfileSetup) args.push('--config', 'features.plugins=false');
+      userSkills = codexUserSkills();
+      args.push('--config', userSkills.config);
       // Only the fresh profile's CLI-created registration config is loaded with plugins.
       if (model) args.push('--model', model);
       if (effort) args.push('--config', `model_reasoning_effort=${JSON.stringify(effort)}`);
@@ -70,6 +87,7 @@ export async function runNative({ runtime, executable = runtime, workspace, outp
     const completion_observed = runtime === 'codex' ? events.some(e => e.type === 'turn.completed') && !events.some(e => e.type === 'turn.failed') : events.some(e => e.type === 'result' && !e.is_error && e.subtype === 'success');
     const completed=completion_observed&&parse_errors.length===0;
     const metadata = { runtime, workspace, trial_id: trialId, configured_model: model || null, configured_effort: effort || null, observed_models: models, model_status: models.length === 1 && completed ? 'observed' : 'incomplete', command: [executable, ...args], exit: result.exit, fault: result.fault || (parse_errors.length ? 'malformed_trace' : null), trace_status: completed ? 'complete' : 'incomplete', parse_errors, completion_observed, duration_ms: result.duration_ms, configured_timeout_ms: result.configured_timeout_ms, effective_timeout_ms: result.effective_timeout_ms, cleanup: result.cleanup, completed, setup, cost_usd: null, evidence: ['stdout.jsonl', 'stderr.txt', 'rollout.jsonl'].map(path => ({ path, sha256: sha(readFileSync(join(output, path))) })) };
+    if (userSkills) metadata.user_skills = { root: userSkills.root, disabled_paths: userSkills.disabled_paths, verification: 'requested exclusions; inspect native catalog before comparison' };
     save(join(output, 'target.json'), metadata); return metadata;
   } finally { rmSync(profile, { recursive: true, force: true }); }
 }
