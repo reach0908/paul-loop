@@ -54,6 +54,13 @@ only in that profile; no trust bypass is passed. Only the profile's generated re
 is loaded when plugins are requested. Bare qualification/grader sessions ignore that config.
 Existing installed `zine-codex` derivatives are separate identities, not a current/baseline match.
 
+For a read-only role observation, use the existing `runNative({readonly:true, ...})` lane so the
+parent also starts read-only. Do not assume a custom role's `sandbox_mode` narrows a writable parent:
+compare the child's actual permissions and role identity against the reviewed template before
+accepting its result. A BLOCK for mismatched/missing permissions leaves task checks incomplete.
+This read-only lane does not qualify writable implementation or publisher behavior, and the
+adapter's `completed` field records trace completion, not permission enforcement or task PASS.
+
 A fresh `CODEX_HOME` does **not** isolate user skills at `$HOME/.agents/skills`. The September 23
 probe observed that catalog and an actual global `diagnosing-bugs` read alongside the generated
 plugin. The common Codex adapter now enumerates user `SKILL.md` files (including symlink targets)
