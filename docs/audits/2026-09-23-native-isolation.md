@@ -47,6 +47,8 @@ hook trust를 넓히지 않았다. 따라서 이전 단회 결과와 조건이 �
 부모는 할당된 worktree를 재사용하고 classifier의 경로 기반 track 조회까지 성공했다.
 이전의 플러그인 경로 해석·없는 비교 ref·branch 생성 실패는 이번 trace에서 관측되지 않았다.
 native `spawn_agent`와 부모-자식 session metadata로 **독립 planner 실행 자체는 확인**했다.
+자식의 `agent_role`은 null이며, 검토된 project-agent template 적용과 역할별 read-only
+sandbox 보장은 확인하지 않았다. 새 세션 생성만으로 역할 계약 전체가 충족된 것은 아니다.
 그러나 자식은 계획의 각 기준을 PASS로 평가하고도, 자신에게 추가 subagent 도구가 없다는
 이유로 전체 BLOCK을 반환했다. 부모는 그 결과를 받은 뒤 제한 시간 안에 끝나지 않았다.
 
@@ -55,7 +57,7 @@ native `spawn_agent`와 부모-자식 session metadata로 **독립 planner 실�
 [`generate-runtime-packages.mjs`](../../scripts/generate-runtime-packages.mjs)의 **호출자와 이미
 분리된 실행자 지침 구분**이다. 관측된 BLOCK 이유와 일치하는 가설이며 반복 실험으로 확정한
 일반 원인은 아니다. 독립 리뷰를 제거하거나 BLOCK을 PASS로 바꾸는 방향은 허용하지 않는다.
-부모-자식 카탈로그 차이도 함께 원인을 확인해야 한다.
+부모-자식 카탈로그 차이와 실제 역할 template 적용도 함께 확인해야 한다.
 
 ## 실행·증거 경계
 
