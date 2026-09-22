@@ -91,3 +91,5 @@ AST에서 발견한 `write_stdin` 호출 위치는 1,139개이며, 그중 1,007�
 - 초기 점검은 시스템 `python3`의 Xcode license 문제와 이전 생성물의 drift로 실패했다. 임시 PATH에서 Python 3.13을 사용하고 이 worktree의 생성물을 재생성한 뒤 확인했다. 설치 캐시·소비 프로젝트 설정은 변경하지 않았다.
 
 다음 우선 작업은 **Digging의 검증 진입점·증거 생성 순서·실제 wrapper 호출을 한 경로로 정렬하는 소비 프로젝트 수정**이다. 작은 작업의 publisher 오진입 조사와 기억 효용 실험보다, 이번에 확인한 반복 경로를 먼저 고치는 편이 근거가 강하다. 새 DB나 memory 활성화로 해결할 문제라는 증거는 없다.
+
+후속: [소비 프로젝트의 진입점 수정과 실제 wrapper 확인](2026-09-22-digging-verification-entrypoint.md)을 로컬 commit으로 저장했다. workspace 8 PASS와 전체 명령의 preflight 실패 전달을 확인했으며, disposable 환경의 full runtime·PR·merge는 남아 있다.
