@@ -2,7 +2,7 @@
 
 기준: 2026-09-22 KST. [장기 실행 진단](2026-09-22-long-run-diagnosis.md)의 소비 프로젝트 후속 작업이다.
 
-**최신 상태:** [나머지 화면 검증과 보관함 클릭 복구](2026-09-22-digging-remaining-visual-validation.md)에서 최종 소스의 canonical visual 11개는 7 PASS / 4 FAIL이었다. 전체 명령도 한 번 실행했으며 DS receipt freshness에서 FAIL했다. [계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md), [직전 DS 갱신·전체 실패](2026-09-22-digging-baseline-refresh.md), [그 이전 실행 결과](2026-09-22-digging-full-verification.json)는 보존한다.
+**최신 상태:** [프로필·작성 관측 수정](2026-09-22-digging-profile-authoring-diagnosis.md)에서 관련 21 tests와 두 정식 runtime이 통과했다. 새 전체 검증은 실행하지 않았다. [직전 나머지 화면 검증](2026-09-22-digging-remaining-visual-validation.md)의 7 PASS / 4 FAIL 및 DS freshness에서 중단된 전체 FAIL은 이전 소스 기록이다. [계약 추적과 fingerprint 정렬](2026-09-22-digging-contract-alignment.md), [DS 갱신·전체 실패](2026-09-22-digging-baseline-refresh.md), [그 이전 실행 결과](2026-09-22-digging-full-verification.json)는 보존한다.
 
 ## 변경과 현재 상태
 

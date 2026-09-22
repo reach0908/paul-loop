@@ -2,6 +2,8 @@
 
 기준: 2026-09-22 KST. [내비게이션·fingerprint 정렬](2026-09-22-digging-contract-alignment.md)의 후속 검증이다. 원격을 갱신해 `origin/main=5d5f39efdf24fc091f79620689fa4f210d56a4da`가 그대로임을 확인했다. 작업은 기존 `codex/verify-evidence-entrypoint` worktree에서 수행했다.
 
+**최신 후속:** [프로필·작성 관측 수정](2026-09-22-digging-profile-authoring-diagnosis.md)에서 두 verifier의 잘못된 가정을 수정했고 관련 21 tests 및 두 정식 runtime이 PASS했다. 아래 7 PASS / 4 FAIL과 전체 FAIL은 이전 소스의 실행 기록이며, 새 전체 검증 결과는 아직 없다.
+
 ## 수정한 실제 오류
 
 보관함 runtime이 `D-LIBRARY-RETURN-DESTINATION`에서 실패했다. 390/1440의 x/y/width마다 같은 책임 검사를 보고해 총 6 records였으며, 원인은 좌표가 아니라 **저장 카드의 전체 클릭 링크와 식별자 누락**이었다. `LibraryContentCard`에 `data-entry-id`, `data-content-id`, `card-hit-target[data-card-destination]`가 없었다. 기존 CSS에는 해당 링크와 제거 버튼의 클릭 영역을 나누는 규칙이 남아 있었다.
