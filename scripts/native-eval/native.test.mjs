@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync, symlinkSync, mkdirSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bounded, caseBound, MAX_CASE_MS, DEFAULT_CASE_MS } from './process.mjs';
-import { sha, runtimeModels, safeEnv } from './adapter.mjs';
+import { sha, runtimeModels, safeEnv, codexUserSkills } from './adapter.mjs';
 import { validateReport } from './validate.mjs';
 import { parseGrade, createChallenge } from './grader.mjs';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -92,6 +92,26 @@ function mockTransport(t,source){
   const root=mkdtempSync(join(tmpdir(),'native-mock-transport-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
   const cli=join(root,'native-cli');writeFileSync(cli,'#!'+process.execPath+'\n'+source,{mode:0o700});return {root,cli};
 }
+test('Codex user skill exclusions follow aliases and cycles without changing files', t => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'native-user-skills-')));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const skills = join(root, 'skills'), linked = join(root, 'external "skill"');
+  mkdirSync(join(skills, 'nested/local'), { recursive: true }); mkdirSync(linked);
+  const local = join(skills, 'nested/local/SKILL.md'), external = join(linked, 'SKILL.md');
+  writeFileSync(local, 'local bytes'); writeFileSync(external, 'linked bytes');
+  symlinkSync(external, join(skills, 'a-readme.md'));
+  symlinkSync(linked, join(skills, 'alias')); symlinkSync(skills, join(skills, 'cycle'));
+  symlinkSync(join(root, 'missing'), join(skills, 'dangling'));
+  writeFileSync(join(skills, 'not-a-skill.md'), 'ignored');
+  const result = codexUserSkills(skills);
+  assert.deepEqual(result.disabled_paths, [external, local].sort());
+  assert.ok(result.config.includes(`{path=${JSON.stringify(external)},enabled=false}`));
+  assert.equal(readFileSync(local, 'utf8'), 'local bytes');
+  assert.equal(readFileSync(external, 'utf8'), 'linked bytes');
+  assert.deepEqual(codexUserSkills(join(root, 'absent')).disabled_paths, []);
+  symlinkSync('invalid-cycle', join(skills, 'invalid-cycle'));
+  assert.throws(() => codexUserSkills(skills), { code: 'ELOOP' });
+});
 test('Raman F3: malformed native JSONL preserves diagnostics and cannot complete',async t=>{
   const {root,cli}=mockTransport(t,`console.log(JSON.stringify({type:'system',subtype:'init',model:'mock-model'}));console.log('{BROKEN_HOST_EVENT');console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,result:'ok'}));`);
   const {runNative}=await import('./adapter.mjs'),r=await runNative({runtime:'claude',executable:cli,workspace:root,output:join(root,'out'),prompt:'synthetic test',timeoutMs:2000});

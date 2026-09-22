@@ -56,10 +56,18 @@ Existing installed `zine-codex` derivatives are separate identities, not a curre
 
 A fresh `CODEX_HOME` does **not** isolate user skills at `$HOME/.agents/skills`. The September 23
 probe observed that catalog and an actual global `diagnosing-bugs` read alongside the generated
-plugin. Record the catalog and selected skill origins; do not attribute that behavior solely to
-the provider. For a controlled follow-up, use supported per-skill settings only in the disposable
-profile and verify the resulting catalog before drawing a comparison. Do not alter the user's
-global skill files, configuration or hook trust. See the [routing observations](../../docs/audits/2026-09-23-native-routing.md)
+plugin. The common Codex adapter now enumerates user `SKILL.md` files (including symlink targets)
+and passes `skills.config` exclusions through command arguments for that invocation only, including
+bare grader/reviewer sessions. It records the requested paths in private `target.json`; this is not
+an assertion that a host applied them. Missing user skill roots are empty, traversal errors stop
+the invocation. User files/configuration and hook trust are unchanged.
+
+Verify the actual native catalog and selected origins before comparing runs. System, admin and
+fixture repository skills are not excluded by this user-skill control, and native tools can still
+read user skill files explicitly. Keep fixture inputs and these remaining sources controlled;
+catalog exclusion is not a filesystem security boundary or hook qualification.
+See the [routing observations](../../docs/audits/2026-09-23-native-routing.md),
+[isolation follow-up](../../docs/audits/2026-09-23-native-isolation.md)
 and [official skill discovery/settings documentation](https://learn.chatgpt.com/docs/build-skills).
 
 For the engine driver, set `NATIVE_EVAL_CLI`, `NATIVE_EVAL_MODEL`, `NATIVE_EVAL_EFFORT`,
