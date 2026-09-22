@@ -5,6 +5,12 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.4
+
+- Let the risky-command hook use optional project risk rules and the classifier's environment
+  override. Missing optional rules no longer cause a classification error; broken configuration
+  still fails closed. Pass merge/deploy stages so permissive rules cannot waive human approval.
+
 ## loop-engine 0.15.3
 
 - Permit the exact local `git merge --ff-only origin/<current-branch>` sync after confirming the
