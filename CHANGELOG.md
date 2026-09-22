@@ -5,6 +5,12 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.3
+
+- Permit the exact local `git merge --ff-only origin/<current-branch>` sync after confirming the
+  execution repository, unambiguous fetched ref and ancestry. Keep other protected-branch landing
+  attempts denied, and recommend fetch and sync as separate commands.
+
 ## loop-engine 0.15.2
 
 - Add explicit `lessons preserve` / `lessons history` for worktree-local verified lessons.

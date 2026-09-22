@@ -7,8 +7,8 @@
 // Detects `git merge`/`git pull` targeting a protected branch (see loadProtectedBranches below —
 // direction inference is cwd-based: effective branch is computed from the actual exec cwd, checkout
 // targets are tracked, and chaining/subshells/redirection keep the same structural-trust gate) and
-// denies **unconditionally**, pointing at `gh pr merge`. This hook does not enforce marker freshness,
-// --ff-only, or a specific source ref — that's the server's job now.
+// denies direct landing, pointing at the PR flow. A narrow exception permits local ff-only sync
+// from the fetched origin ref of the current branch; it grants no remote merge or publication authority.
 //
 // Command parsing is two layers: the shared tokenizer (command-tokenizer.mjs — segment splitting,
 // heredoc stripping, env/word-prefix traversal) handles env prefixes (FOO=bar); this file's
@@ -35,10 +35,9 @@
 // not merges and are out of scope — a local hook can't cover directly moving a protected branch;
 // server-side branch protection is the backstop there (this hook only watches merge/pull).
 //
-// Syncing a local protected branch to match origin is not blocked by this hook (and shouldn't be) —
-// the safe path is a ff-only merge from `origin/<branch>` (already-reviewed, already-merged server
-// truth), which doesn't route through this PreToolUse hook's merge-gate concern and doesn't bypass the
-// merge gate either.
+// Sync uses two separate calls: `git fetch origin`, then `git merge --ff-only origin/<branch>`.
+// The exception checks the local remote-tracking ref, not live server state or PR approval. It is
+// still a local guardrail: same-UID ref/config mutation and concurrent changes are not a trust boundary.
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
@@ -220,8 +219,8 @@ try {
 // A non-merge/pull command (neither the strict nor the loose check found one) passes quickly.
 if (!gitSegs.some((g) => g.sub === 'merge' || g.sub === 'pull') && !looseHasMergeOrPull) allow();
 
-// Never let a single merge/pull targeting a protected branch through. An unexpected error in direction
-// inference itself fails closed (deny in the catch below).
+// Direct landing on a protected branch is denied; only the exact confirmed local sync form may pass.
+// An unexpected error in direction inference itself fails closed (deny in the catch below).
 try {
   if (!isSimpleSingleGitCmd) {
     deny(
@@ -272,7 +271,8 @@ try {
       return null;
     }
   };
-  let effective = sameRepo ? headAt(execCwd) : null;
+  const execBranch = sameRepo ? headAt(execCwd) : null;
+  let effective = execBranch;
   if (effective === null) effective = headAt(root); // execCwd undecidable / a different repo -> fall back to root (the fail-closed default)
 
   for (const seg of gitSegs) {
@@ -292,14 +292,26 @@ try {
     )
       continue;
 
-    // -- Direct landing attempt on a protected branch -> redirect to the PR flow (a guardrail, not a
-    // boundary). No marker freshness / --ff-only / source-ref enforcement here — the actual
-    // enforcement is the server's (branch protection + required status checks on the release branch).
+    const source = `origin/${effective}`, remoteRef = `refs/remotes/${source}`;
+    if (typeof payload.cwd === 'string' && payload.cwd && execBranch === effective &&
+        !/[`$"'<>|;&(){}\\\r\n]/.test(cmd) &&
+        tokenize(cmd).join(' ') === `git merge --ff-only ${source}`) {
+      try {
+        // Reject missing refs and local branches/tags shadowing origin/<branch>. No local-only
+        // commits may be carried along: HEAD must be an ancestor of the fetched remote-tracking ref.
+        if (git(['rev-parse', '--symbolic-full-name', source], execCwd) === remoteRef) {
+          git(['merge-base', '--is-ancestor', 'HEAD', remoteRef], execCwd);
+          allow();
+        }
+      } catch { /* an unconfirmed fast-forward remains a denied landing */ }
+    }
+
+    // Remote merge approval and server-side protections remain separate from this local sync.
     deny(
       `Can't land directly on ${effective} via local git ${seg.sub} — use the PR flow: push the branch ` +
         `and merge with \`gh pr merge\` (or the GitHub UI). If you only want your local ${effective} to ` +
-        `match origin/${effective}, use \`git fetch origin && git merge --ff-only origin/${effective}\` ` +
-        `(a safe ff-only sync) instead.`,
+        `match origin/${effective}, run \`git fetch origin\` and then \`git merge --ff-only origin/${effective}\` ` +
+        `as separate tool calls in this directory. This requires an unambiguous origin ref and no local-only commits.`,
       `${effective}-direct-landing`,
     );
   }
