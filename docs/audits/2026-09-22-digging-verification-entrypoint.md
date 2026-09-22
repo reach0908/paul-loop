@@ -2,6 +2,8 @@
 
 기준: 2026-09-22 KST. [장기 실행 진단](2026-09-22-long-run-diagnosis.md)의 소비 프로젝트 후속 작업이다.
 
+**최신 상태:** 아래 후속 실행에서 disposable DB preflight는 통과했으나 전체 명령은 DS 기준 자료 불일치로 **FAIL / exit 1**이었다. 전체 runtime PASS는 아직 없다. [구조화된 실행 결과](2026-09-22-digging-full-verification.json)에 실행 시간·실패 항목·원본 해시를 저장했다.
+
 ## 변경과 현재 상태
 
 Digging의 `verifyCommand`를 `pnpm verify`에서 **`pnpm verify:evidence`**로 바꾸고 기존 설치 문서에 실제 wrapper 호출을 명시했다. 기존 evidence producer와 launcher를 재사용했다. 검증 코드·fingerprint 범위·CI·의존성 lockfile은 변경하지 않았다.
@@ -23,7 +25,7 @@ node tools/paul-loop.mjs exec bin/verdict-run.sh -- pnpm verify:evidence
 
 generation 변수는 정식 producer가 소유한다. 전체 검사와 다른 runtime/visual receipt의 freshness 조건은 그대로다. 이번 수정은 root receipt의 생성 순서를 정렬하며, 다른 receipt의 재생성이나 모든 직접 shell 호출의 자동 강제를 해결하지 않는다.
 
-## 실제 확인한 증거
+## 진입점 수정 당시 확인한 증거
 
 | 검사 | 관측 | 해석 범위 |
 |---|---|---|
@@ -50,4 +52,29 @@ generation 변수는 정식 producer가 소유한다. 전체 검사와 다른 ru
 | `configured-command.log` | `0feef7c6db64ef84817e3a032f3c9bf5e9ddda322e055a9617b370cf3c2d11a6` |
 | `root-verify-failed.txt` | `0ff52bb423d46e59890b38c6d04391de12a538bcebafe7de8d23c7458b2fcccb` |
 
-남은 작업은 검토 가능한 disposable DB/runtime 입력을 준비한 환경에서 필요한 receipt의 freshness를 먼저 확인하고 이 **같은 최종 명령을 한 번 완주**하는 것이다. full 검증·독립 리뷰·PR·merge는 미완료다. 기존 CI의 raw `pnpm verify`와 앱 host launcher 호환성은 별도 미정렬 경로로 남아 있다. 이번 결과만으로 14시간 문제 해결, 실행 속도 향상, loop-memory 효용을 주장하지 않는다.
+이 시점의 후속 작업은 disposable 환경에서 같은 최종 명령을 실행하는 것이었다. 아래에 실제 실행 결과를 추가했다. 기존 CI의 raw `pnpm verify`와 앱 host launcher 호환성은 별도 미정렬 경로로 남아 있다. 이번 결과만으로 14시간 문제 해결, 실행 속도 향상, loop-memory 효용을 주장하지 않는다.
+
+## 전체 검증 후속 실행
+
+사용자의 검증 요청에 따라 같은 consumer commit `893aa49`에서 실행했다. 원격을 다시 확인했으며 `origin/main`은 `5d5f39e`로 동일했다.
+
+1. 다른 서비스의 DB를 사용하지 않고 PostgreSQL 17 임시 cluster 두 개를 생성했다. `127.0.0.1:55439`에는 `ddt_cutover`와 새 build DB, `55440`에는 mobile 검증용 DB 두 개를 준비했다.
+2. 기존 read-only preflight가 exact target·role·server port·live rows 0을 확인해 **PASS**했다. build DB도 읽기 전용 transaction에서 새 DB·role·port·빈 public schema를 확인한 후 기존 migration을 실행했다.
+3. 먼저 기존 `test:runtime-verifier-freshness`를 실행해 **9개 중 6 PASS / 3 FAIL**을 확인했다. 뒤에 연결한 legacy/club 개별 검사는 앞 명령 실패로 실행되지 않았다.
+4. 실제 설정 경로의 최종 판정을 확인하기 위해 `verdict-run.sh -- pnpm verify:evidence`를 **한 번** 실행했다. **138,358 ms**, `ROOT_VERIFY_FAIL`, `VERDICT: FAIL`, exit **1**로 종료했다. 같은 실패로 다시 실행하지 않았다.
+
+| 실패 | 확인한 차이 |
+|---|---|
+| legacy fixture가 현재 origin/main에 연결되는지 | fixture `042730c…` / 현재 main `5d5f39e…` |
+| fixture를 캡처한 시점과 현재 production source가 같은지 | captured 248 files / current 251 files; digest 불일치 |
+| runtime PASS receipt가 현재 구현을 가리키는지 | `ds-04` receipt의 baseline이 이전 `042730c…`로 남음 |
+
+해당 fixture·검증 코드·DS receipt는 `origin/main`과 바이트 차이가 없다. 이번 변경 두 파일은 구현 fingerprint에 포함되지 않으며, 실행 시작·종료도 `008a2538…01ee117`, 765 files로 동일했다. 따라서 이 실행에서 확인한 기준 자료 불일치는 진입점 수정으로 새로 바뀐 제품 코드에서 발생한 것이 아니다. 이전 기준 이후 product source에는 offline shell·route·style 등 실제 변경이 있으므로 SHA만 새 값으로 덮어써서 해결할 수 없다.
+
+별도 읽기 전용 목록에서는 DS receipt 두 개, canonical visual receipt 11개, integration receipt 한 개 모두 현재 구현 digest를 포함하지 않았다. **14개 각각의 browser 실행이 실패했다는 의미는 아니다.** 전체 명령은 design-system의 freshness 검사에서 중단됐으며, 뒤의 Next production build·PostgreSQL contract·browser runtime·prototype full·mobile final·최종 route matrix에는 도달하지 못했다.
+
+ESLint는 errors 0 / warnings 14로 종료했다. wrapper가 `✖ 14 problems`를 `FAIL:` 후보로 추출했지만 이것은 이번 종료 원인이 아니다. wrapper의 summary `passed=6 failed=3`도 마지막 freshness suite의 수이며 전체 누적 검사 수가 아니다.
+
+원본은 소비 worktree `.loop/full-verification/`에 보존했다. `result.json`, `root-verify.log`, `root-verify-failed.txt`, `verdict.txt`, preflight·migration·focused 검사 로그와 receipt 목록이 있다. 기존 tracked root receipt는 실패 원본을 따로 보존한 뒤 원래 바이트로 돌렸으며, 기존 PASS 표식을 이번 실행의 증거로 사용하지 않는다. 검증을 위해 만든 두 PostgreSQL cluster는 종료했고 두 포트의 listener가 없음을 확인했다. 임시 데이터 디렉터리는 보존했다.
+
+**다음 필요한 수정:** 현재 제품 변경을 검토해 legacy/club 기준 자료를 정식 producer로 다시 관찰·캡처하고, 필요한 visual/integration receipt를 함께 갱신한 후 같은 전체 명령을 재실행한다. 기준 snapshot·verifier·테스트를 이번 검증에서 변경하거나 완화하지 않았다. full PASS·독립 리뷰·PR·merge는 여전히 미완료다.

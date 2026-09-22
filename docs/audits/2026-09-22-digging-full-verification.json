@@ -1,0 +1,234 @@
+{
+  "date": "2026-09-22",
+  "consumerRoot": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto",
+  "consumerHead": "893aa495638114ae37ccb59d90ff2e4aaa6e9bca",
+  "originMain": "5d5f39efdf24fc091f79620689fa4f210d56a4da",
+  "command": "node tools/paul-loop.mjs exec bin/verdict-run.sh --log .loop/full-verification/root-verify.log -- pnpm verify:evidence",
+  "fullCommandAttempts": 1,
+  "startedAt": "2026-09-22T05:51:13Z",
+  "finishedAt": "2026-09-22T05:53:32Z",
+  "durationMs": 138358,
+  "exit": 1,
+  "verdict": "FAIL",
+  "rootReceipt": "ROOT_VERIFY_FAIL",
+  "preflight": "PASS",
+  "buildDatabaseMigrations": "PASS",
+  "sourceFingerprint": {
+    "digest": "008a2538ba936d0962f992b5f6d3b6f30408c46c94e357183be7ddf3401ee117",
+    "files": 765,
+    "stable": true
+  },
+  "failedSuite": {
+    "name": "test:runtime-verifier-freshness",
+    "tests": 9,
+    "pass": 6,
+    "fail": 3,
+    "failedTests": [
+      "legacy card contraction fixture is bound to the current origin/main",
+      "legacy card contraction fixture captured baseline matches current production source",
+      "runtime PASS receipts are read back and bound to the observed implementation"
+    ]
+  },
+  "capturedBaseline": "042730c57b3d7d498f9fa1cc6f8726a02b10f73e",
+  "lint": {
+    "errors": 0,
+    "warnings": 14,
+    "isFailureCause": false
+  },
+  "notReached": [
+    "Next production build",
+    "PostgreSQL contract suite",
+    "browser runtime suites",
+    "prototype full gate",
+    "mobile final runtime",
+    "final route visual matrix"
+  ],
+  "databaseCleanup": {
+    "ownedClustersStopped": true,
+    "ports": [
+      55439,
+      55440
+    ],
+    "temporaryDataRetained": true
+  },
+  "receiptInventory": {
+    "current": {
+      "algorithm": "sha256",
+      "digest": "008a2538ba936d0962f992b5f6d3b6f30408c46c94e357183be7ddf3401ee117",
+      "files": 765
+    },
+    "originMain": "5d5f39efdf24fc091f79620689fa4f210d56a4da",
+    "records": [
+      {
+        "name": "ds-04-legacy-card-contraction-runtime.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "LEGACY_CARD_CONTRACTION_RUNTIME_PASS routes=6 viewports=3 overflow=0 writes=0",
+        "baseline": "042730c57b3d7d498f9fa1cc6f8726a02b10f73e",
+        "fingerprintLines": []
+      },
+      {
+        "name": "ds-02-club-card-runtime.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "CLUB_CARD_RUNTIME_PASS routes=2 viewports=3 overflow=0",
+        "baseline": "042730c57b3d7d498f9fa1cc6f8726a02b10f73e",
+        "fingerprintLines": []
+      },
+      {
+        "name": "12-pixel-perfect-baseline.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_BASELINE_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "13-pixel-perfect-search.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_SEARCH_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "14-pixel-perfect-library.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_LIBRARY_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "15-pixel-perfect-club.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_CLUB_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "16-pixel-perfect-link-addition.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_LINK_ADDITION_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "17-pixel-perfect-profile-view.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_PROFILE_VIEW_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "18-pixel-perfect-profile-settings.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_PROFILE_SETTINGS_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "19-pixel-perfect-link-detail.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_LINK_DETAIL_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "20-pixel-perfect-story-collection-detail.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_STORY_COLLECTION_DETAIL_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "21-pixel-perfect-authoring.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_AUTHORING_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "22-pixel-perfect-club-proposal.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "PIXEL_CLUB_PROPOSAL_RUNTIME_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "IMPLEMENTATION_FINGERPRINT sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      },
+      {
+        "name": "08-integration.txt",
+        "currentImplementationDigestPresent": false,
+        "lastLine": "EVIDENCE_STATUS_SEPARATION_PASS",
+        "baseline": null,
+        "fingerprintLines": [
+          "WORKTREE_FINGERPRINT_END sha256:68545406f1c436cca8761e5653e16b9a7e6271a8460096a9169008d76d58038c files=563"
+        ]
+      }
+    ]
+  },
+  "originMainParity": {
+    "base": "5d5f39efdf24fc091f79620689fa4f210d56a4da",
+    "files": [
+      "package.json",
+      "scripts/verify-root-evidence.mjs",
+      "web/tests/unit/runtime-verifier-freshness.test.mjs",
+      "web/tests/fixtures/legacy-card-contraction-runtime.json",
+      "web/scripts/verify-legacy-card-contraction-runtime.mjs",
+      "web/scripts/verify-club-card-runtime.mjs",
+      "delivery/implementation/evidence/ds-04-legacy-card-contraction-runtime.txt",
+      "delivery/implementation/evidence/ds-02-club-card-runtime.txt"
+    ],
+    "identical": true
+  },
+  "evidence": [
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/preflight.log",
+      "sha256": "600833f8f5d81c4201b94d3f25697e472339a09853153e14e2d608a347a2510a"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/build-db-migrate.log",
+      "sha256": "2e7034c2f7210c21f70681f59dd38cf7a018d2dba686e0d31c87494d014a5974"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/freshness.log",
+      "sha256": "dac7851122b19aab84bae94f7ef0a6287c567703d31856ab65a58aac775cce74"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/root-verify.log",
+      "sha256": "31456ccce8f1d2c5362b36f2b6fac7d7e4ed408c861e207949bdbf6796be90c8"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/root-verify-failed.txt",
+      "sha256": "60c6197509afb237248a8ccfb7e5a8de9b18507ba74ac964a2b82d97c6d1c0ab"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/verdict.txt",
+      "sha256": "838abe01b224bc44b7911e49e8afd2c1366227d63cb1b0d595d1f382b48ed4bf"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/receipt-inventory.json",
+      "sha256": "6a378748528376b520ad47c6606ea0d97137fc38e1a2d85f8da1db80608ad533"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/full-verification/origin-main-parity.json",
+      "sha256": "c1786716c10d275511d1cfeecc13b9d47c41063a7ebadc143cb243d13ce279df"
+    }
+  ]
+}
