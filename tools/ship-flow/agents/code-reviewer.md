@@ -81,7 +81,9 @@ sees non-completion — which historically got skipped over as "no findings". Ch
 - **General CLAUDE.md compliance:** package-boundary imports (no deep-path imports bypassing barrel
   exports), no speculative abstractions/config for single-use code, matches existing style in touched
   files, no dead code left behind by the change, no unrelated "drive-by" edits outside the diff's
-  stated scope.
+  stated scope. Check for an existing helper, stdlib or native feature before proposing new machinery;
+  name the concrete simpler replacement and any behavior it must preserve. Line count alone is not
+  a finding. Keep necessary regression tests and trust-boundary checks.
 
 ## Output
 

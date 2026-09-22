@@ -18,8 +18,59 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const generated = buildPackages(root);
-const shipVersion = JSON.parse(generated.get(manifest).content.toString('utf8')).version;
-const nextShipVersion = shipVersion.replace(/\d+$/, patch => String(Number(patch) + 1));
+const sourceShipVersion = JSON.parse(generated.get(manifest).content).version;
+const nextShipVersion = sourceShipVersion.replace(/\d+$/, patch => String(Number(patch) + 1));
+
+test('Codex packages retain manual skill policy and keep publisher out of implicit discovery', () => {
+  let manualSkills = 0;
+  for (const [path, { content }] of generated) {
+    if (!path.startsWith('claude/') || !path.endsWith('/SKILL.md') || !/^disable-model-invocation: true\s*$/m.test(content.toString())) continue;
+    const native = path.replace(/^claude\//, 'codex/').replace(/SKILL.md$/, 'agents/openai.yaml');
+    assert.match(generated.get(native)?.content.toString() || '', /^policy:\n  allow_implicit_invocation: false\n$/);
+    manualSkills++;
+  }
+  assert.ok(manualSkills > 0, 'manual source skills must be exercised');
+  const prefix = 'codex/plugins/ship-flow/';
+  assert.equal(generated.get(prefix + 'skills/publisher/agents/openai.yaml')?.content.toString(), 'policy:\n  allow_implicit_invocation: false\n');
+  assert.ok(generated.has(prefix + 'skills/publisher/SKILL.md'), 'explicit handoff remains available');
+  assert.match(generated.get(prefix + 'agent-templates/publisher.toml').content.toString(), /sandbox_mode = "workspace-write"/);
+  assert.equal(generated.has(prefix + 'skills/ship-feature/agents/openai.yaml'), false, 'delivery remains discoverable');
+  assert.deepEqual(generated.get(prefix + 'skills/diagnosing-bugs/agents/openai.yaml'), generated.get('claude/plugins/ship-flow/skills/diagnosing-bugs/agents/openai.yaml'));
+});
+
+test('manual policy conversion preserves UI metadata and rejects a competing policy source', t => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'paul-loop manual policy ')));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  for (const path of Object.keys(JSON.parse(generated.get('provenance.json').content).sourceHashes)) {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    cpSync(join(root, path), join(dir, path));
+  }
+  for (const args of [['init', '-q'], ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'fixture']]) {
+    const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  const path = 'tools/ship-flow/skills/ask-paul/agents/openai.yaml';
+  mkdirSync(dirname(join(dir, path)), { recursive: true });
+  const ui = 'interface:\n  display_name: "Ask Paul"\n';
+  writeFileSync(join(dir, path), ui);
+  assert.equal(buildPackages(dir).get('codex/plugins/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), ui + '\npolicy:\n  allow_implicit_invocation: false\n');
+  const skillPath = join(dir, 'tools/ship-flow/skills/ask-paul/SKILL.md'), skill = readFileSync(skillPath, 'utf8');
+  for (const flag of ['disable-model-invocation: true # explicit only', '"disable-model-invocation": true', "'disable-model-invocation': true"]) {
+    writeFileSync(skillPath, skill.replace('disable-model-invocation: true', flag));
+    const converted = buildPackages(dir);
+    assert.match(converted.get('codex/plugins/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), /allow_implicit_invocation: false/);
+    assert.doesNotMatch(converted.get('codex/plugins/ship-flow/skills/ask-paul/SKILL.md').content.toString(), /disable-model-invocation/);
+  }
+  for (const flag of ['disable-model-invocation: &manual true', 'disable-model-invocation: true\ndisable-model-invocation: false']) {
+    writeFileSync(skillPath, skill.replace('disable-model-invocation: true', flag));
+    assert.throws(() => buildPackages(dir), /unsupported invocation policy|duplicate invocation policy/);
+  }
+  writeFileSync(skillPath, skill);
+  for (const metadata of [ui + 'policy:\n  allow_implicit_invocation: true\n', ui + '"policy":\n  allow_implicit_invocation: true\n', '  policy:\n    allow_implicit_invocation: true\n', '{"policy":{"allow_implicit_invocation":true}}\n']) {
+    writeFileSync(join(dir, path), metadata);
+    assert.throws(() => buildPackages(dir), /explicit-invocation policy requires UI-only block metadata/);
+  }
+});
 
 // An executable fake at the real PATH/CLI seam, using the official 0.146.0 JSON shapes.
 // It never reads the user's home/configuration and fails on any unapproved command.
@@ -63,7 +114,7 @@ if(args.join(' ')==='plugin marketplace list --json'){
  const entry={pluginId:args[2],name,marketplaceName:'paul-loop-codex',version:manifest.version,installed:true,enabled:true,
    source:{source:'local',path:source},marketplaceSource:{sourceType:'local',source:target}};
  if(name==='ship-flow'){
-  if(process.env.FAKE_FAIL==='post-cache')writeFileSync(join(home,'plugins/cache/paul-loop-codex/loop-engine/0.15.0/NOTICE'),'changed by later installation');
+  if(process.env.FAKE_FAIL==='post-cache')writeFileSync(join(home,'plugins/cache/paul-loop-codex/loop-engine',state.installed.find(p=>p.pluginId==='loop-engine@paul-loop-codex').version,'NOTICE'),'changed by later installation');
   if(process.env.FAKE_FAIL==='post-disabled')entry.enabled=false;
   if(process.env.FAKE_FAIL==='post-unknown')delete entry.enabled;
   if(process.env.FAKE_FAIL==='post-version')entry.version='9.9.9';
@@ -279,7 +330,7 @@ for (const [name, change, pattern] of blockedActivations) test(`${name} preserve
   assert.deepEqual(snapshot(statePath), activationBefore);
   assert.deepEqual(f.calls().slice(calls).map(c => c.args), [['plugin', 'marketplace', 'list', '--json'], ['plugin', 'list', '--json']]);
   assert.ok(!readdirSync(f.temp).some(p => /\.stage-|\.backup-|\.lock$/.test(p)));
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, shipVersion);
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, sourceShipVersion);
 });
 
 test('disabled core blocks an already-current apply without reinstalling or changing activation', t => {
@@ -414,7 +465,7 @@ test('a concurrent edit during CLI preflight is preserved and blocks publication
   const calls = f.calls().length;
   bad(f.invoke(['--apply'], { FAKE_FAIL: 'mutate-target' }), /Hash\/mode mismatch/);
   assert.equal(readFileSync(join(f.target, 'plugins/loop-engine/NOTICE'), 'utf8'), 'concurrent local edit');
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, shipVersion);
+  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, sourceShipVersion);
   assert.equal(f.calls().length, calls + 2);
 });
 

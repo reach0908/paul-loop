@@ -218,11 +218,11 @@ passed=""; failed=""; skipped=""
 _scan="$(tail -n 60 "$LOG" 2>/dev/null)"
 
 # jest / vitest:  "Tests: 1 failed, 4 passed, 1 skipped, 6 total"
-_line="$(printf '%s\n' "$_scan" | grep -iE 'Tests?:' | tail -n 1)"
+_line="$(printf '%s\n' "$_scan" | grep -iE '(^|[[:space:]])Tests?:' | tail -n 1)"
 if [ -n "$_line" ]; then
-  _f="$(printf '%s' "$_line" | grep -oiE '[0-9]+ failed'  | grep -oE '[0-9]+' | tail -n1)"
-  _p="$(printf '%s' "$_line" | grep -oiE '[0-9]+ passed'  | grep -oE '[0-9]+' | tail -n1)"
-  _s="$(printf '%s' "$_line" | grep -oiE '[0-9]+ skipped' | grep -oE '[0-9]+' | tail -n1)"
+  _f="$(printf '%s' "$_line" | grep -oiE '(^|[[:space:],:])[0-9]+ failed'  | grep -oE '[0-9]+' | tail -n1)"
+  _p="$(printf '%s' "$_line" | grep -oiE '(^|[[:space:],:])[0-9]+ passed'  | grep -oE '[0-9]+' | tail -n1)"
+  _s="$(printf '%s' "$_line" | grep -oiE '(^|[[:space:],:])[0-9]+ skipped' | grep -oE '[0-9]+' | tail -n1)"
   [ -n "$_f" ] && failed="$_f"; [ -n "$_p" ] && passed="$_p"; [ -n "$_s" ] && skipped="$_s"
 fi
 
@@ -236,7 +236,7 @@ fi
 
 # pytest:  "1 failed, 4 passed in 0.12s"
 if [ -z "$passed$failed" ]; then
-  _line="$(printf '%s\n' "$_scan" | grep -oiE '[0-9]+ (failed|passed|skipped)([, ]|$)' | tr '\n' ' ')"
+  _line="$(printf '%s\n' "$_scan" | grep -oiE '(^|[[:space:],])[0-9]+ (failed|passed|skipped)([, ]|$)' | tr '\n' ' ')"
   if [ -n "$_line" ]; then
     _f="$(printf '%s' "$_line" | grep -oiE '[0-9]+ failed'  | grep -oE '[0-9]+' | tail -n1)"
     _p="$(printf '%s' "$_line" | grep -oiE '[0-9]+ passed'  | grep -oE '[0-9]+' | tail -n1)"
@@ -253,7 +253,21 @@ if [ "$code" -eq 0 ]; then verdict="PASS"; else verdict="FAIL"; fi
 # is deliberately excluded because it mostly matches stack frames.
 fails=""
 if [ "$verdict" = "FAIL" ]; then
-  fails="$(grep -nE '(✕|✗|✖|✘|×|not ok|--- FAIL|FAILED|AssertionError|panic:)' "$LOG" 2>/dev/null \
+  # Warning-only lint summaries are fallback context, not the cause when a real failure follows.
+  fails="$(awk '
+    /(✕|✗|✖|✘|×|not ok|--- FAIL|FAILED|AssertionError|panic:|ESLint found too many warnings)/ {
+      plain = $0
+      gsub(/\033\[[0-9;]*m/, "", plain)
+      if (plain ~ /^[[:space:]]*PASS:/) next
+      if (plain ~ /^[[:space:]]*([[:alnum:]@_.\/-]+:[[:space:]]*)*✖[[:space:]]+[0-9]+ problems? \(0 errors?, [0-9]+ warnings?\)[[:space:]]*$/) {
+        if (!warning) warning = NR ":" $0
+        next
+      }
+      print NR ":" $0
+      found = 1
+    }
+    END { if (!found && warning) print warning }
+  ' "$LOG" 2>/dev/null \
     | sed -e 's/[[:space:]]\{2,\}/ /g' \
     | cut -c1-200 \
     | awk '!seen[$0]++' \

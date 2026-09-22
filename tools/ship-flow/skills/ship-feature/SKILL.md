@@ -1,11 +1,11 @@
 ---
 name: ship-feature
-description: This plugin's autonomous-by-default feature delivery sequence and single entrypoint — isolate a worktree, plan, TDD, runtime-verify, self-review, open the PR and STOP for the human to merge, then prepare a harness-improvement PR only when that follow-up is authorized. Risk gating is decided by a deterministic classifier, not the agent's own scoring. Use when the user delegates a task, feature, bug, or tracked issue to take from plan to an open PR (plan → tdd → runtime-verify → review → PR → improve), or asks to "ship"/"deliver"/"land" a feature.
+description: End-to-end feature delivery when the user asks to take a feature, bug or tracked issue from plan to an open PR, or to ship/deliver/land a feature. Isolate, plan, build, verify, review and open the PR; stop for human merge. Research, local edits and routine Git synchronization use their own bounded procedure. Post-merge improvements require authorized scope.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
 
-# ship-feature — this plugin's single entrypoint (autonomous, human only where the gate calls for it)
+# ship-feature — delivery from plan to PR
 
 > **Output language.** Read `outputLanguage` (a BCP-47 tag, e.g. `ko`) from
 > `.claude/ship-flow.config.json` and write **every human-facing prose artifact** — reports, summaries,
@@ -18,6 +18,11 @@ merged PR to a harness-improvement PR** only within the caller's requested scope
 between genuine approval boundaries. Each
 step's *content* belongs to the skill/agent it delegates to — this skill fixes only the **order, the
 gates, and where a human steps in**.
+
+Use this sequence for delegated delivery through PR creation. Questions, research, a bounded local
+fix, or routine commit/push/main synchronization do not need this sequence or its publisher. Use the
+host's repository procedure and the checks required by that change. Explicit invocation still ends
+at the user's requested artifact or verified local patch when that is the authorized endpoint.
 
 Bundled references (read at the point each is needed): [RISK-GATE.md](RISK-GATE.md) ·
 [AC-CONTRACTS.md](AC-CONTRACTS.md) · [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md).
@@ -60,79 +65,32 @@ error is not a code failure or a valid gate verdict.
 
 ## Execution mode — autonomous by default
 
-Record the requested endpoint and allowed actions first. Read/draft requests end with their artifact,
-not implementation or publication. For delivery authorized through PR creation, run step 0 → PR
-without unnecessary stops, using these human boundaries:
+Record the requested endpoint and allowed actions using [AUTHORIZATION.md](../AUTHORIZATION.md).
+For delivery through PR creation, continue through steps 0–5. Read/draft requests end at their
+artifact; local implementation requests end at the verified patch. Stop for the human merge
+decision, a REQUIRE action lacking matching approval, or a blocking decision/environment problem
+that cannot be resolved within scope. Release/deploy is a separate request.
 
-Implementation approval continues across necessary source, plan and test edits within that scope.
-Refresh affected evidence as the working head changes; do not re-ask implementation approval per edit.
-Artifact/head binding governs the reviewed merge/publish/deploy/send action when that boundary is
-reached, or another action explicitly approved against an artifact.
-
-1. **The merge/deploy boundary** — it opens a `feature/* → integrationBranch` (or the trunk-based
-   equivalent) PR and **stops**. Landing on a shared branch is `reversibility=none`, so a human reviews
-   and decides the merge — the agent never approves its own code onto a shared branch. A later exact
-   merge instruction uses `ship-flow:hotfix` or the repo's release procedure. **Release
-   (`integrationBranch → releaseBranch`) is out of this skill's scope** (see step 5).
-2. **Any step where the risk gate returns REQUIRE** — see [Risk gate](#risk-gate--the-rules-classify-not-the-agent).
-   Before the action, check inherited approval for that exact action. If absent, prepare its
-   reviewable result and wait for approval. Do not request existing matching approval again.
-3. **Genuinely stuck, ambiguous, or unable to self-recover** — only when the agent can't resolve a gate
-   on its own or a real judgment call is needed.
-
-Ordinary check failures loop back within scope. Invocation/environment failures remain unresolved
-until the real verifier runs. Missing or contradictory evidence is never PASS.
-
-**Qualify every question before asking it.** Those three are the *only* sanctioned stops, and this skill
-drifts into asking far past them — design questions the agent could already answer, put to a human who
-answers "go with your recommendation". Before interrupting, apply this test:
-
-> **Is this authorized, can I state a clear recommendation, and is the decision reversible?** If all
-> are yes, **take the
-> decision, don't ask** — and record it, one line per decision (what was chosen, the alternative, why),
-> in a **`Decisions taken`** section of the PR body, where the human reviews it at the merge boundary
-> that already exists.
-
-Ask only when missing information or authorization blocks the next action: no defensible recommendation (a real product/priority call
-the agent has no basis for), or an irreversible consequence — already covered by points 1 and 2.
-"This feels like it deserves a check-in" is not a qualifying reason; a `Decisions taken` line is.
+Reuse implementation approval across source, plan and test edits. Refresh affected evidence;
+artifact binding applies to reviewed merge/publish/deploy/send actions, not every reversible edit.
+For an authorized reversible choice with a defensible recommendation, decide and record one line
+(choice, alternative, reason) under `Decisions taken` in the PR body. Ask only for missing information
+or authority that changes the next action. Check failures loop back; missing or contradictory evidence
+is never PASS.
 
 ## Invariants (skipping these breaks the contract — non-negotiable)
 
-- **Worktree isolation first.** Reuse an isolated worktree explicitly assigned by the user. Otherwise,
-  inspect the actual checkout and base; never assume or change the main checkout's HEAD. Before
-  the first edit when a new isolated worktree is needed:
-  `git fetch origin` → `git worktree add -b <branch> <sibling-path-outside-repo> origin/<base>`. **Don't
-  base a new worktree on a local branch** — the server is the source of truth.
-- **Reward-hack guard — if this repo has one, it's always armed, structurally.** Where loop-engine@paul-loop
-  (or an equivalent) provides a reward-hack guard hook on working branches, it arms by branch condition
-  automatically — this skill never turns it on or off, and there's nothing to disarm before handing off
-  to a human. If a legitimate edit to a protected file (test/config/verifier files) gets denied, open a
-  reasoned window per that guard's convention, make the edit, close the window, and record why in the
-  PR body.
-- **This repo's verify command is the one automatic gate.** A `feature/* → integrationBranch` PR often
-  doesn't trigger CI (a common cost-control pattern — check `ciSkipOnIntegrationPR` in the config); if
-  so, nothing catches a skipped local gate before the change lands. If this repo also gates its
-  harness/consumer wiring separately (e.g. a `verify:loop`-style script), that has to be green too
-  whenever harness-consumer files were touched — step 6 especially.
-- **Verify (runtime) means observing the running app**, not re-running the verify command — that already
-  happened in step 2. Step 3 asks "did the app actually get built/started and exercised at the changed
-  surface," not "did the test suite pass again."
-- **A human approves each merge.** This delivery run ends at its verified publish outcome and the
-  human merge boundary. CI/AFK cannot supply approval. No local `git merge`/`git pull` toward
-  a shared branch, no direct push — a merge guardrail hook and/or branch protection will block it anyway.
-- **The agent doesn't self-score risk.** Classification comes from a deterministic rule set first; agent
-  input can only push it **up**, never down. Self-grading turns the gate into decoration.
-- **Harness improvements land as PRs only.** Authorized CLAUDE.md / `.claude/**` edits happen in an
-  isolated worktree with guards and verification, never as direct commits to a shared branch.
-  Step 6 prepares accepted lessons as a **separate PR** only when that follow-up is authorized.
-- **Issues live in this repo's tracker.** Use whatever `trackerName` says; don't fall back to ad-hoc
-  GitHub issues if a real tracker is configured.
-- **Verification results are quoted, not paraphrased.** Preserve the single canonical verdict and
-  redact secrets before sharing without altering its outcome. Paste actual output (or the LOG file) verbatim
-  for test runs, gate verdicts and review findings, the same way step 5 pastes the risk-verdict block
-  into the PR body. A hand-summarized paraphrase can silently launder a partial/failing result into an
-  apparent pass; the raw output is the evidence, not a description of it.
+- **Worktree isolation first:** use step 0; never change the main checkout's HEAD.
+- **Reward-hack guard:** keep branch-armed protection. For a legitimate protected-file edit, open
+  a reasoned window by the guard's convention, close it afterward, and record why. Never own its sentinel.
+- **Required gates:** run the repo's verify command and affected deep/harness-consumer gates even
+  when integration PRs skip CI. Runtime observation in step 3 is separate from repeating the suite.
+- **Human merge:** CI/AFK/reviews cannot authorize merge, release or deploy. No direct shared-branch
+  commits/pushes or local merge/pull toward it. Harness improvements use a separate authorized PR.
+- **Deterministic risk:** the classifier routes work; agent input may only raise its result.
+- **Tracker:** use the configured tracker; do not invent a second issue system.
+- **Evidence:** retain actual verdict/review output or LOG artifacts, redact secrets without changing
+  outcomes, and quote the canonical gate block in the PR. A prose summary cannot replace evidence.
 
 ## Risk gate — the rules classify, not the agent
 
@@ -196,6 +154,11 @@ code. For a material open decision, call `ship-flow:grill-with-docs` in **caller
 bounded question and allowed documentation. Return to this flow when it resolves; no implementation
 before the finished plan is checked. Use an available planning agent or plan here.
 
+Keep the plan proportional: reuse the issue's settled requirements, name the affected seam and
+checks, and avoid a new PRD/ADR/interview for an already clear change. Do not add speculative
+configurability or a second implementation of an existing helper. A compact plan still gets the
+planner and AC checks below.
+
 **Scope guard.** Grilling routinely surfaces adjacent work that *should* happen. That is not licence to
 grow this run: record adjacent work as a follow-up proposal; file a separate tracked issue only when
 that publication is authorized (blocked-by links where applicable). **This run continues on the original issue at
@@ -248,6 +211,8 @@ or inconsistent evidence stays unresolved; do not pick whichever result is green
 does not replace the block, state file, and ledger event.
 → **Gate:** `VERDICT: PASS` + whatever `DEEP_GATES:` step 1 identified (re-checked against the actual
 diff with `--from-git`). `VERDICT: FAIL` loops back autonomously.
+Use the shared contract's failure recovery: resolve the failing check and affected evidence inputs
+before another full run; a focused PASS never clears this gate.
 
 > If any `DEEP_GATES:` run against a shared local resource (e.g. a per-worktree docker database), don't
 > run more than one deep gate in this worktree at the same time — a second one recreating the same
@@ -305,45 +270,25 @@ point: by now the context is dominated by this English skill body, and runs that
 language through step 4 report the PR in English here. Pasted evidence (verdict block, gate output,
 command names, branch name) stays verbatim — only your own prose is translated.
 
-**This session does not run the `git push`, PR-open, or tracked-issue comment itself** (ADR-0003, issue
-#15). Hand off to this plugin's `ship-flow:publisher` agent, and make the handoff **file-based, never a
-Bash heredoc**:
+**This session does not run push, PR-open or tracker-comment commands itself** (ADR-0003). Read
+[PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md) now and hand the completed material to
+`ship-flow:publisher`: fresh `mktemp -d`, literal files written with the Write tool for title/body/
+comment and identifiers, authorization record, exact repository/worktree/head/base/destination,
+gate evidence, ordered commands and their dependencies. Use `--body-file`; never compose payloads
+with a Bash heredoc. The publisher executes only the supplied authorized actions and returns the
+PR URL plus each command's exit code; it does not fetch context or compose content.
 
-1. `mktemp -d` — a fresh directory, never a predictable fixed path.
-2. **Write the PR title, PR body, and tracked-issue comment text with the Write tool**, each to its own
-   file in that directory.
-3. Give `ship-flow:publisher` the authorization record, exact worktree/repository, head/base,
-   destination, gate evidence, command dependencies, and file paths plus the commands — `git push -u origin
-   <branch>`, `gh pr create` (or this repo's tracker-appropriate equivalent) with `--title` from the
-   title file and `--body-file` pointed at the body file, and the tracked-issue comment command with
-   `--body-file` pointed at the comment file.
+Inspect each required action's result. Repair failures within scope without repeating successful
+posts; a PR URL with a failed required comment is partial. **Hard termination:** report actual outcomes in
+`outputLanguage` and end the run at the requested endpoint. No next issue, worktree, PR or post-merge
+improvement without that scope. Per-PR merge approval and uncertain-outcome recovery follow
+[AUTHORIZATION.md](../AUTHORIZATION.md); changed reviewed content/head/base needs matching approval
+for that merge, while ongoing implementation remains authorized.
 
-Never assemble these values with a Bash heredoc (`VAR=$(cat <<'EOF' … EOF)`) — a quoted delimiter does
-**not** stop the heredoc ending early on untrusted content, and everything after that line is read back
-as real shell commands. [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md) has the full reasoning and the safe
-pattern; `agents/publisher.md`'s "File-based execution" has it from the executing side. `ship-flow:publisher`
-only executes what it's handed — it never reads repository files on its own initiative, fetches
-content, or writes its own PR/comment text — and reports back the PR URL and each command's exit code.
-Check the publisher's status for every required action; repair failures within scope without
-duplicating successful posts. **Stop here** only after the requested publication is complete or a
-specific remaining blocker is reported — a human decides the merge. If this PR doesn't trigger CI, the PR body is the only
-verification record a human sees, so make sure step 2's gate results are in it.
-
-**Hard termination — the run ends at the requested, verified outcome.** A PR URL alone is insufficient
-if a required publish action failed or remains unknown. Once the authorized work is complete, this
-session does **not**, absent a human instruction naming the new work:
-create another worktree · create another branch · create or claim another tracked issue · open another
-PR · start implementing anything else. Step 6 runs only if included in the existing authorization.
-Report the PR URL and each required action's actual outcome in `outputLanguage`, identifiers verbatim.
-
-**Merge approval is per-PR and never inferred.** It names this PR, reviewed head/base, destination,
-and allowed operation, never a future PR or a bypass. A failed command does not automatically consume
-approval: inspect remote state first. Never repeat an applied merge. A confirmed no-effect failure
-may be retried with unchanged scope/head/base and valid gates; uncertain outcomes stay blocked.
-Changed content or target needs approval for this affected merge; a protection bypass needs its own
-authorization. Neither revokes ongoing implementation approval for necessary edits within scope.
-
-→ **After an approved merge, if closeout was authorized:** clean up the worktree/branch (remove any dedicated deep-gate resources
+→ **After an approved merge, if closeout was authorized:** preserve any evidence needed for authorized
+lesson capture before deleting its producer worktree. Verified lesson receipts are bound to that
+checkout; copying them to the canonical checkout does not preserve verification. If capture or
+reverification is still needed, defer that worktree's removal and report it. Then clean up the worktree/branch (remove any dedicated deep-gate resources
 first, confirm no stash leftovers) + update the tracked issue (status, merge SHA) → **step 6**.
 Release (`integrationBranch → releaseBranch`) is a separate decision — `hotfix`, or this repo's own
 release procedure.

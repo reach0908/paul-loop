@@ -83,6 +83,17 @@ RIGHT (vertical):
 
 ## Workflow
 
+### Minimum implementation
+
+Trace the behavior and every caller of the boundary you will change before choosing a fix.
+Check existing helpers first, then stdlib, native platform features and installed dependencies.
+Add only what the current acceptance criteria require; fix a shared root cause once rather than
+patching each caller. Prefer readable code over a forced one-liner. Preserve trust-boundary
+validation, data-loss protection, security, accessibility and explicitly requested behavior.
+Extend the existing test seam with the smallest regression that fails without the fix; add no
+new test framework or parallel suite for an already covered behavior. A short diff is not proof
+of correctness. Mark a deliberate limitation only when real, with its ceiling and revisit trigger.
+
 ### 1. Planning
 
 When exploring the codebase, read `CONTEXT.md` (if it exists) so that test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching.

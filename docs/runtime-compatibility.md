@@ -1,6 +1,6 @@
 # Runtime packaging and compatibility
 
-This source line declares loop-engine 0.15.0, ship-flow 0.11.0 and loop-memory 0.7.0.
+This source line declares loop-engine 0.15.1, ship-flow 0.11.2 and loop-memory 0.7.0.
 The common core runs shell/Node commands. Runtime adapters package that core for a host; they do
 not turn an instruction into a host capability. A successful schema check, generated artifact,
 agent-eval grade or doctor result is not installation, hook trust, approval, isolation or native E2E evidence.
@@ -17,7 +17,7 @@ supply independent host evidence; this doctor deliberately cannot manufacture th
 | Core | Node >=22, Bash >=3.2, git, POSIX utilities; Linux/macOS | Same | Same; Windows requires a Linux/WSL environment |
 | Verifier / fixer | Exit-code contract and explicit fix command | Same | Same; caller owns execution and approvals |
 | Evidence / agent-eval | Local receipts, identity and grade fixtures | Same | Same; dataset cases are not native runtime coverage |
-| Skills | Claude frontmatter and namespace | Agent Skills with compatibility contract; host-specific frontmatter removed | Reference instructions only |
+| Skills | Claude frontmatter and namespace | Agent Skills with compatibility contract; manual invocation mapped to native policy | Reference instructions only |
 | Review roles | Native `agents/*.md` | Role skills plus `agent-templates/*.toml` for deliberate project configuration | Caller must provide separate contexts and tool restrictions |
 | Workflow JS | Host Workflow feature when enabled | Native JS unsupported; use a skill-documented equivalent fallback preserving gates and required independence | Caller provides a driver |
 | Hooks | Native hook events when enabled | `hooks/hooks.json` plus per-plugin adapter; separate host trust required | None automatically |
@@ -31,6 +31,14 @@ Codex role templates are not silently copied into `.codex/agents/`. A role skill
 neither fresh context nor a read-only sandbox. Configure the reviewed template only within approved
 project scope, verify that the host actually created the intended isolated agent, and stop when
 that required capability is missing. Publisher instructions retain separate publication approval.
+
+Source skills with `disable-model-invocation: true` and the internal publisher role receive
+`agents/openai.yaml` with `policy.allow_implicit_invocation: false`. This excludes implicit skill
+injection while retaining explicit invocation; it is not a tool sandbox or proof of correct model
+routing. Existing `interface:` block metadata is preserved. Competing policies or other YAML
+metadata shapes fail generation instead of silently overriding policy. Source invocation flags
+support literal booleans, quoted keys and line comments; aliases/duplicate flags fail explicitly.
+Ordinary Git operations use the host's repository procedure.
 
 Generated role skills rebase local Markdown resource links to their actual `skills/<role>/` location.
 Native agent templates embed the shared authorization contract and its Markdown dependency closure;

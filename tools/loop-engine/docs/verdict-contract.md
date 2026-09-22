@@ -38,11 +38,17 @@ LOG: <absolute path to the full, untruncated log>
    *curated, framework-native* per-failure markers (TAP `not ok`, jest/vitest `✕`, `--- FAIL`,
    `FAILED`, `AssertionError`, `panic:`), de-duplicates, and caps the count (default 20) so the
    context never floods; the full output lives in `LOG`. Generic stack-frame noise (e.g. bare
-   `Error:`) is intentionally excluded.
+   `Error:`) is intentionally excluded. Zero-error ESLint warning summaries (including colored
+   output and task prefixes) are fallback context only: actual failure markers and explicit warning
+   threshold failures take priority before the cap. Warning-only output with a nonzero command exit
+   still produces FAIL; log bytes and exit-based verdicts are unchanged. Explicit `PASS:` messages
+   are not failure markers merely because their descriptive text contains a cross symbol.
 3. **Full noise goes to `LOG`, never to stdout.** The block is a few lines; the megabytes of test
    output are written to a file the agent reads *only if it needs to*.
 4. **`SUMMARY` is pre-computed** so the agent never re-counts. Unparseable fields are emitted as
-   empty (`failed=`) rather than guessed.
+   empty (`failed=`) rather than guessed. Counts are inferred from the last 60 log lines and are
+   not a total across multiple suites; use the full log when that distinction matters. Unknown
+   fraction summaries such as `79/80 passed` remain unparsed rather than claiming 80 passed.
 5. **The block is delimited** (`=== VERDICT ===` … `=== END VERDICT ===`) so it can be extracted
    from a larger transcript unambiguously.
 
