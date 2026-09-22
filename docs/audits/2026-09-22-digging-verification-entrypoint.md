@@ -2,7 +2,7 @@
 
 기준: 2026-09-22 KST. [장기 실행 진단](2026-09-22-long-run-diagnosis.md)의 소비 프로젝트 후속 작업이다.
 
-**최신 상태:** 아래 후속 실행에서 disposable DB preflight는 통과했으나 전체 명령은 DS 기준 자료 불일치로 **FAIL / exit 1**이었다. 전체 runtime PASS는 아직 없다. [구조화된 실행 결과](2026-09-22-digging-full-verification.json)에 실행 시간·실패 항목·원본 해시를 저장했다.
+**최신 상태:** [DS 기준 재캡처와 후속 전체 검증](2026-09-22-digging-baseline-refresh.md)에서 DS freshness는 해결됐다. build·DB·integration을 지난 전체 명령은 Home runtime의 geometry 실패를 route matrix가 거부하여 **FAIL / exit 1**이었다. 아래는 그 이전 DS 실패 실행의 기록이며, 전체 runtime PASS는 아직 없다. [이전 구조화된 실행 결과](2026-09-22-digging-full-verification.json)도 보존한다.
 
 ## 변경과 현재 상태
 
@@ -77,4 +77,4 @@ ESLint는 errors 0 / warnings 14로 종료했다. wrapper가 `✖ 14 problems`�
 
 원본은 소비 worktree `.loop/full-verification/`에 보존했다. `result.json`, `root-verify.log`, `root-verify-failed.txt`, `verdict.txt`, preflight·migration·focused 검사 로그와 receipt 목록이 있다. 기존 tracked root receipt는 실패 원본을 따로 보존한 뒤 원래 바이트로 돌렸으며, 기존 PASS 표식을 이번 실행의 증거로 사용하지 않는다. 검증을 위해 만든 두 PostgreSQL cluster는 종료했고 두 포트의 listener가 없음을 확인했다. 임시 데이터 디렉터리는 보존했다.
 
-**다음 필요한 수정:** 현재 제품 변경을 검토해 legacy/club 기준 자료를 정식 producer로 다시 관찰·캡처하고, 필요한 visual/integration receipt를 함께 갱신한 후 같은 전체 명령을 재실행한다. 기준 snapshot·verifier·테스트를 이번 검증에서 변경하거나 완화하지 않았다. full PASS·독립 리뷰·PR·merge는 여전히 미완료다.
+**당시 다음 필요한 수정:** 현재 제품 변경을 검토해 legacy/club 기준 자료를 정식 producer로 다시 관찰·캡처하고, 필요한 visual/integration receipt를 함께 갱신한 후 같은 전체 명령을 재실행하는 것이었다. [후속 실행 기록](2026-09-22-digging-baseline-refresh.md)에 실제 결과와 새 중단 지점을 저장했다. 이 이전 실행에서는 기준 snapshot·verifier·테스트를 변경하거나 완화하지 않았다. full PASS·독립 리뷰·PR·merge는 여전히 미완료다.

@@ -1,0 +1,257 @@
+{
+  "date": "2026-09-22",
+  "consumerRoot": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto",
+  "consumerRunHead": "893aa495638114ae37ccb59d90ff2e4aaa6e9bca",
+  "consumerSavedHead": "d37f82a9d61890c590b2f8643a48d5c4d7c0e628",
+  "originMain": "5d5f39efdf24fc091f79620689fa4f210d56a4da",
+  "command": "node tools/paul-loop.mjs exec bin/verdict-run.sh --log .loop/baseline-refresh/root-verify.log -- pnpm verify:evidence",
+  "fullCommandAttempts": 1,
+  "startedAt": "2026-09-22T06:08:24Z",
+  "finishedAt": "2026-09-22T06:35:46Z",
+  "durationMs": 1639948,
+  "exit": 1,
+  "verdict": "FAIL",
+  "rootReceipt": "ROOT_VERIFY_FAIL",
+  "failedGate": {
+    "name": "web verify:route-visual-matrix",
+    "reason": "12-pixel-perfect-baseline.txt is missing PIXEL_BASELINE_RUNTIME_PASS",
+    "upstreamRuntimeResult": "PIXEL_BASELINE_RUNTIME_FAIL count=8",
+    "firstFailureOnly": true
+  },
+  "sourceFingerprint": {
+    "digest": "c68e83fed0702d619e3526ac82e4e45c05ad7916ba1a94c9c92c21a375af3c66",
+    "files": 765,
+    "stable": true
+  },
+  "focused": {
+    "legacy": {
+      "captureExit": 0,
+      "readbackExit": 0,
+      "routes": 6,
+      "viewports": 3,
+      "observations": 18,
+      "changedImages": 5,
+      "totalImages": 18
+    },
+    "club": {
+      "captureExit": 0,
+      "readbackExit": 0,
+      "routes": 2,
+      "viewports": 3,
+      "observations": 6,
+      "canonicalPngChanges": 0,
+      "captureNoise": {
+        "changedPixels": 44,
+        "maxChannelDelta": 2
+      }
+    },
+    "freshness": {
+      "exit": 0,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0
+    },
+    "home": {
+      "exit": 1,
+      "uniqueGeometryFailures": 4,
+      "failureRecords": 8,
+      "remainingStandaloneVisualProducersNotRun": 10,
+      "measurements": [
+        {
+          "viewport": 390,
+          "route": "/",
+          "selector": ".club-global-nav",
+          "property": "x",
+          "actual": 12,
+          "expected": 22,
+          "delta": -10
+        },
+        {
+          "viewport": 390,
+          "route": "/",
+          "selector": ".club-global-nav",
+          "property": "y",
+          "actual": 8,
+          "expected": 32,
+          "delta": -24
+        },
+        {
+          "viewport": 390,
+          "route": "/",
+          "selector": ".club-global-nav",
+          "property": "width",
+          "actual": 366,
+          "expected": 346,
+          "delta": 20
+        },
+        {
+          "viewport": 390,
+          "route": "/",
+          "selector": ".club-landing-hero",
+          "property": "y",
+          "actual": 120,
+          "expected": 112,
+          "delta": 8
+        }
+      ]
+    }
+  },
+  "passedInFullRun": [
+    "disposable DB preflight",
+    "workspace contract",
+    "design-system freshness",
+    "DS browser runtime producers",
+    "Club density and Club Proposal runtime",
+    "Next production build",
+    "PostgreSQL contract suite",
+    "empty database production build",
+    "Unit 08 signed-out/owner browser responsive and accessibility matrices",
+    "public catalog",
+    "social-proof runtime and seven receipt readbacks",
+    "loading/offline runtime",
+    "loading lifecycle tests",
+    "observability contract"
+  ],
+  "pixelPerfectVerifierSuite": {
+    "tests": 117,
+    "pass": 116,
+    "fail": 0,
+    "skipped": 1,
+    "durationMs": 598800.985958,
+    "skip": {
+      "name": "Link Detail runtime fails closed and releases port after verifier failure",
+      "reason": "requires ddt-mobile-ux-local; root used ddt-cutover-local"
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 14,
+    "isFailureCause": false
+  },
+  "notReached": [
+    "root verify:web trailing link-card/navigation/authoring-field/authoring-shell runtime commands",
+    "prototype full gate",
+    "mobile final runtime",
+    "outer root route visual matrix"
+  ],
+  "fingerprintBasisMismatch": {
+    "rootMatrix": {
+      "base": "origin/main",
+      "algorithm": "sha256",
+      "digest": "c68e83fed0702d619e3526ac82e4e45c05ad7916ba1a94c9c92c21a375af3c66",
+      "files": 765
+    },
+    "homeRuntimeProducer": {
+      "base": "2fa4d39df9f14ed65e89fe0b878d83d2b50f31e6",
+      "algorithm": "sha256",
+      "digest": "f57122bdc6d840db382d331346909018abdaa0dfb3e4b546d758ad10ee364b20",
+      "files": 773
+    },
+    "same": false,
+    "actualFailedGateReason": false
+  },
+  "databaseCleanup": {
+    "ownedClustersStopped": true,
+    "ports": [
+      55439,
+      55440
+    ],
+    "portsReleased": true,
+    "temporaryDataRetained": true
+  },
+  "archive": {
+    "root": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/observed",
+    "trackedGeneratedFiles": 31,
+    "restoredHistoricalFiles": 24,
+    "restoredHistoricalReceiptsAreNotCurrentPassEvidence": true,
+    "untrackedRuntimeImagesRetained": true
+  },
+  "scope": {
+    "productCodeChanged": false,
+    "verifiersChanged": false,
+    "unitTestsChanged": false,
+    "baselineFixtureChanged": true,
+    "pushed": false,
+    "prCreated": false,
+    "merged": false,
+    "consumerInstallationChanged": false
+  },
+  "evidence": [
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/preflight.log",
+      "sha256": "d2f634889f43aa87fbf833d1f295115705ac68dea945d63c3f61672feae70baf"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/club-capture.log",
+      "sha256": "aacca2fbae5408f11a2ada9890011f49fc34b616d18d0853169d7328a664245a"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/club-readback.log",
+      "sha256": "f4a158ebf9bd2b0f25d47ac2a0e9280f05c57c6a0b40c4556707e8e9ddbddcfe"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/legacy-capture.log",
+      "sha256": "1e13e5ac6522cf5e6ae532bf38290734e903d18a40f31662a94319a34d6ea72c"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/legacy-readback.log",
+      "sha256": "1e13e5ac6522cf5e6ae532bf38290734e903d18a40f31662a94319a34d6ea72c"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/freshness.log",
+      "sha256": "0c73e1e2503986c7241084db5a1b10e878e6e41e058352941d73a2cc61b76d1a"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/visual-baseline.log",
+      "sha256": "f769618384868b283cb12e5e776fdb5a19068a4d328ebebf7730a692a8e87509"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/root-verify.log",
+      "sha256": "eaf5e6ba5b29a94ba45988191012b0ae604ddbfa6d6f5050f04f103050583121"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/verdict.txt",
+      "sha256": "259be7b6590302d4b26f7115850ea513767dc2a5110120e1a02edecf485feed5"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/home-geometry-failure.json",
+      "sha256": "996e02969a7a9d1655e9d14bb8204f47e467d5cf6587f69b82e5a1d519b73e02"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/fingerprint-bases.json",
+      "sha256": "99ef2173aa5bad5cb7f16b56d11b9080a9ca654daebd11f32762ee5050689dfd"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/club-image-diff.json",
+      "sha256": "30420001f951b3a0439b0beb893a995092d23e5045a8cb6c3ca536da16cdbd7f"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/legacy-image-diff.json",
+      "sha256": "a2248a3c4cdccd65bb5a0ecf6510c174757b7d2648701dd26144265b772c998c"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/observed-manifest.json",
+      "sha256": "b55756dd85f7b25f44bf1b302d2a3bdf8cd43c70c7cc51b8ec97e42244dcc30a"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/cleanup-ports.json",
+      "sha256": "3cdf090493d49c1a575dad50ec6cc1b50b6de8c1958404d7ff7e3ef584a430b8"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/context.json",
+      "sha256": "17a2879120029056cacc5b7d0a6b8069e35e0027de21c2f19e1fd73557543e57"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/observed/delivery/implementation/evidence/root-verify.txt",
+      "sha256": "d16c7b8825fa61a09058ec4aed74ae6d4651b80c7eb81dbb05de91f5ae375253"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/observed/delivery/implementation/evidence/12-pixel-perfect-baseline.txt",
+      "sha256": "a7286c4d70d067a4770c29a8657e1543d241b8c56c94c3e5eab09efd84312774"
+    },
+    {
+      "path": "/Users/jinhokim/.codex/worktrees/digging-verify-evidence/digging-n-ditto/.loop/baseline-refresh/observed/delivery/implementation/evidence/08-integration.txt",
+      "sha256": "167bfe62ddb75a064fadde5fc20c24acc10048b1cc5cafa17cc6c52bc2104d07"
+    }
+  ]
+}
