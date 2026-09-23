@@ -24,6 +24,6 @@ jobs:
       - name: gitleaks
         # 유일한 서드파티 액션 — 가변 태그가 아니라 커밋 SHA로 고정한다. `@v2`는 언제든 다른 코드를
         # 가리키게 재지정될 수 있고, 그 재지정은 이 레포의 어떤 diff에도 나타나지 않는다.
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
