@@ -44,7 +44,19 @@ Dependabot은 [기본 groups 옵션](https://docs.github.com/en/code-security/re
   registry signature는 npm 배포물 검증이며 소스 빌드 provenance attestation을 대신하지 않는다.
 - actionlint 1.7.12 PASS. 공식 릴리스 checksum을 확인한 임시 바이너리 사용.
 - skill lock 및 생성 runtime package 재현성 PASS.
-- 전체 engine suite, strict manifests, 독립 리뷰, 새 PR hosted CI: 진행 중. 완료 결과로 갱신한다.
+- 고정 CLI로 원본 marketplace/plugin 4개 및 생성 marketplace/plugin 4개 strict validation PASS.
+- 독립 code-review(`c38b575…` → `801859f`): Standards 0건, Spec 0건.
+  실제 취소 동작·예약 canary 실행까지 독립 재현한 결과는 아니다.
+- 전체 engine suite: 81/81 PASS. 선택적 BAC-580 memory probe는 로컬 tsx 부재로 SKIP이며
+  그 기능을 검증한 것으로 세지 않는다. memory 구현 변경은 없고 해당 hosted CI는 유지한다.
+- 기록 시점 base-pinned review는 진행 중이며 새 PR hosted CI는 아직 시작 전이다.
+  이 기록을 원격 CI 완료 주장으로 쓰지 않는다. 게시 후 최신 결과는 해당 PR checks에서 확인한다.
+
+위험 분류의 최초 계획 10개 경로는 AUTO였다. 이후 `--from-git`의 기본 base가 없는
+`origin/develop`을 가리켜 사용법 오류(exit 2)가 발생했다. 작업 기록상 로컬 커밋이 이 오류의
+재분류보다 먼저 만들어졌으며, 원격 게시 전 `--from-git origin/main`으로 다시 확인했다.
+결과는 기존 비추적 감사 문서 2개를 포함한 13개 경로의 REQUIRE였고, 사용자의 CI 구현·게시
+범위 승인을 적용한다. 오류를 AUTO나 검증 PASS로 취급하지 않으며 새 PR 머지는 승인하지 않는다.
 
 ## 자체 개선은 남아 있다
 
@@ -53,7 +65,10 @@ CI 정리는 개발 과정의 낭비를 줄이지만 ship-flow의 실제 효과�
 1. **ship-flow:** 같은 권한·카탈로그·과제로 기본 모델과 비교하는 4쌍 평가가 남았다.
    작은 작업이 불필요한 계획/역할 위임을 거치는지, 소요시간·호출·사용자 개입·검증 결과를
    비교한 뒤 필요 없는 절차를 삭제한다. #87의 source 지침 변경과 실제 host 라우팅을 구분한다.
-2. **loop-engine:** 부모/자식 권한·카탈로그 차이와 provider/설치 runtime 차이를 통제한
+2. **loop-engine:** 실제 명령에서 확인한 `classify-risk.mjs --from-git`의 고정
+   `origin/develop` 기본값은 main-only 저장소에서 exit 2를 낸다(`bin/classify-risk.mjs:134`).
+   명시적 base는 유지하면서 저장소 기본 브랜치를 사용하는 호환성 개선을 별도 변경으로 다룬다.
+   부모/자식 권한·카탈로그 차이와 provider/설치 runtime 차이를 통제한
    native 검증이 남았다. 이미 있는 doctor·평가 도구를 먼저 사용하며 새 controller를 만들지 않는다.
 3. **loop-memory:** #35의 실제 hook → 관련 기억 검색 → 수정에 활용 → 독립 검증 증거가
    부족하다. 실제 반복 실패 6–10건으로 파일 lesson/native memory/semantic recall을 비교한다.
@@ -62,4 +77,4 @@ CI 정리는 개발 과정의 낭비를 줄이지만 ship-flow의 실제 효과�
    #84, #86은 별도 신뢰·개인 데이터 설계 backlog다. #85의 dist 재빌드 대조는 이미 CI에 있어
    구현을 반복하지 않고 이슈 정리 대상으로 취급한다.
 
-다음 순서는 이 CI PR 검증·머지 → #96 → 같은 조건의 실행/기억 효용 평가다.
+다음 순서는 이 CI PR 검증·머지 → 기본 브랜치 인식 개선 및 #96 → 같은 조건의 실행/기억 효용 평가다.
