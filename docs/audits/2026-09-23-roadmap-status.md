@@ -38,8 +38,10 @@ SUCCESS와 `loop-engine--v0.15.4` → 위 main SHA 일치를 원격 조회로 �
 [provider 우선순위](2026-09-22-provider-priorities.md)는 당시 기록으로 보존한다.
 과거의 소비 프로젝트 수리 제안은 이번 provider 작업의 다음 행동이 아니다.
 
-후속 #109·#110은 merge됐으며, #111의 engine 0.15.5 / ship-flow 0.11.3은 아직 PR 후보다.
-위 배포 표는 #108 시점 기준이며, #111의 로컬 검증은 새 버전 게시나 소비 설치 적용을 뜻하지 않는다.
+후속 #109–#111은 merge됐다. #111의 [tag workflow 35767502478](https://github.com/reach0908/paul-loop/actions/runs/35767502478)
+SUCCESS와 engine 0.15.5 / ship-flow 0.11.3 원격 tag가 merge SHA `16e2e90`에 일치함을 확인했다.
+이는 source 게시이며 소비 설치 적용의 증거가 아니다. 다음 bounded provider 변경은
+[#103 lesson 저장 경로 제한](2026-09-23-lesson-paths.md)이다. 이 변경의 engine 0.15.6은 PR 후보다.
 
 ## 열린 이슈의 상태 해석
 

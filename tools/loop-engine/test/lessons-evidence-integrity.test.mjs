@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync, realpathSync, cpSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync, realpathSync, cpSync, symlinkSync, lstatSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
@@ -36,6 +36,77 @@ function pair(overrides = {}, failOverrides = {}, shared = {}) {
   return { pass, fail, args: ['--receipt', join(evidence, `${pass.id}.json`), '--failure-receipt', join(evidence, `${fail.id}.json`)] };
 }
 try {
+  // #103: all attack targets are disposable fixtures, never consumer lessons or user files.
+  const store = join(root, 'path-lessons'), victim = join(root, 'victim.json');
+  const sentinel = JSON.stringify({ id: '../victim', title: 'outside path sentinel' });
+  writeFileSync(victim, sentinel);
+  for (const command of ['challenge', 'retire', 'invalidate', 'preserve', 'history']) {
+    for (const id of ['../victim', '/victim', 'a\\b', 'ABCDEF0123456789', '0123456789abcdef0']) {
+      const r = run([command, '--lessons', store, '--id', id, '--verdict', 'reject']);
+      assert.equal(r.status, 2, `${command} must reject invalid id ${id}: ${r.stderr}`);
+      assert.equal(readFileSync(victim, 'utf8'), sentinel);
+      assert.equal(existsSync(store), false, 'invalid IDs must fail before creating a store/lock');
+    }
+  }
+  assert.equal(run(['record', '--lessons', store, '--signature', 'path fixture']).status, 0);
+  const pathId = readdirSync(store).find(f => f.endsWith('.json')).slice(0, -5);
+  const pathFile = join(store, `${pathId}.json`), original = readFileSync(pathFile, 'utf8');
+  assert.equal(run(['invalidate', '--lessons', store, '--id', pathId, '--superseded-by', '../victim']).status, 2);
+  assert.equal(readFileSync(pathFile, 'utf8'), original);
+  for (const id of ['../victim', '0123456789abcdef']) {
+    writeFileSync(pathFile, JSON.stringify({ ...JSON.parse(original), id }));
+    for (const args of [['challenge', '--id', pathId, '--verdict', 'accept'],
+      ['record', '--signature', 'path fixture'], ['stats']]) {
+      assert.notEqual(run([...args, '--lessons', store]).status, 0, 'stored id must match its filename');
+      assert.equal(readFileSync(victim, 'utf8'), sentinel);
+      assert.equal(existsSync(join(store, '0123456789abcdef.json')), false);
+      assert.equal(existsSync(join(store, '.lock')), false, 'failure must release the lock');
+    }
+  }
+  rmSync(pathFile); symlinkSync(victim, pathFile);
+  for (const args of [['challenge', '--id', pathId, '--verdict', 'accept'], ['stats']]) {
+    const r = run([...args, '--lessons', store]);
+    assert.notEqual(r.status, 0, 'a lesson symlink must not be read or replaced');
+    assert.doesNotMatch(r.stdout, /outside path sentinel/);
+    assert.ok(lstatSync(pathFile).isSymbolicLink());
+    assert.equal(readFileSync(victim, 'utf8'), sentinel);
+  }
+  rmSync(pathFile); writeFileSync(pathFile, original);
+  const outside = join(root, 'outside'); mkdirSync(outside);
+  const alias = join(root, 'alias'); symlinkSync(outside, alias);
+  const dangling = join(root, 'dangling'); symlinkSync(join(root, 'absent'), dangling);
+  for (const target of [alias, join(alias, 'new', 'lessons'), dangling]) {
+    assert.notEqual(run(['record', '--signature', 'path fixture', '--lessons', target]).status, 0);
+    assert.deepEqual(readdirSync(outside), [], 'symlink ancestors must be checked before mkdir/write');
+    assert.equal(existsSync(join(root, 'absent')), false);
+  }
+  // Inject a link immediately before the actual temporary write to exercise exclusive creation.
+  const preload = join(root, 'temp-link.cjs');
+  writeFileSync(preload, `const fs=require('node:fs'); const write=fs.writeFileSync;
+fs.writeFileSync=function(file,...args){if(typeof file==='string' && file.endsWith('.tmp')) fs.symlinkSync(${JSON.stringify(victim)},file);return write.call(this,file,...args);};
+require('node:module').syncBuiltinESMExports();`);
+  assert.notEqual(run(['challenge', '--lessons', store, '--id', pathId, '--verdict', 'accept'],
+    { NODE_OPTIONS: `--require=${preload}` }).status, 0, 'temporary-file symlinks must not be followed');
+  assert.equal(readFileSync(victim, 'utf8'), sentinel);
+  assert.equal(readFileSync(pathFile, 'utf8'), original);
+  assert.equal(existsSync(join(store, '.lock')), false);
+  assert.equal(run(['challenge', '--lessons', store, '--id', pathId, '--verdict', 'reject']).status, 0);
+  const swap = join(root, 'swap-lesson.cjs');
+  writeFileSync(swap, `const fs=require('node:fs'); const open=fs.openSync, read=fs.readFileSync;
+let swapped=false; const target=${JSON.stringify(pathFile)};
+function swap(file){if(file===target && !swapped){swapped=true;fs.unlinkSync(target);fs.symlinkSync(${JSON.stringify(victim)},target);}}
+fs.openSync=function(file,...args){swap(file);return open.call(this,file,...args);};
+fs.readFileSync=function(file,...args){swap(file);const bytes=read.call(this,file,...args);if(file===target)process.stderr.write('OUTSIDE_LESSON_READ');return bytes;};
+require('node:module').syncBuiltinESMExports();`);
+  for (const args of [['challenge', '--id', pathId, '--verdict', 'accept'], ['preserve', '--id', pathId]]) {
+    const r = run([...args, '--lessons', store], { NODE_OPTIONS: `--require=${swap}` });
+    assert.notEqual(r.status, 0);
+    assert.doesNotMatch(r.stderr, /OUTSIDE_LESSON_READ/, 'a swapped lesson leaf must not be opened, including preserve');
+    assert.equal(readFileSync(victim, 'utf8'), sentinel);
+    assert.equal(existsSync(join(store, '.lock')), false);
+    rmSync(pathFile); writeFileSync(pathFile, original);
+  }
+  console.log('PASS: lesson paths — CLI/stored IDs, leaf/ancestor/dangling symlinks, exclusive temporary write, lock recovery');
   assert.equal(run(['record', '--signature', bytes, '--verified']).status, 2);
   assert.equal(run(record).status, 2, 'a file is not verifier evidence');
   for (const [good, bad, shared] of [

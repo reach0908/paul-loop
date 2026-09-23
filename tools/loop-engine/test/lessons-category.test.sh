@@ -38,8 +38,8 @@ rc=0; L record --signature "FAIL: whatever" --category bogus >/dev/null 2>&1 || 
 
 # 4) a hand-written legacy lesson file (no category field at all, as all ~95 pre-existing lessons are)
 #    coerces to 'engineering' on read — no migration required. Exercise this via `stats`.
-cat > "$DIR/legacy0000000000000000.json" <<'EOF'
-{ "id": "legacy0000000000000000", "signature": ["legacy lesson pre-category"], "title": "legacy lesson",
+cat > "$DIR/aaaa000000000002.json" <<'EOF'
+{ "id": "aaaa000000000002", "signature": ["legacy lesson pre-category"], "title": "legacy lesson",
   "fix": "some old fix", "source": "manual", "verified": true, "count": 5, "iterations": [1],
   "first_seen": "2026-01-01T00:00:00.000Z", "last_seen": "2026-01-01T00:00:00.000Z" }
 EOF

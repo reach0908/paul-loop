@@ -51,9 +51,9 @@ printf '%s' "$POUT1" | grep -q "RETIREMENT CANDIDATE" && fail "negative clean_pa
 rc=0; L invalidate >/dev/null 2>&1 || rc=$?
 [ "$rc" = "2" ] || fail "invalidate with no --id must exit 2; got rc=$rc"
 
-rc=0; ERR="$(L invalidate --id doesnotexist1234 2>&1 >/dev/null)" || rc=$?
+rc=0; ERR="$(L invalidate --id 0000000000000000 2>&1 >/dev/null)" || rc=$?
 [ "$rc" = "2" ] || fail "invalidate on a nonexistent id must exit 2; got rc=$rc"
-printf '%s' "$ERR" | grep -q "no lesson with id doesnotexist1234" || fail "invalidate notfound must name the id: $ERR"
+printf '%s' "$ERR" | grep -q "no lesson with id 0000000000000000" || fail "invalidate notfound must name the id: $ERR"
 
 # ==== 3) invalidate: success path sets invalid_at/invalid_reason/invalidated_by, leaves superseded_by
 #         empty when --superseded-by is omitted. ====
@@ -85,9 +85,9 @@ grep -q '"invalid_reason": ""' "$DIR/$GID.json" || fail "invalid_reason must def
 L record --signature-file <(printf '%s\n' "FAIL: hygiene super-target-missing") --verified --title "hygiene lesson super-target-missing" >/dev/null || fail "record super-target-missing failed"
 SID="$(id_for "$DIR" "hygiene lesson super-target-missing")"
 [ -n "$SID" ] || fail "could not extract super-target-missing id"
-rc=0; ERR5="$(L invalidate --id "$SID" --superseded-by "nonexistentxxxxxx" 2>&1 >/dev/null)" || rc=$?
+rc=0; ERR5="$(L invalidate --id "$SID" --superseded-by "0000000000000000" 2>&1 >/dev/null)" || rc=$?
 [ "$rc" = "2" ] || fail "invalidate --superseded-by dangling target must exit 2; got rc=$rc"
-printf '%s' "$ERR5" | grep -q "superseded-by target nonexistentxxxxxx does not exist" || fail "must name the missing superseded-by target: $ERR5"
+printf '%s' "$ERR5" | grep -q "superseded-by target 0000000000000000 does not exist" || fail "must name the missing superseded-by target: $ERR5"
 # a fresh (never-invalidated) lesson file has no invalid_at key at all — coerce() only ADDS it as ''
 # on read, it isn't persisted until a write happens. A refused invalidate must not trigger that write.
 grep -q '"invalid_at"' "$DIR/$SID.json" && fail "a refused invalidate must NOT mutate the lesson (invalid_at key must not appear): $(cat "$DIR/$SID.json")"

@@ -32,6 +32,7 @@ fail() { echo "FAIL: $1"; exit 1; }
 
 DIR="$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXX")" || fail "mktemp -d failed"
 trap 'rm -rf "$DIR"' EXIT
+DIR="$(cd "$DIR" && pwd -P)" || fail "physical fixture directory unavailable"
 NOCFG="$DIR/no-config"; CFG="$DIR/with-config"
 mkdir -p "$NOCFG" "$CFG/.claude" "$DIR/store"
 

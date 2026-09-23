@@ -69,11 +69,12 @@
 //
 // Exit: 0 ok, 2 usage error.
 
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { lessonState, lessonContentHash } from '../lib/lesson-state.mjs'
 import { lessonReceipt, lessonVerification, sealLessonVerification } from '../lib/lesson-evidence.mjs'
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, existsSync, renameSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { readLessonFile, preserveLesson, lessonHistory } from '../lib/lesson-history.mjs'
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, existsSync, renameSync, lstatSync, unlinkSync } from 'node:fs'
+import { join, resolve, dirname } from 'node:path'
 import { sanitizeText } from '../lib/sanitize.mjs'   // BAC-628 기록 시점 redaction
 // BAC-631 회귀 신호 의존체 — best-effort 동적 import(웨이브2 교훈: 정적 import는 의존체 파손 시 파일
 // 전체를 무음 무력화). loop-fix가 record를 `>/dev/null 2>&1`+`&&` 체인으로, recall을 `2>/dev/null`+
@@ -121,6 +122,7 @@ if (!cmd || !['record', 'recall', 'promote', 'stats', 'challenge', 'retire', 'in
 if (process.env.LOOP_LEARNING_OFF === '1' && ['record', 'challenge', 'retire', 'invalidate', 'mark-clean', 'preserve'].includes(cmd)) usage('learning_off: lesson mutations disabled');
 
 const opt = { lessons: process.env.LESSONS_DIR || join(process.env.LOOP_DIR || '.loop', 'lessons'), sigFile: '', sig: '', fix: '', title: '', source: '', category: '', iterations: null, verified: false, minCount: 3, includeUnverified: false, id: '', verdict: '', reason: '', by: '', ref: '', codify: false, gate: '', runs: '', supersededBy: '', receipt: '', failureReceipt: '' }
+const lessonId = id => typeof id === 'string' && /^[a-f0-9]{16}$/.test(id)
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
   const val = () => { if (i + 1 >= argv.length) usage(`${a} requires a value`); return argv[++i] }
@@ -139,7 +141,7 @@ for (let i = 0; i < argv.length; i++) {
     case '--verified': opt.verified = true; break
     case '--min-count': opt.minCount = posInt('--min-count', /^[1-9]\d*$/); break
     case '--include-unverified': opt.includeUnverified = true; break
-    case '--id': opt.id = val(); break
+    case '--id': opt.id = val(); if (!lessonId(opt.id)) usage('--id must be 16 lowercase hex characters'); break
     case '--verdict': opt.verdict = val(); break
     case '--reason': opt.reason = val(); break
     case '--by': opt.by = val(); break
@@ -147,7 +149,7 @@ for (let i = 0; i < argv.length; i++) {
     case '--codify': opt.codify = true; break
     case '--gate': opt.gate = val(); break
     case '--runs': opt.runs = val(); break
-    case '--superseded-by': opt.supersededBy = val(); break
+    case '--superseded-by': opt.supersededBy = val(); if (!lessonId(opt.supersededBy)) usage('--superseded-by must be 16 lowercase hex characters'); break
     default: usage(`unknown arg ${a}`)
   }
 }
@@ -164,7 +166,6 @@ opt.reason = sanitizeText(opt.reason)
 opt.by = sanitizeText(opt.by)
 opt.ref = sanitizeText(opt.ref)
 opt.gate = sanitizeText(opt.gate)
-opt.supersededBy = sanitizeText(opt.supersededBy)
 // 게이트 키 정규화(BAC-631) — 원장 payload.cmd와 같은 규칙(lib normalizeGateKey: `sh -c ` 래퍼 제거 +
 // 절단 수렴)으로 맞춰야 promote --runs 교차 참조가 어긋나지 않는다. loop-fix 경로의 cmd는
 // "sh -c pnpm verify"로 착지하므로 raw 문자열 비교는 영구 미매칭이었다(리뷰). lib 로드 실패 시엔
@@ -258,28 +259,53 @@ function coerce(l) {
   l.clean_pass_count = l.clean_receipts.length
   return l
 }
-function ensureDir() { mkdirSync(opt.lessons, { recursive: true }) }
-function lessonPath(key) { return join(opt.lessons, `${key}.json`) }
+function storeDir() {
+  const dir = resolve(opt.lessons)
+  // Check missing paths too, before mkdir can follow an existing or dangling ancestor link.
+  for (let parent = dir; ; parent = dirname(parent)) {
+    const st = lstatSync(parent, { throwIfNoEntry: false })
+    if (st && (!st.isDirectory() || st.isSymbolicLink())) throw Error(`lesson directory must be a physical directory, not a symlink or file: ${parent}`)
+    if (dirname(parent) === parent) return dir
+  }
+}
+function ensureDir() {
+  mkdirSync(storeDir(), { recursive: true, mode: 0o700 })
+  return storeDir()
+}
+function lessonPath(key) {
+  if (!lessonId(key)) throw Error('invalid lesson id')
+  const p = join(storeDir(), `${key}.json`)
+  const st = lstatSync(p, { throwIfNoEntry: false })
+  if (st && (!st.isFile() || st.isSymbolicLink())) throw Error('lesson file must be a regular file, not a symlink')
+  return p
+}
 function readLesson(key) {
   const p = lessonPath(key)
-  if (!existsSync(p)) return null
-  try { return coerce(JSON.parse(readFileSync(p, 'utf8'))) } catch { return null }
+  let bytes
+  try { bytes = readLessonFile(p) } catch (e) { if (e.code === 'ENOENT') return null; throw e }
+  let l
+  try { l = JSON.parse(bytes) } catch { return null }
+  if (l?.id !== key) throw Error('lesson id must match its filename')
+  return coerce(l)
 }
 function writeLesson(l) {
   ensureDir()
-  const p = lessonPath(l.id), tmp = `${p}.${process.pid}.tmp`     // unique tmp: concurrent writers don't clobber
-  writeFileSync(tmp, JSON.stringify(l, null, 2) + '\n'); renameSync(tmp, p)
+  const p = lessonPath(l.id), tmp = `${p}.${randomUUID()}.tmp`
+  try {
+    writeFileSync(tmp, JSON.stringify(l, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
+    renameSync(tmp, p)
+  } finally { try { unlinkSync(tmp) } catch (e) { if (e.code !== 'ENOENT') throw e } }
 }
 function allLessons() {
-  if (!existsSync(opt.lessons)) return []
-  return readdirSync(opt.lessons).filter(f => f.endsWith('.json')).map(f => { try { return coerce(JSON.parse(readFileSync(join(opt.lessons, f), 'utf8'))) } catch { return null } }).filter(Boolean)
+  const dir = storeDir()
+  if (!existsSync(dir)) return []
+  return readdirSync(dir).filter(f => /^[a-f0-9]{16}\.json$/.test(f)).map(f => readLesson(f.slice(0, -5))).filter(Boolean)
 }
 
 // best-effort cross-process lock so the read-modify-write of `record` doesn't lose count updates
 function sleepMs(ms) { try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms) } catch { /* noop */ } }
 function withLock(fn) {
-  ensureDir()
-  const lock = join(opt.lessons, '.lock')
+  const lock = join(ensureDir(), '.lock')
   for (let i = 0; i < 150; i++) {
     try { mkdirSync(lock) } catch (e) { if (e.code === 'EEXIST') { sleepMs(20); continue } throw e }
     try { return fn() } finally { try { rmdirSync(lock) } catch { /* noop */ } }
@@ -292,9 +318,8 @@ const avg = a => a.length ? (a.reduce((x, y) => x + y, 0) / a.length) : null
 // ---- commands ----
 if (cmd === 'preserve' || cmd === 'history') {
   const id = opt.id || (cmd === 'history' ? signatureOf()?.key : '')
-  if (!/^[a-f0-9]{16}$/.test(id || '') || opt.verified) usage(`${cmd} requires --id <lesson-key> (history also accepts a signature); history cannot grant --verified`)
+  if (!lessonId(id) || opt.verified) usage(`${cmd} requires --id <lesson-key> (history also accepts a signature); history cannot grant --verified`)
   try {
-    const { preserveLesson, lessonHistory } = await import('../lib/lesson-history.mjs')
     const result = cmd === 'preserve' ? withLock(() => preserveLesson(lessonPath(id), id)) : lessonHistory(id)
     process.stdout.write(JSON.stringify(result, null, 2) + '\n')
   } catch (e) { usage(e.message) }
