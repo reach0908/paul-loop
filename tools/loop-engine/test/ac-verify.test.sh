@@ -9,6 +9,7 @@ AC_VERIFY="$HERE/../bin/ac-verify.sh"
 
 fail() { echo "FAIL: $1"; exit 1; }
 [ -x "$AC_VERIFY" ] || fail "ac-verify.sh not found/executable at $AC_VERIFY"
+node "$HERE/ac-artifact-paths.test.mjs" || fail "artifact path boundaries"
 
 DIR="$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXX")" || fail "mktemp -d failed"
 trap 'rm -rf "$DIR"' EXIT
