@@ -48,18 +48,19 @@
 #                A verdict-run.sh exit of 2 (its own usage-error / fail-closed refusal) is NOT a
 #                normal AC failure — it aborts ac-verify.sh itself with exit 2, same as loop-fix.sh's
 #                handling of the same case.
-#   - artifacts: each comma-separated path must exist (`-e`), resolved relative to the CWD
+#   - artifacts: each comma-separated path must exist, resolved relative to the physical CWD
 #                ac-verify.sh itself runs from (NOT the plan file's directory — verify commands
 #                and artifacts are expected relative to the repo/worktree root, same as verify
-#                commands already are).
+#                commands already are). Absolute paths and parent segments are rejected;
+#                symlinks must resolve inside that boundary, including recursive searches.
 #   - expect:    a LITERAL substring (`grep -F`, not a regex) that must be found in the AC's
 #                corpus. Which corpus depends on what else the AC declares (issue #74):
 #                  verify: present         -> the per-AC log (verdict-run.sh's untruncated LOG
 #                                             output for that AC). Unchanged, and NOT widened to
 #                                             also cover artifacts when both are declared — an
 #                                             existing contract must keep meaning what it meant.
-#                  no verify:, artifacts:  -> the contents of those artifact files (`grep -rF`, so
-#                                             a directory artifact is searched recursively). A
+#                  no verify:, artifacts:  -> the contents of those artifact files (literal bytes;
+#                                             directories are searched recursively). A
 #                                             match in ANY listed artifact satisfies it.
 #                  neither                 -> a contract error: exit 2, not an AC failure. There is
 #                                             no corpus, so the check could never hold; reporting
@@ -210,6 +211,7 @@ if [ ! -x "$VERDICT_RUN" ]; then
   echo "ac-verify.sh: cannot find verdict-run.sh next to me ($VERDICT_RUN)" >&2
   exit 2
 fi
+ARTIFACT_ROOT="$(pwd -P)" || { echo "ac-verify.sh: cannot resolve invocation directory" >&2; exit 2; }
 
 mkdir -p "$LOGSUBDIR" 2>/dev/null || { echo "ac-verify.sh: cannot create log directory '$LOGSUBDIR'" >&2; exit 2; }
 AGG_LOG="$LOG_DIR/ac-verify.log"
@@ -422,43 +424,21 @@ while IFS= read -r line || [ -n "$line" ]; do
     fi
 
     if [ -n "$artifacts_field" ]; then
-      missing=""
-      IFS=',' read -ra apaths <<< "$artifacts_field"
-      if [ "${#apaths[@]}" -gt 0 ]; then
-        for p in "${apaths[@]}"; do
-          pt="$(trim "$p")"
-          [ -z "$pt" ] && continue
-          if [ ! -e "$pt" ]; then
-            if [ -z "$missing" ]; then missing="$pt"; else missing="$missing, $pt"; fi
-          fi
-        done
+      artifact_expect=""
+      [ -z "$verify_cmd" ] && artifact_expect="$expect_field"
+      # Always validate every declared artifact, even after a content match. The helper keeps
+      # both checks on the same contained paths and never hands an unchecked path back to grep.
+      artifact_out="$(node "$HERE/../lib/ac-artifacts.mjs" "$ARTIFACT_ROOT" "$artifacts_field" "$artifact_expect" 2>&1)"
+      artifact_code=$?
+      if [ "$artifact_code" -ne 0 ]; then
+        reasons+=("artifact check failed (exit $artifact_code): $artifact_out")
       fi
-      [ -n "$missing" ] && reasons+=("missing artifact(s): $missing")
     fi
 
-    if [ -n "$expect_field" ]; then
+    if [ -n "$expect_field" ] && [ -n "$verify_cmd" ]; then
       expect_found=0
-      if [ -n "$verify_cmd" ]; then
-        # verify: present — its log is the corpus, unchanged. Deliberately NOT widened to also
-        # search the artifacts when both are declared: that would quietly make an existing
-        # contract easier to satisfy, and every contract that passes today must keep meaning
-        # exactly what it meant. Widening only happens where the corpus was previously empty.
-        grep -qF -- "$expect_field" "$ac_log" 2>/dev/null && expect_found=1
-      else
-        # No verify: — the declared artifacts are the corpus (issue #74). A match in ANY of them
-        # satisfies expect:. Paths that don't exist are skipped here rather than erroring: the
-        # artifacts check above already produced a "missing artifact(s)" reason for them, and an
-        # AC carrying both reasons reports both.
-        IFS=',' read -ra epaths <<< "$artifacts_field"
-        if [ "${#epaths[@]}" -gt 0 ]; then
-          for ep in "${epaths[@]}"; do
-            ept="$(trim "$ep")"
-            [ -z "$ept" ] && continue
-            [ -e "$ept" ] || continue
-            if grep -rqF -- "$expect_field" "$ept" 2>/dev/null; then expect_found=1; break; fi
-          done
-        fi
-      fi
+      # verify: present — its log remains the only expect corpus, never the artifacts.
+      grep -qF -- "$expect_field" "$ac_log" 2>/dev/null && expect_found=1
       [ "$expect_found" -eq 0 ] && reasons+=("expect substring not found: \"$expect_field\"")
     fi
 
