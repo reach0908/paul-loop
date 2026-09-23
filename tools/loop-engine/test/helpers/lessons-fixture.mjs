@@ -37,6 +37,6 @@ if (args.includes('--verified') || args[0] === 'mark-clean') {
   args.push('--receipt', join(evidenceDir, `${pass.id}.json`));
 }
 // Keep test artifacts in the fixture directory; never emit receipts in the source checkout.
-args[args.lastIndexOf('--lessons') + 1] = dir;
+args[args.lastIndexOf('--lessons') + 1] = root;
 const result = spawnSync(process.execPath, [resolve(bin), ...args], { cwd: root, env: { ...process.env, LOOP_DIR: '.loop' }, stdio: 'inherit' });
 process.exit(result.status ?? 1);

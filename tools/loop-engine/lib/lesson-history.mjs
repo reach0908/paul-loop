@@ -1,7 +1,7 @@
 // Historical snapshots are hints, never current verification or promotion inputs.
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, unlinkSync, writeFileSync, openSync, closeSync, fstatSync, constants } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { lessonContentHash, lessonState } from './lesson-state.mjs';
 import { verifiedLessonSummary } from './lesson-evidence.mjs';
@@ -9,6 +9,13 @@ import { evidenceDir, readEvidence } from './evidence-graph.mjs';
 import { sha256 } from './workspace-identity.mjs';
 
 const lessonId = id => typeof id === 'string' && /^[a-f0-9]{16}$/.test(id);
+export function readLessonFile(file) {
+  const fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    if (!fstatSync(fd).isFile()) throw Error('lesson file must be a regular file');
+    return readFileSync(fd, 'utf8');
+  } finally { closeSync(fd); }
+}
 function store(root, create = false) {
   const common = realpathSync(resolve(root, execFileSync('git', ['rev-parse', '--git-common-dir'],
     { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()));
@@ -26,7 +33,7 @@ function store(root, create = false) {
 }
 function readSnapshot(file, repository) {
   if (!lstatSync(file).isFile() || lstatSync(file).isSymbolicLink()) throw Error('invalid history file');
-  const record = JSON.parse(readFileSync(file, 'utf8'));
+  const record = JSON.parse(readLessonFile(file));
   const { content_hash, ...body } = record;
   const { id, preserved_at, ...payload } = body;
   if (sha256(JSON.stringify(body)) !== content_hash || sha256(JSON.stringify(payload)) !== id ||
@@ -42,7 +49,7 @@ export function preserveLesson(file, id, root = process.cwd()) {
   if (process.env.LOOP_LEARNING_OFF === '1') throw Error('learning_off');
   if (!lessonId(id)) throw Error('invalid lesson id');
   if (!lstatSync(file).isFile() || lstatSync(file).isSymbolicLink()) throw Error('invalid lesson file');
-  const lesson = JSON.parse(readFileSync(file, 'utf8'));
+  const lesson = JSON.parse(readLessonFile(file));
   if (typeof lesson?.title !== 'string' || typeof lesson.fix !== 'string' ||
       !Array.isArray(lesson.signature) || !lesson.signature.every(line => typeof line === 'string')) throw Error('invalid lesson content');
   const state = lessonState(lesson, { root });

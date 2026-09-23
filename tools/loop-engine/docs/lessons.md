@@ -32,6 +32,14 @@ One JSON file per lesson under the lessons dir, keyed by a **normalized failure 
 line numbers, paths, and digits, lowercase, sort, hash) so the *same kind* of failure recurs to the
 same lesson. File-per-lesson is git-diffable and merge-friendly.
 
+The lessons CLI uses the producer's 16 lowercase hexadecimal IDs. Direct `--id` and `--superseded-by`
+arguments must use that format; stored JSON IDs must match their filenames. Other filenames are
+excluded from listings. Symlinked lesson files, store directories and ancestors are rejected before
+access or directory creation. Use the physical path for an explicitly configured store (including
+systems where `/tmp` or `/var` is an alias). Writes use an exclusively created temporary file and
+rename it into place. These checks do not isolate a hostile process with the same OS permissions
+that concurrently replaces ancestor directories; they are not a sandbox.
+
 ```json
 { "id": "<sig>", "title": "...", "fix": "...", "source": "loop-fix", "category": "engineering",
   "verified": true, "count": 3, "iterations": [2,1,3],
