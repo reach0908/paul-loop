@@ -31,9 +31,12 @@ No plugin subtree or version changed; this is provider infrastructure. The npm `
 - New `node --test scripts/workflow-actions.test.mjs`: RED before the workflow edits (`actions/checkout@v4`), GREEN after pinning.
 - Existing tag publication sandbox: PASS, including publishing all manifest plugins, preserving existing tags, idempotence and missing-plugin failure.
 - Existing workflow interpreter-injection check: PASS across all five workflows.
-- Full engine suite and pinned-baseline review: running; results will be recorded before publication.
-- Independent Standards and Spec review: pending.
+- Ruby's standard YAML parser: all five workflows and Dependabot config parse; parsed assertions confirm six persistence opt-outs and only the tag publisher retaining it.
+- Runtime generation/check, skill lock and strict source/generated manifest validation: PASS.
+- Full engine suite: 81/81 PASS, exit 0 (`.loop/action-pins/engine-full.log`). The optional BAC-580 memory probe reported SKIP because this checkout lacks tsx; it is not counted as live memory evidence.
+- Pinned-baseline review against `3714090cddbc0a9b94ce664859709a665ef1912d`: PASS, exit 0 (`.loop/action-pins/pinned-full.log`). Existing test files are unchanged.
+- Independent `code-review` on `3714090..794991a`: Standards 0 findings, Spec 0 findings. Both reviewers independently confirmed the official action refs and preserved release contracts.
 
 The new check covers this repository's block-style `uses` entries, not every YAML spelling or malicious edits to CI itself (ADR-0002). GitHub-hosted action execution, authenticated tag publication with these pins, and actual Dependabot PR creation require their corresponding hosted runs; local checks do not prove them.
 
-Authorization: continuing the user's provider improvement and publication request. Implementation classifier returned AUTO for these nine paths. PR push/publication are authorized; merge remains the user's per-PR decision. No consumer installation, memory infrastructure activation, branch-protection change or gate bypass is included.
+Authorization: continuing the user's provider improvement and publication request. Implementation classifier returned AUTO for these nine paths. Publication classifier returned REQUIRE because command dimensions have no matching rule; the existing user instruction to continue provider improvements and publish covers this branch/PR. Merge remains the user's per-PR decision. No consumer installation, memory infrastructure activation, branch-protection change or gate bypass is included.
