@@ -2,14 +2,16 @@ name: runtime packaging
 
 on:
   workflow_call:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
+
+concurrency:
+  group: runtime-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   portability:
@@ -47,8 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Pinned schema baseline plus moving compatibility canary. Neither is a live agent session.
-        claude: ['2.1.261', 'latest']
+        # Preserve the existing check name. Moving compatibility runs separately, weekly.
+        claude: ['2.1.261']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,8 +58,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-      - run: npm install -g "@anthropic-ai/claude-code@${{ matrix.claude }}"
       - run: |
+          npm ci --prefix .github/claude-code --ignore-scripts --no-audit --no-fund
+          npm audit signatures --prefix .github/claude-code
+          node .github/claude-code/node_modules/@anthropic-ai/claude-code/install.cjs
+          export PATH="$PWD/.github/claude-code/node_modules/.bin:$PATH"
           node scripts/generate-runtime-packages.mjs
           claude plugin validate --strict build/runtime-packages/claude
           for plugin in build/runtime-packages/claude/plugins/*; do

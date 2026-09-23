@@ -4,3 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
