@@ -51,9 +51,10 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0 # tags are needed to know which ones already exist
+          persist-credentials: true # required by the authenticated git push below; read-only jobs opt out
 
       - name: create missing version tags
         env:

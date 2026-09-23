@@ -20,8 +20,10 @@ jobs:
         node: [22, 24]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
       - name: verify adapters, resolver, executable modes and setup isolation (no model calls)
@@ -35,7 +37,7 @@ jobs:
           node scripts/generate-runtime-packages.mjs --check
       - name: upload reviewable packages and provenance (not a marketplace install)
         if: matrix.os == 'ubuntu-latest' && matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: runtime-packages
           path: build/runtime-packages
@@ -48,8 +50,10 @@ jobs:
         # Pinned schema baseline plus moving compatibility canary. Neither is a live agent session.
         claude: ['2.1.261', 'latest']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - run: npm install -g "@anthropic-ai/claude-code@${{ matrix.claude }}"

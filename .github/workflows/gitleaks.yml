@@ -17,9 +17,10 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: gitleaks
         # 유일한 서드파티 액션 — 가변 태그가 아니라 커밋 SHA로 고정한다. `@v2`는 언제든 다른 코드를
         # 가리키게 재지정될 수 있고, 그 재지정은 이 레포의 어떤 diff에도 나타나지 않는다.
