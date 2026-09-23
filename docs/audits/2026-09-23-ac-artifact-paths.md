@@ -35,12 +35,33 @@ hard link 또는 같은 OS 권한의 프로세스가 상위 디렉터리를 동�
 
 - RED: 임시 worktree의 sibling 파일을 절대 artifact로 지정한 기존 구현이 실제 PASS/exit 0을
   반환했다. 새 회귀는 FAIL/exit 1을 요구해 실패했다. 폐기 가능한 fixture 밖 데이터는 사용하지 않았다.
-- GREEN 및 최종 검증: 진행 중. 로그는 `.loop/ac-artifacts/`에 보존한다.
+- GREEN: 절대·parent·외부 leaf/ancestor 경로, recursive 외부 symlink, 일치 파일 뒤의
+  잘못된 artifact, 비어 있는 목록을 FAIL 처리한다. 내부 링크·순환·공백/한글 파일·생성 파일,
+  verify-log 전용 expect, 단일 Verdict block과 상태 파일 일치 검사를 통과했다.
+- open 직전 실제 leaf를 외부 symlink로 교체하는 preload probe에서 외부 read 없이 FAIL이었다.
+  호출 경계 자체가 symlink로 바뀐 경우에도 helper가 새 위치를 경계로 채택하지 않았다.
+- 구현 커밋 `9ca6d40`의 engine 전체 **81/81, exit 0**, base `7867af8` 고정 검사 **PASS, exit 0**.
+  선택적 BAC-580 memory probe는 tsx 부재로 SKIP이며 실제 memory 검증으로 계산하지 않는다.
+  `FAIL: mktemp -d failed` 출력은 실패 주입의 기대 결과이고 해당 회귀는 PASS다.
+- runtime 패키지 생성·재현, vendor lock, strict manifest 3개(source marketplace/engine/generated
+  Claude marketplace), 변경 문서의 로컬 링크와 diff 공백 검사 통과. 새로운 native 모델 호출은 없다.
+- 위 로컬 검증 후 변경은 감사 문서뿐이다. 최종 PR head CI는 발행 후 해당 PR의 checks와
+  `.loop/ac-artifacts/final-ci-receipt.json`으로 확인한다. 로그는 `.loop/ac-artifacts/`에 보존한다.
 - 새 경로 회귀는 기존 `ac-verify.test.sh`에서 실행하므로 전체 suite에도 포함된다.
 - 선행 배포 근거는 [engine 0.15.6 기록](2026-09-23-loop-engine-0.15.6-release.md)에 보존한다.
+
+## 독립 리뷰
+
+Standards: 문서화된 기준 위반과 actionable smell 0건. 공통 경계 검사, 같은 FD 읽기,
+기존 집계 흐름과 격리 한계의 명시를 확인했다. Spec: actionable finding 0건.
+별도 임시 probe에서 먼저 일치한 파일 뒤의 외부 symlink와 plan 폴더에만 존재하는 파일이
+FAIL이었고, PASS/FAIL/설명-only AC 집계는 passed=1 failed=1 skipped=1 및 상태 FAIL과 일치했다.
+리뷰가 전체 suite·CI·소비 환경 검증을 대신하지 않으며 reviewer는 이를 반복 실행하지 않았다.
 
 ## 권한과 발행 경계
 
 예정 10개 경로의 구현 classifier는 AUTO/standard다. 기존 자체 개선 요청 범위의 가역 수정이다.
-발행 전 실제 diff·push·PR 명령을 다시 분류한다. 기존 발행 권한은 동일 provider PR 준비와
-발행에 재사용하며, merge·소비 설치 교체·보호 설정 변경에는 확장하지 않는다.
+최종 10개 경로와 실제 push/PR 명령의 classifier는 명령 규칙 부재로 REQUIRE/standard다.
+분류를 AUTO로 바꾸지 않는다. 사용자의 기존 “배포도 알아서 진행하고 개선점들도 계속해서 개발
+진행해줘”와 이번 다음 작업 요청을 동일 provider의 `codex/paul-loop-ac-artifacts` → `main`
+PR 준비·발행에 재사용한다. merge·소비 설치 교체·보호 설정 변경에는 확장하지 않는다.
