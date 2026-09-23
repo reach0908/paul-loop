@@ -102,3 +102,29 @@ RED/GREEN 로그를 대조했다. 최종 전체 suite·head CI와 소비 환경 
 “배포도 알아서 진행하고 개선점들도 계속해서 개발 진행해줘”와 이번 다음 작업 요청을
 `reach0908/paul-loop`, `codex/paul-loop-lesson-id` → `main`의 engine 0.15.6 후보 PR에 재사용한다.
 분류 원문은 PR 본문에 포함한다. 이는 merge·설치 교체·별도 loop-memory 활성화 권한이 아니다.
+
+## PR CI와 남은 호환성 승인
+
+[PR #112](https://github.com/reach0908/paul-loop/pull/112)의 구현 head
+`214d8daea1c433cce233b53b570b033d5620c7be`에서 일반 CI **10개 SUCCESS**를 확인했다.
+engine selftest 전체와 strict manifest, memory, macOS/Linux × Node 22/24, schema 두 버전,
+secret scan 두 개가 포함된다. 따라서 로컬 종료 코드 불명확 상태와 별개로 해당 head의
+[engine CI 완료](https://github.com/reach0908/paul-loop/actions/runs/35811992682/job/107025385560)는 확인됐다.
+
+나머지 [verifier-pinned-review](https://github.com/reach0908/paul-loop/actions/runs/35811992682/job/107025385435)는
+**FAIL, 79/81, exit 1**이다. base `16e2e90`의 테스트를 그대로 실행한 결과이며 원인은 다음 두 개다.
+
+| 기존 fixture/기대 | 새 동작 | 유지한 회귀 검사 |
+|---|---|---|
+| category 없는 `legacy0000000000000000.json`을 stats에 포함 | 생성형 ID가 아닌 파일은 목록에서 제외 | 유효한 생성형 ID로 category 생략 시 engineering 기본값을 계속 검사 |
+| `doesnotexist1234`를 조회한 뒤 notfound 문구 반환 | 조회 전에 잘못된 ID 형식으로 exit 2 | 유효하지만 없는 ID의 notfound·superseded-notfound와 무변경 assertion 유지 |
+
+이는 이번 ID 제한의 의도적인 호환성 변경이다. 정상 producer형 ID에는 같은 category/lifecycle
+검사를 유지하며, 임의 비형식 ID 파일의 호환성을 보장하거나 자동 이관하지 않는다.
+`mktemp -d failed` 출력은 별도 negative fixture의 기대 실패이며 세 번째 suite 실패가 아니다.
+
+검사 스크립트의 규칙은 의도적 변경을 PR에 명시하고 **"a human must sign off on it"**이다
+([verifier-pinned-review.sh](../../tools/loop-engine/bin/verifier-pinned-review.sh)).
+검사기·workflow·base·기존 assertion을 바꿔 PASS로 만들지 않는다. 현재 구현 검증은 끝났지만
+전체 CI 통과 및 수용 기준 5 완료로 표시하지 않는다. 사람이 이 구체적인 호환성 변경과
+pinned 실패 근거를 검토·승인한 뒤 수동 merge하는 단계가 남았다. engine 0.15.6 배포도 아직 아니다.
