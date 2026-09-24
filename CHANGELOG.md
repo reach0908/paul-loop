@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.8
+
+- Use Git's recorded remote default branch for `classify-risk --from-git` when no base is given,
+  instead of assuming `origin/develop`. Preserve explicit bases, full changed-path collection and
+  fail-closed errors when the selected ref or common ancestor is unavailable. Local branches/tags
+  named `origin/HEAD` do not shadow the fully qualified remote reference.
+
 ## loop-engine 0.15.4
 
 - Let the risky-command hook use optional project risk rules and the classifier's environment

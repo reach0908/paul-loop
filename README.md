@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.7**, ship-flow **0.11.3**, loop-memory **0.7.0**.
+> **Source versions:** loop-engine **0.15.8**, ship-flow **0.11.3**, loop-memory **0.7.0**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -165,6 +165,10 @@ gate.mjs --blast-radius high --reversibility partial --cost low
 - `--render-md` emits one PR-body-ready markdown block with a greppable
   `<!-- gate-verdict: ... -->` marker, so the routing decision has a durable, auditable trail
   instead of living only in a terminal that scrolled away.
+- `--from-git` defaults to Git's recorded `refs/remotes/origin/HEAD`, without a network lookup or
+  guessing a branch name. For a different PR target, or when that ref is missing, pass the intended
+  fetched base explicitly (for example, `--from-git origin/main` or `--from-git origin/develop`).
+  Missing refs or a missing common ancestor remain usage errors, never an empty diff or approval.
 - `classify-risk.mjs` computes dimensions and then execs `gate.mjs` — there is exactly one place
   that turns dimensions into a routing decision, not two copies that can drift.
 - **The path/command rule table ships empty.** Which paths are a migration, which are auth, which

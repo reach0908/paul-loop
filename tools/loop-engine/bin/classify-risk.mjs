@@ -63,7 +63,8 @@ function usage(msg) {
     'Usage: classify-risk.mjs [--from-git [<base>]] [--path <p>]... [--command "<cmd>"]... [--stage <name>]\n' +
       '                        [--rules <path>]\n' +
       '                        [--agent-blast-radius <v>] [--agent-reversibility <v>] [--agent-cost <v>]\n' +
-      '                        [--action "<desc>"] [--no-gate] [--json] [--render-md]\n',
+      '                        [--action "<desc>"] [--no-gate] [--json] [--render-md]\n' +
+      'Git base defaults to refs/remotes/origin/HEAD; pass an explicit base if it is unavailable.\n',
   )
   process.exit(2)
 }
@@ -131,7 +132,7 @@ for (let i = 0; i < argv.length; i++) {
       opt.agent.cost = val()
       break
     case '--from-git':
-      opt.fromGit = optVal() || 'origin/develop'
+      opt.fromGit = optVal() || 'refs/remotes/origin/HEAD'
       break
     case '--no-gate':
       opt.gate = false
@@ -228,7 +229,7 @@ if (opt.fromGit) {
   // A base ref we cannot resolve would silently yield "no committed changes" — which under-reports
   // the diff, skips every path rule, and lets a risky change out as AUTO. That is the one direction
   // this tool must never fail in, so an unresolvable base is a usage error, not a warning.
-  if (!base) usage(`cannot resolve a merge-base with "${opt.fromGit}" — fetch it, or pass --path explicitly`)
+  if (!base) usage(`cannot resolve a merge-base with "${opt.fromGit}" — fetch the intended base and pass --from-git <base> explicitly, or use --path`)
   opt.gitBase = base
   // NUL(-z) 파싱 필수: 비-ASCII·특수문자 경로는 -z 없이는 git이 따옴표로 감싸 내보내고("...\355..."),
   // 그 선행 따옴표가 모든 PATH_RULE startsWith를 비껴간다. BAC-584 이전엔 미매치=fail-closed라
