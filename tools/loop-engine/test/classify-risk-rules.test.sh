@@ -17,6 +17,7 @@
 #     valid, self-covering (its own harness rule matches "risk-rules.json" — the same self-coverage
 #     idea as a consuming repo's own verify-loop-wiring "harness-covers-risk-rules-json" case), and
 #     its per-rule deep-gate lists are locked so a future edit can't silently drop one.
+# (9) omitted Git bases use origin's recorded default; explicit bases and fail-closed errors remain.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$HERE/../../.."
@@ -147,5 +148,60 @@ node -e '
   }
 ' "$EXAMPLE_RULES" || fail "templates/risk-rules.example.json per-rule deep-gate lists changed unexpectedly or are malformed"
 echo "PASS: templates/risk-rules.example.json's per-rule deep-gate lists are locked and structurally sound"
+
+node --input-type=module - "$CR" "$DIR/git-default" "$DIR/rules.json" <<'JS' || exit 1
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+const [cli, root, rules] = process.argv.slice(2);
+mkdirSync(root);
+const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const write = (path, text = 'fixture\n') => writeFileSync(join(root, path), text);
+git('init', '-q', '--initial-branch=main');
+git('config', 'user.name', 'Fixture');
+git('config', 'user.email', 'fixture@example.invalid');
+write('README.md'); git('add', '.'); git('commit', '-qm', 'base');
+const base = git('rev-parse', 'HEAD');
+mkdirSync(join(root, 'db/migrations'), { recursive: true });
+write('db/migrations/001.sql'); git('add', '.'); git('commit', '-qm', 'migration');
+const alternate = git('rev-parse', 'HEAD');
+mkdirSync(join(root, 'docs'));
+write('docs/change.md'); git('add', '.'); git('commit', '-qm', 'docs');
+write('staged.txt'); git('add', 'staged.txt'); write('untracked.txt');
+const run = (...args) => spawnSync(process.execPath, [cli, '--from-git', ...args, '--rules', rules, '--render-md'], { cwd: root, encoding: 'utf8' });
+for (const branch of ['main', 'master', 'develop', 'trunk']) {
+  git('update-ref', `refs/remotes/origin/${branch}`, base);
+  git('symbolic-ref', 'refs/remotes/origin/HEAD', `refs/remotes/origin/${branch}`);
+  const r = run();
+  assert.equal(r.status, 10, `${branch}: ${r.stderr}\n${r.stdout}`);
+  assert.ok(r.stdout.includes(`BASE=${base.slice(0, 12)}`));
+  assert.match(r.stdout, /custom-migration/);
+  assert.match(r.stdout, /\| PATHS \| 4 \|/); // committed + staged + untracked paths
+}
+git('branch', 'origin/HEAD', 'HEAD'); git('tag', 'origin/HEAD');
+assert.equal(run().status, 10, 'local branch/tag names must not shadow the remote default');
+git('update-ref', 'refs/remotes/origin/develop', alternate);
+let r = run('refs/remotes/origin/develop');
+assert.equal(r.status, 0, r.stderr);
+assert.ok(r.stdout.includes(`BASE=${alternate.slice(0, 12)}`));
+assert.equal(run('refs/remotes/origin/develop', '--stage', 'merge').status, 10);
+git('checkout', '--detach', '-q');
+assert.equal(run().status, 10, 'detached HEAD still uses the remote default');
+git('symbolic-ref', '--delete', 'refs/remotes/origin/HEAD');
+r = run();
+assert.equal(r.status, 2, 'missing remote HEAD must not guess from available branches');
+assert.doesNotMatch(r.stdout, /gate-verdict|\*\*AUTO\*\*/);
+assert.equal(run('refs/remotes/origin/main').status, 10, 'explicit base works without remote HEAD');
+git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/missing');
+assert.equal(run().status, 2, 'dangling remote HEAD must not fall back');
+git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
+assert.equal(run('refs/remotes/origin/missing').status, 2, 'invalid explicit base must not fall back');
+const unrelated = git('commit-tree', git('rev-parse', 'HEAD^{tree}'), '-m', 'unrelated root');
+git('update-ref', 'refs/remotes/origin/unrelated', unrelated);
+git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/unrelated');
+assert.equal(run().status, 2, 'a default without a common ancestor must not fall back');
+console.log('PASS: Git default branches, explicit overrides, detached HEAD and fail-closed missing refs preserve risk coverage');
+JS
 
 exit 0

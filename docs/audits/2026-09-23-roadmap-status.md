@@ -2,6 +2,11 @@
 
 ## 최신 후속 상태
 
+2026-09-24 후속: #119가 main `4bc97603b1d2012143489a35aed56d0eb714955d`로 머지됐고
+[배포 검증](https://github.com/reach0908/paul-loop/actions/runs/35962789634)이 성공했다.
+현재는 [기본 비교 브랜치 수정](2026-09-24-default-risk-base.md)을 loop-engine 0.15.8 후보로
+검증 중이다. 아래 9월 23일의 CI/기본 브랜치 미완료 상태는 당시 기록이다.
+
 2026-09-23 main `c38b5754bbb376ef329456ca83514b65006761e1`까지 #104–#118이 머지됐고,
 [최종 배포 검증](https://github.com/reach0908/paul-loop/actions/runs/35833614190)이 성공했다.
 현재 source/기존 게시 버전은 engine 0.15.7 / ship-flow 0.11.3 / memory 0.7.0이다.
