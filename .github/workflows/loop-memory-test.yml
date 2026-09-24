@@ -2,13 +2,6 @@ name: loop-memory test
 
 on:
   workflow_call:
-  push:
-    branches: [main]
-    paths:
-      - "tools/loop-memory/**"
-      - "tools/loop-engine/lib/**"
-      - ".claude-plugin/marketplace.json"
-      - ".github/workflows/loop-memory-test.yml"
   pull_request:
     branches: [main]
     paths:
@@ -16,10 +9,15 @@ on:
       - "tools/loop-engine/lib/**"
       - ".claude-plugin/marketplace.json"
       - ".github/workflows/loop-memory-test.yml"
+      - ".github/claude-code/**"
 
 # 이 워크플로는 GITHUB_TOKEN을 전혀 쓰지 않는다 — 레포 기본값 상속 대신 명시적 최소권한.
 permissions:
   contents: read
+
+concurrency:
+  group: memory-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -99,6 +97,9 @@ jobs:
       - name: validate plugin + marketplace manifests
         working-directory: .
         run: |
-          npm install -g @anthropic-ai/claude-code@2.1.261
+          npm ci --prefix .github/claude-code --ignore-scripts --no-audit --no-fund
+          npm audit signatures --prefix .github/claude-code
+          node .github/claude-code/node_modules/@anthropic-ai/claude-code/install.cjs
+          export PATH="$PWD/.github/claude-code/node_modules/.bin:$PATH"
           claude plugin validate --strict .
           claude plugin validate --strict tools/loop-memory
