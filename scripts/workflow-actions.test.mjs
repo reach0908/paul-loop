@@ -64,6 +64,24 @@ test('moving Claude compatibility is isolated from required validation and artif
   }
 });
 
+test('secret scanning takes PR policy from base and scans before running submitted tests', () => {
+  const source = workflow('gitleaks');
+  assert.match(source, /types: \[opened, synchronize, reopened, edited\]/);
+  assert.match(source, /POLICY_SHA: \$\{\{ github.event.pull_request.base.sha \|\| github.sha \}\}/);
+  assert.match(source, /SCAN_HEAD: \$\{\{ github.event.pull_request.head.sha \|\| github.sha \}\}/);
+  assert.match(source, /SCAN_BASE: \$\{\{ github.event.pull_request.base.sha \|\| github.event.before \}\}/);
+  assert.match(source, /sha256sum --check --strict/);
+  assert.match(source, /gitleaks_8\.24\.3_linux_x64\.tar\.gz/);
+  assert.doesNotMatch(source, /secrets\.|pull_request_target|continue-on-error: true|\|\| true/);
+  const scan = source.indexOf('- name: scan with trusted policy');
+  const tests = source.indexOf('run: node --test scripts/gitleaks-policy.test.mjs');
+  assert.ok(scan >= 0 && tests > scan);
+  const owners = readFileSync(new URL('../CODEOWNERS', import.meta.url), 'utf8');
+  for (const file of ['.gitleaks.toml', '.gitleaksignore']) {
+    assert.ok(owners.split('\n').some(line => line.trim().split(/\s+/)[0] === '/' + file), file);
+  }
+});
+
 test('required Claude and its native binaries have exact versions, registry origins and integrity', () => {
   const manifest = JSON.parse(readFileSync(new URL('../.github/claude-code/package.json', import.meta.url)));
   const lock = JSON.parse(readFileSync(new URL('../.github/claude-code/package-lock.json', import.meta.url)));

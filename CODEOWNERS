@@ -12,6 +12,8 @@
 /tools/loop-engine/test/   @paulkim-lansik
 /.github/workflows/        @paulkim-lansik
 /CODEOWNERS                @paulkim-lansik
+/.gitleaks.toml            @paulkim-lansik
+/.gitleaksignore           @paulkim-lansik
 
 # Broad parent entry (adversarially found indirection bypass, issue #14): a file placed directly
 # under /tools/loop-engine/ or under any other subdirectory of it (e.g. tools/loop-engine/checker-
