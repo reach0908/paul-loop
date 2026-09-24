@@ -4,10 +4,10 @@ on:
   workflow_call:
   pull_request:
     branches: [main]
+    # A retargeted PR must be checked against its new base policy.
+    types: [opened, synchronize, reopened, edited]
 
-# 이 워크플로는 GITHUB_TOKEN으로 아무것도 쓰지 않는다(스캔 결과는 잡 종료코드로만 나간다).
-# 명시하지 않으면 레포 기본값을 상속하는데, 그 기본값은 이 파일 밖에서 바뀔 수 있고 바뀌어도 여기서는
-# 보이지 않는다. 서드파티 액션이 도는 잡에서 그건 그냥 미확인 쓰기 권한이다.
+# The scanner needs no API token. Findings fail the job and retain a redacted SARIF report.
 permissions:
   contents: read
 
@@ -23,9 +23,55 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: gitleaks
-        # 유일한 서드파티 액션 — 가변 태그가 아니라 커밋 SHA로 고정한다. `@v2`는 언제든 다른 코드를
-        # 가리키게 재지정될 수 있고, 그 재지정은 이 레포의 어떤 diff에도 나타나지 않는다.
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+      - name: install pinned gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/gitleaks.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz -o "$archive"
+          printf '%s  %s\n' '9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c' "$archive" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+      - name: scan with trusted policy
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          POLICY_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+          SCAN_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          policy=$(git rev-parse --verify --end-of-options "${POLICY_SHA}^{commit}")
+          head=$(git rev-parse --verify --end-of-options "${SCAN_HEAD}^{commit}")
+          range="$head"
+          if [ -n "$SCAN_BASE" ] && [[ ! "$SCAN_BASE" =~ ^0+$ ]]; then
+            base=$(git rev-parse --verify --end-of-options "${SCAN_BASE}^{commit}")
+            range="$base..$head"
+          fi
+          policy_dir=$(mktemp -d "$RUNNER_TEMP/gitleaks.XXXXXXXX")
+          trap 'rm -rf "$policy_dir"' EXIT
+          git show "$policy:.gitleaks.toml" > "$policy_dir/config.toml"
+          # A bare local clone scans every selected commit without submitted config/ignore files.
+          git clone --bare --shared --quiet . "$policy_dir/repo.git"
+          ignore_entry=$(git ls-tree "$policy" -- .gitleaksignore)
+          if [ -n "$ignore_entry" ]; then
+            git show "$policy:.gitleaksignore" > "$policy_dir/repo.git/.gitleaksignore"
+          fi
+          # Default ignore lookup also checks cwd: it must be owned temporary storage.
+          cd "$policy_dir"
+          gitleaks git repo.git --config "$policy_dir/config.toml" --ignore-gitleaks-allow \
+            --redact --log-opts="--diff-merges=first-parent $range" \
+            --report-format sarif --report-path "$RUNNER_TEMP/gitleaks.sarif"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: verify policy isolation with the installed scanner
+        run: node --test scripts/gitleaks-policy.test.mjs
+      - name: retain redacted findings
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gitleaks-results.sarif
+          path: ${{ runner.temp }}/gitleaks.sarif
+          if-no-files-found: ignore
