@@ -28,9 +28,18 @@ origin 외 다른 remote를 쓰거나 `origin/HEAD`가 없는 초기화 방식�
 
 - 새 회귀 검사는 수정 전 main fixture에서 exit 2로 실패했다(`red.log`).
 - 수정 후 기본 브랜치 4종, 명시적 override, 동일 이름의 로컬 branch/tag, detached HEAD,
-  ref 부재/파손, 공통 조상 부재, 4개 변경 경로 수집, merge 단계 REQUIRE를 실제 Git과 CLI로 검사한다.
+  ref 부재/파손, 공통 조상 부재, 4개 변경 경로 수집, merge 단계 REQUIRE 검사가 통과했다.
 - 이 저장소에서 base를 생략한 실제 명령이 main merge-base `4bc97603b1d2`로 판정되는 것을 확인했다.
-- 전체 engine suite, runtime/manifest/vendor 검사와 독립 리뷰 및 PR CI 결과는 검증 후 기록한다.
+- `bash tools/loop-engine/test/run.sh`: **81/81**, exit 0. BAC-580의 선택적 memory probe는
+  로컬 tsx 부재로 SKIP했으며, memory 활성화나 효용 검증의 성공으로 세지 않는다.
+- shell wrapper 인자/종료 코드 검사 통과. plugin-path와 runtime-package 검사 **19/19** 통과.
+- runtime package 생성 후 `--check`, source·generated manifest **8개 strict 검증**, vendor lock
+  **24개 일관성 검사**, `refresh-skill-lock.mjs --check`, `git diff --check` 통과.
+- 구현 `2f32f66ffed59105ee4ea462683308381ebe5eb3`에 대한 독립 Standards·Spec 리뷰는 각각
+  조치가 필요한 발견사항 **0건**. Spec 리뷰어가 Git 회귀 검사를 별도로 실행해 통과했다.
+
+증거 로그는 로컬 `.loop/default-risk-base/`에 저장했다. PR의 hosted CI와 base-pinned review는
+게시 이후 별도로 확인한다. 위 로컬 검증을 해당 검사나 마켓플레이스 배포 완료로 간주하지 않는다.
 
 구현 계획 8개 경로의 위험 분류는 AUTO였다. 이 결과는 새 PR의 머지·배포 승인이 아니다.
 배포 후보 버전은 loop-engine **0.15.8**이며 다른 plugin 버전은 그대로다.
