@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { buildPackages, writePackages } from '../../../scripts/generate-runtime-packages.mjs';
 import { adaptOutput } from '../runtime/hook-adapter.mjs';
@@ -149,23 +149,63 @@ test('native direct mjs launch no longer returns EACCES, and doctor never attest
 });
 
 test('setup action executes twice with independent temporary dirs, preserves spaces and validates pins', (t) => {
-  const dir = temp(t), bin = join(dir, 'bin'), runner = join(dir, 'runner space'); mkdirSync(runner);
-  const body = source('tools/ship-flow/templates/setup-loop-engine.action.yml.template').split('      run: |\n')[1].split('\n').map(line => line.slice(8)).join('\n').replaceAll('{{LOOP_ENGINE_TAG}}','v0.15.0').replaceAll('{{SHIP_FLOW_TAG}}','v0.11.0');
-  assert.ok(body.includes('git clone'));
-  // Stub only the network clone. Execute the actual resolver and action shell against real manifests.
-  write(join(bin, 'git'), '#!/usr/bin/env node\n' + `const fs=require('node:fs'),p=require('node:path');const args=process.argv.slice(2);if(args[0]!=='clone')process.exit(1);const dst=args.at(-1),engine=args.includes('loop-engine--v0.15.0'),ship=args.includes('ship-flow--v0.11.0');if(!engine&&!ship)process.exit(4);fs.mkdirSync(dst,{recursive:true});fs.cpSync(p.join(process.env.FIXTURE_SOURCE,'tools',engine?'loop-engine':'ship-flow'),p.join(dst,'tools',engine?'loop-engine':'ship-flow'),{recursive:true,filter:s=>!s.includes('node_modules')});`);
-  chmodSync(join(bin, 'git'), 0o755);
+  const dir = temp(t), provider = join(dir, 'provider repo'), runner = join(dir, 'runner space'); mkdirSync(runner);
+  // Redirect only the canonical network URL. Real Git creates and verifies the fetched objects.
+  const env = { ...clean, HOME: dir, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_ALLOW_PROTOCOL: 'file', GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: `url.${pathToFileURL(provider).href}.insteadOf`,
+    GIT_CONFIG_VALUE_0: 'https://github.com/reach0908/paul-loop.git', RUNNER_TEMP: runner };
+  const git = (cwd, ...args) => execFileSync('git', ['-C', cwd, ...args], { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  git(dir, 'init', '-q', '--initial-branch=main', provider);
+  git(provider, 'config', 'user.name', 'Fixture'); git(provider, 'config', 'user.email', 'fixture@example.invalid');
+  const commit = () => { git(provider, 'add', '-A'); git(provider, 'commit', '-qm', 'fixture'); return git(provider, 'rev-parse', 'HEAD'); };
+  const pins = {};
+  for (const [plugin, key] of [['loop-engine', 'LOOP_ENGINE'], ['ship-flow', 'SHIP_FLOW']]) {
+    cpSync(join(root, 'tools', plugin), join(provider, 'tools', plugin), { recursive: true, filter: path => !path.split(/[\\/]/).includes('node_modules') });
+    pins[`${key}_TAG`] = 'v' + json(join(provider, 'tools', plugin, '.claude-plugin/plugin.json')).version;
+    pins[`${key}_COMMIT`] = commit();
+    git(provider, 'tag', `${plugin}--${pins[`${key}_TAG`]}`);
+  }
+  const execute = (overrides = {}) => {
+    const values = { ...pins, ...overrides };
+    const rendered = source('tools/ship-flow/templates/setup-loop-engine.action.yml.template').replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
+      assert.ok(Object.hasOwn(values, key), `unknown setup placeholder: ${key}`); return values[key];
+    });
+    const [metadata, script] = rendered.split('      run: |\n');
+    assert.ok(script, 'setup shell is missing');
+    // This template's step env supports literal single-quoted values, never evaluated shell text.
+    const stepEnv = Object.fromEntries([...metadata.matchAll(/^        ([A-Z_]+): '([^'\n]*)'$/gm)].map(([, key, value]) => [key, value]));
+    const out = join(dir, 'github-env'); write(out, '');
+    const result = spawnSync('/bin/bash', ['-c', script.split('\n').map(line => line.slice(8)).join('\n')],
+      { cwd: dir, encoding: 'utf8', env: { ...env, ...stepEnv, GITHUB_ENV: out }, timeout: 30000 });
+    assert.equal(result.error, undefined);
+    return { ...result, exported: readFileSync(out, 'utf8') };
+  };
   const outputs=[];
   for (let i=0;i<2;i++) {
-    const out=join(dir,`env-${i}`); write(out,'');
-    const result=spawnSync('/bin/bash',['-c',body],{cwd:dir,encoding:'utf8',env:{...clean,PATH:bin+':'+process.env.PATH,RUNNER_TEMP:runner,GITHUB_ENV:out,FIXTURE_SOURCE:root},timeout:30000});
-    assert.equal(result.status,0,result.stderr); const entries=Object.fromEntries(readFileSync(out,'utf8').trim().split('\n').map(l=>l.split('=')));
-    assert.equal(entries.LOOP_RUNTIME,'shell'); assert.ok(entries.LOOP_ENGINE_PATH.startsWith(runner+'/paul-loop.')); assert.ok(existsSync(entries.SHIP_FLOW_PATH)); outputs.push(entries.LOOP_ENGINE_PATH);
+    const result = execute();
+    assert.equal(result.status,0,result.stderr); const entries=Object.fromEntries(result.exported.trim().split('\n').map(l=>l.split('=')));
+    assert.equal(entries.LOOP_RUNTIME,'shell');
+    for (const key of ['LOOP_ENGINE', 'SHIP_FLOW']) {
+      assert.ok(entries[`${key}_PATH`].startsWith(runner+'/paul-loop.'));
+      assert.equal(git(entries[`${key}_PATH`], 'rev-parse', 'HEAD'), pins[`${key}_COMMIT`]);
+    }
+    outputs.push(entries.LOOP_ENGINE_PATH);
   }
   assert.notEqual(outputs[0],outputs[1]); assert.ok(existsSync(outputs[0]));
-  const failed=join(dir,'failed-env');write(failed,'');
-  const res=spawnSync('/bin/bash',['-c',body.replace('ship-flow--v0.11.0','ship-flow--v0.0.0')],{cwd:dir,encoding:'utf8',env:{...clean,PATH:bin+':'+process.env.PATH,RUNNER_TEMP:runner,GITHUB_ENV:failed,FIXTURE_SOURCE:root},timeout:30000});
-  assert.notEqual(res.status,0); assert.equal(readFileSync(failed,'utf8'),''); assert.ok(existsSync(outputs[0]));
+  const successfulDirs = readdirSync(runner).sort();
+  const reject = result => {
+    assert.notEqual(result.status, 0); assert.equal(result.exported, '');
+    assert.deepEqual(readdirSync(runner).sort(), successfulDirs, 'failure cleans only its own installation');
+    assert.ok(existsSync(outputs[0])); assert.ok(existsSync(outputs[1]));
+  };
+  reject(execute({ SHIP_FLOW_TAG: 'v0.0.0', SHIP_FLOW_COMMIT: '0'.repeat(40) }));
+  // Transport success is insufficient: retain the downloaded artifact validation failure path.
+  const manifest = join(provider, 'tools/ship-flow/.claude-plugin/plugin.json');
+  write(manifest, JSON.stringify({ ...json(manifest), name: 'wrong-plugin' }));
+  const invalid = commit(); git(provider, 'tag', 'ship-flow--v0.0.1');
+  const rejected = execute({ SHIP_FLOW_TAG: 'v0.0.1', SHIP_FLOW_COMMIT: invalid });
+  reject(rejected); assert.match(rejected.stderr, /manifest name mismatch/);
 });
 
 test('release tags depend on validation at the event SHA and CI compares committed runtime bundle', () => {
