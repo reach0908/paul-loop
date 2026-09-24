@@ -5,6 +5,12 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.9
+
+- Exercise consumer setup with real local Git repositories instead of a clone-only stub.
+  Preserve independent revisions, temporary directories, path exports and failure cleanup before
+  introducing immutable setup pins. Runtime behavior is unchanged; issue #99 remains open.
+
 ## loop-engine 0.15.8
 
 - Use Git's recorded remote default branch for `classify-risk --from-git` when no base is given,
