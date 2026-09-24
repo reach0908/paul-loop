@@ -159,8 +159,18 @@ If any CI job in this repo needs to invoke a loop-engine or ship-flow bin script
 running `classify-risk.sh`/`ac-verify.sh`, or a repo-local harness self-test) — ask whether to
 install `${CLAUDE_PLUGIN_ROOT}/templates/setup-loop-engine.action.yml.template` at
 `.github/actions/setup-loop-engine/action.yml` (BAC-753), substituting `{{LOOP_ENGINE_TAG}}`/
-`{{SHIP_FLOW_TAG}}` with the plugin versions this repo currently targets (match `minPluginVersions`
-if this repo has one — see verify-loop-wiring's floor check pattern). GitHub Actions is a plain shell
+`{{SHIP_FLOW_TAG}}` with the plugin versions this repo currently targets (`vX.Y.Z`, optionally with
+build metadata; match `minPluginVersions` if present). Also substitute `{{LOOP_ENGINE_COMMIT}}` and
+`{{SHIP_FLOW_COMMIT}}` with separately reviewed, full 40-character lowercase commit SHAs from the
+canonical `reach0908/paul-loop` release history. Peel annotated tags to their commit, not the tag
+object. Check the release's review and same-commit validation evidence; a current remote tag lookup
+alone is not evidence that a changed target is trusted. Commit the selected tag/SHA pairs in the
+consumer action and review both on updates; never compute expected SHAs from live refs during CI.
+Validate all four values before substitution: literal release versions and hex SHAs only, no quotes,
+newlines, shell text or GitHub expressions. Missing pins are a setup gap; do not substitute a branch
+or fall back to tag-only execution. The action verifies both clones before checkout or downloaded
+code execution, then retains manifest validation. Existing copied actions need an explicitly scoped
+update; a provider release does not rewrite them. GitHub Actions is a plain shell
 process outside the live-session plugin cache, so any such job needs this action's
 `LOOP_ENGINE_PATH`/`SHIP_FLOW_PATH` exports before loop-engine's bundled `bin/plugin-path.mjs`
 resolver (or a bin script invoked directly) can find anything.

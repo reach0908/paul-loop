@@ -150,11 +150,14 @@ test('native direct mjs launch no longer returns EACCES, and doctor never attest
 
 test('setup action executes twice with independent temporary dirs, preserves spaces and validates pins', (t) => {
   const dir = temp(t), provider = join(dir, 'provider repo'), runner = join(dir, 'runner space'); mkdirSync(runner);
+  const executed = join(dir, 'resolver-executed'), checkedOut = join(dir, 'smudge-executed');
   // Redirect only the canonical network URL. Real Git creates and verifies the fetched objects.
   const env = { ...clean, HOME: dir, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null',
-    GIT_ALLOW_PROTOCOL: 'file', GIT_CONFIG_COUNT: '1',
+    GIT_ALLOW_PROTOCOL: 'file', GIT_CONFIG_COUNT: '2',
     GIT_CONFIG_KEY_0: `url.${pathToFileURL(provider).href}.insteadOf`,
-    GIT_CONFIG_VALUE_0: 'https://github.com/reach0908/paul-loop.git', RUNNER_TEMP: runner };
+    GIT_CONFIG_VALUE_0: 'https://github.com/reach0908/paul-loop.git', RUNNER_TEMP: runner,
+    GIT_CONFIG_KEY_1: 'filter.fixture.smudge', GIT_CONFIG_VALUE_1: 'echo smudge >> "$SETUP_CHECKOUT_SENTINEL"; cat',
+    SETUP_EXECUTION_SENTINEL: executed, SETUP_CHECKOUT_SENTINEL: checkedOut };
   const git = (cwd, ...args) => execFileSync('git', ['-C', cwd, ...args], { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   git(dir, 'init', '-q', '--initial-branch=main', provider);
   git(provider, 'config', 'user.name', 'Fixture'); git(provider, 'config', 'user.email', 'fixture@example.invalid');
@@ -162,11 +165,16 @@ test('setup action executes twice with independent temporary dirs, preserves spa
   const pins = {};
   for (const [plugin, key] of [['loop-engine', 'LOOP_ENGINE'], ['ship-flow', 'SHIP_FLOW']]) {
     cpSync(join(root, 'tools', plugin), join(provider, 'tools', plugin), { recursive: true, filter: path => !path.split(/[\\/]/).includes('node_modules') });
+    if (key === 'LOOP_ENGINE') {
+      const resolver = join(provider, 'tools/loop-engine/bin/plugin-path.mjs');
+      write(resolver, readFileSync(resolver, 'utf8').replace('\n', '\nimport { appendFileSync as recordExecution } from "node:fs"; recordExecution(process.env.SETUP_EXECUTION_SENTINEL, "resolver\\n");\n'));
+    }
     pins[`${key}_TAG`] = 'v' + json(join(provider, 'tools', plugin, '.claude-plugin/plugin.json')).version;
     pins[`${key}_COMMIT`] = commit();
     git(provider, 'tag', `${plugin}--${pins[`${key}_TAG`]}`);
   }
   const execute = (overrides = {}) => {
+    rmSync(executed, { force: true }); rmSync(checkedOut, { force: true });
     const values = { ...pins, ...overrides };
     const rendered = source('tools/ship-flow/templates/setup-loop-engine.action.yml.template').replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
       assert.ok(Object.hasOwn(values, key), `unknown setup placeholder: ${key}`); return values[key];
@@ -179,12 +187,13 @@ test('setup action executes twice with independent temporary dirs, preserves spa
     const result = spawnSync('/bin/bash', ['-c', script.split('\n').map(line => line.slice(8)).join('\n')],
       { cwd: dir, encoding: 'utf8', env: { ...env, ...stepEnv, GITHUB_ENV: out }, timeout: 30000 });
     assert.equal(result.error, undefined);
-    return { ...result, exported: readFileSync(out, 'utf8') };
+    return { ...result, exported: readFileSync(out, 'utf8'), executed: existsSync(executed), checkedOut: existsSync(checkedOut) };
   };
   const outputs=[];
   for (let i=0;i<2;i++) {
     const result = execute();
     assert.equal(result.status,0,result.stderr); const entries=Object.fromEntries(result.exported.trim().split('\n').map(l=>l.split('=')));
+    assert.equal(result.executed, true, 'positive control must reach the downloaded resolver');
     assert.equal(entries.LOOP_RUNTIME,'shell');
     for (const key of ['LOOP_ENGINE', 'SHIP_FLOW']) {
       assert.ok(entries[`${key}_PATH`].startsWith(runner+'/paul-loop.'));
@@ -194,8 +203,10 @@ test('setup action executes twice with independent temporary dirs, preserves spa
   }
   assert.notEqual(outputs[0],outputs[1]); assert.ok(existsSync(outputs[0]));
   const successfulDirs = readdirSync(runner).sort();
-  const reject = result => {
-    assert.notEqual(result.status, 0); assert.equal(result.exported, '');
+  const reject = (result, allowExecution = false) => {
+    assert.notEqual(result.status, 0, result.stderr); assert.equal(result.exported, '');
+    assert.equal(result.executed, allowExecution, 'identity failure must precede downloaded code');
+    assert.equal(result.checkedOut, false, 'untrusted Git attributes must not trigger a checkout filter');
     assert.deepEqual(readdirSync(runner).sort(), successfulDirs, 'failure cleans only its own installation');
     assert.ok(existsSync(outputs[0])); assert.ok(existsSync(outputs[1]));
   };
@@ -205,7 +216,39 @@ test('setup action executes twice with independent temporary dirs, preserves spa
   write(manifest, JSON.stringify({ ...json(manifest), name: 'wrong-plugin' }));
   const invalid = commit(); git(provider, 'tag', 'ship-flow--v0.0.1');
   const rejected = execute({ SHIP_FLOW_TAG: 'v0.0.1', SHIP_FLOW_COMMIT: invalid });
-  reject(rejected); assert.match(rejected.stderr, /manifest name mismatch/);
+  reject(rejected, true); assert.match(rejected.stderr, /manifest name mismatch/);
+
+  // Retarget each release independently. Both identities must pass before either checkout or resolver.
+  write(manifest, JSON.stringify({ ...json(manifest), name: 'ship-flow' }));
+  write(join(provider, '.gitattributes'), 'unreviewed.txt filter=fixture\n');
+  write(join(provider, 'unreviewed.txt'), 'not reviewed\n');
+  const changed = commit();
+  for (const [plugin, key] of [['loop-engine', 'LOOP_ENGINE'], ['ship-flow', 'SHIP_FLOW']]) {
+    const tag = `${plugin}--${pins[`${key}_TAG`]}`;
+    git(provider, 'tag', '-f', tag, changed);
+    reject(execute());
+    git(provider, 'tag', '-f', tag, pins[`${key}_COMMIT`]);
+    git(provider, 'branch', tag, changed); // --branch can choose a same-named branch over a tag.
+    reject(execute()); git(provider, 'branch', '-D', tag);
+    git(provider, 'tag', '-d', tag); git(provider, 'branch', tag, pins[`${key}_COMMIT`]);
+    reject(execute()); // A branch-only alias is not the reviewed release tag, even at the same commit.
+    git(provider, 'branch', '-D', tag); git(provider, 'tag', tag, pins[`${key}_COMMIT`]);
+    for (const value of ['', 'abc123', '0'.repeat(40), 'A'.repeat(40), pins[`${key}_COMMIT`] + '\n', '$(touch "$SETUP_EXECUTION_SENTINEL")']) {
+      reject(execute({ [`${key}_COMMIT`]: value }));
+    }
+    for (const value of ['main', 'v01.2.3', 'v1.2.3; true', '$(touch "$SETUP_EXECUTION_SENTINEL")']) {
+      reject(execute({ [`${key}_TAG`]: value }));
+    }
+    // An annotated tag is pinned by its peeled commit, not by the tag object's own hash.
+    git(provider, 'tag', '-f', '-a', tag, '-m', 'reviewed release', pins[`${key}_COMMIT`]);
+  }
+  const annotated = execute(); assert.equal(annotated.status, 0, annotated.stderr);
+  for (const [plugin, key] of [['loop-engine', 'LOOP_ENGINE'], ['ship-flow', 'SHIP_FLOW']]) {
+    git(provider, 'tag', '-f', `${plugin}--${pins[`${key}_TAG`]}`, changed);
+  }
+  const repinned = execute({ LOOP_ENGINE_COMMIT: changed, SHIP_FLOW_COMMIT: changed });
+  assert.equal(repinned.status, 0, repinned.stderr); assert.equal(repinned.executed, true);
+  assert.equal(repinned.checkedOut, true, 'explicitly reviewed update must exercise the checkout-filter control');
 });
 
 test('release tags depend on validation at the event SHA and CI compares committed runtime bundle', () => {
