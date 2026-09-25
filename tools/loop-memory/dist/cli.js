@@ -5312,7 +5312,7 @@ var require_lib2 = __commonJS({
 });
 
 // src/cli.ts
-import { readFileSync as readFileSync7, realpathSync as realpathSync4, existsSync as existsSync3 } from "node:fs";
+import { readFileSync as readFileSync7, realpathSync as realpathSync5, existsSync as existsSync2 } from "node:fs";
 import { join as join6, relative as relative3, resolve as resolve5, isAbsolute as isAbsolute3 } from "node:path";
 
 // node_modules/drizzle-orm/entity.js
@@ -12440,10 +12440,265 @@ var memoryStore = pgTable("memory_store", {
   embeddingId: text("embedding_id").notNull()
 });
 
+// hooks/lib/load-dotenv.mjs
+import { execFileSync } from "node:child_process";
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from "node:fs";
+import { userInfo } from "node:os";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
+var DEFAULT_DOTENV_PATH = ".loop/.env";
+var ALLOWED_KEYS = Object.freeze([
+  // credentials — the reason this loader exists at all
+  "OPENAI_API_KEY",
+  "GEMINI_API_KEY",
+  "LOOP_MEMORY_SIGNING_KEY",
+  // Legacy parsing compatibility only: DB consumers must use trustedDatabaseConfig, never this value.
+  "LOOP_DATABASE_URL",
+  "LOOP_EMBED_PROVIDER",
+  "LOOP_EMBED_MODEL",
+  // recall tuning — numeric thresholds, no behaviour switch
+  "LOOP_RECALL_MAX_DISTANCE",
+  "LOOP_KNOWLEDGE_MAX_DISTANCE"
+]);
+var ALLOWED = new Set(ALLOWED_KEYS);
+function mainWorktreeRoot(cwd) {
+  try {
+    const options = {
+      cwd,
+      encoding: "utf8",
+      timeout: 3e3,
+      stdio: ["ignore", "pipe", "ignore"],
+      env: { PATH: process.env.PATH }
+    };
+    const [top, common] = execFileSync("git", ["rev-parse", "--show-toplevel", "--git-common-dir"], options).trim().split("\n");
+    if (!top || !common) return null;
+    const root = realpathSync(top);
+    if (!contained(root, realpathSync(cwd))) return null;
+    const registered = execFileSync("git", ["worktree", "list", "--porcelain", "-z"], options).split("\0");
+    if (!registered.some((field) => {
+      try {
+        return field.startsWith("worktree ") && realpathSync(field.slice(9)) === root;
+      } catch {
+        return false;
+      }
+    })) return null;
+    const commonDir = realpathSync(resolve(cwd, common));
+    return basename(commonDir) === ".git" ? dirname(commonDir) : null;
+  } catch {
+    return null;
+  }
+}
+function resolveDotenvPath(projectDir, configured) {
+  const rel = configured || DEFAULT_DOTENV_PATH;
+  if (isAbsolute(rel)) return lstatSync(rel, { throwIfNoEntry: false })?.isFile() ? rel : null;
+  const root = realpathSync(projectDir);
+  const local = contained(root, rel);
+  if (!local || !withoutSymlinks(root, local)) return null;
+  const localStat = lstatSync(local, { throwIfNoEntry: false });
+  if (localStat) return localStat.isFile() ? local : null;
+  const mainRoot = mainWorktreeRoot(projectDir);
+  if (!mainRoot) return null;
+  const canonical = realpathSync(mainRoot);
+  const fallback = contained(canonical, rel);
+  return fallback && withoutSymlinks(canonical, fallback) && lstatSync(fallback, { throwIfNoEntry: false })?.isFile() ? fallback : null;
+}
+function withoutSymlinks(root, file) {
+  let cursor = file;
+  while (cursor !== root) {
+    if (lstatSync(cursor, { throwIfNoEntry: false })?.isSymbolicLink()) return false;
+    cursor = dirname(cursor);
+  }
+  return true;
+}
+function contained(root, rel) {
+  const abs = resolve(root, rel);
+  const r = relative(resolve(root), abs);
+  return r === "" || !r.startsWith("..") && !isAbsolute(r) ? abs : null;
+}
+function loadDotenv(projectDir, configured, target = process.env) {
+  let fd;
+  try {
+    const file = resolveDotenvPath(projectDir, configured);
+    if (!file) return null;
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    if (!fstatSync(fd).isFile()) return null;
+    for (const raw of readFileSync(fd, "utf8").split("\n")) {
+      const line2 = raw.trim();
+      if (!line2 || line2.startsWith("#")) continue;
+      const eq2 = line2.indexOf("=");
+      if (eq2 < 1) continue;
+      const key = line2.slice(0, eq2).replace(/^export\s+/, "").trim();
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) || !ALLOWED.has(key) || key in target) continue;
+      let val = line2.slice(eq2 + 1).trim();
+      const q = val[0];
+      if (q === '"' || q === "'") {
+        const end = val.indexOf(q, 1);
+        val = end === -1 ? val.slice(1) : val.slice(1, end);
+      } else {
+        const c = val.search(/\s#/);
+        if (c !== -1) val = val.slice(0, c).trim();
+      }
+      target[key] = val;
+    }
+    return file;
+  } catch {
+    return null;
+  } finally {
+    if (fd !== void 0) closeSync(fd);
+  }
+}
+function trustedDatabaseConfig(projectDir) {
+  let fd;
+  try {
+    const user = userInfo();
+    const home = realpathSync(user.homedir);
+    const homeStat = lstatSync(home);
+    if (homeStat.uid !== user.uid || homeStat.mode & 18) throw Error("database_config_untrusted");
+    const canonical = realpathSync(mainWorktreeRoot(projectDir) || projectDir);
+    const file = resolve(home, ".config/paul-loop/memory-databases.json");
+    if (contained(canonical, file)) throw Error("database_config_untrusted");
+    let cursor = file;
+    while (cursor !== home) {
+      const st2 = lstatSync(cursor);
+      if (st2.isSymbolicLink() || st2.uid !== user.uid || st2.mode & 18) throw Error("database_config_untrusted");
+      cursor = dirname(cursor);
+    }
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const st = fstatSync(fd);
+    if (!st.isFile() || st.uid !== user.uid || st.nlink !== 1 || st.mode & 63) throw Error("database_config_untrusted");
+    const entry = JSON.parse(readFileSync(fd, "utf8"))[canonical];
+    if (!entry) throw Error("database_config_missing");
+    if (typeof entry.url !== "string" || /[\s\u0000-\u001f]/.test(entry.url)) throw Error("database_config_invalid");
+    const url = new URL(entry.url);
+    if (!["postgres:", "postgresql:"].includes(url.protocol) || url.hash || !url.hostname || !url.username || url.pathname.length < 2) throw Error("database_config_invalid");
+    for (const key of url.searchParams.keys()) {
+      if (!["host", "options", "sslmode"].includes(key) || url.searchParams.getAll(key).length !== 1) throw Error("database_config_invalid");
+    }
+    const socket = url.searchParams.get("host");
+    if (socket !== null && !isAbsolute(socket)) throw Error("database_config_invalid");
+    const host = socket || url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    const local = socket || ["localhost", "127.0.0.1", "::1"].includes(host);
+    const mode = url.searchParams.get("sslmode");
+    if (mode !== null && !["disable", "require", "verify-full"].includes(mode)) throw Error("database_config_invalid");
+    if (!local && (entry.allowRemote !== true || !["require", "verify-full"].includes(mode))) throw Error("database_remote_not_approved");
+    const port = Number(url.port || 5432);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error("database_config_invalid");
+    const userName = decodeURIComponent(url.username), password = decodeURIComponent(url.password), database = decodeURIComponent(url.pathname.slice(1));
+    if ([host, userName, password, database].some((v) => /[\u0000-\u001f]/.test(v))) throw Error("database_config_invalid");
+    return {
+      host: host === "localhost" ? "127.0.0.1" : host,
+      port,
+      user: userName,
+      password,
+      database,
+      ssl: mode === "require" || mode === "verify-full",
+      options: url.searchParams.get("options") || " "
+    };
+  } catch (e) {
+    const code = e?.code === "ENOENT" ? "database_config_missing" : e?.message;
+    throw Error(["database_config_missing", "database_config_untrusted", "database_config_invalid", "database_remote_not_approved"].includes(code) ? code : "database_config_invalid");
+  } finally {
+    if (fd !== void 0) closeSync(fd);
+  }
+}
+
+// src/store.ts
+import { createHash } from "node:crypto";
+import { execFileSync as execFileSync2 } from "node:child_process";
+import { realpathSync as realpathSync2 } from "node:fs";
+import { basename as basename2, dirname as dirname2, resolve as resolve2 } from "node:path";
+var MemoryError = class extends Error {
+  constructor(code) {
+    super(code);
+    this.code = code;
+    this.name = "MemoryError";
+  }
+};
+var sha256 = (text2) => createHash("sha256").update(text2).digest("hex");
+var stores = /* @__PURE__ */ new WeakMap();
+function repositoryIdentity(root) {
+  const current = realpathSync2(root);
+  let canonical = current;
+  try {
+    const common = resolve2(current, execFileSync2("git", ["rev-parse", "--git-common-dir"], {
+      cwd: current,
+      encoding: "utf8",
+      timeout: 3e3,
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim());
+    if (basename2(common) === ".git") canonical = realpathSync2(dirname2(common));
+  } catch {
+  }
+  return { owner: sha256(canonical), canonical, current, writable: current === canonical };
+}
+async function bindStore(db, pool, context) {
+  memoryAccess();
+  stores.delete(db);
+  if (!context.signingKey) throw new MemoryError("signing_key_missing");
+  if (!/^[a-f0-9]{64}$/.test(context.owner)) throw new MemoryError("store_identity_invalid");
+  const client = await pool.connect();
+  try {
+    const frozen = process.env.LOOP_LEARNING_OFF === "1" || process.env.LOOP_MEMORY_RECALL_ONLY === "1";
+    await client.query(frozen ? "BEGIN READ ONLY" : "BEGIN");
+    if (!frozen) await client.query("SELECT pg_advisory_xact_lock(1819109234)");
+    const result = await client.query(
+      "SELECT owner, embedding_id FROM memory_store WHERE id = 'primary'"
+    );
+    if (result.rows.length === 0) {
+      if (frozen) throw new MemoryError("frozen_store_uninitialized");
+      memoryAccess(true);
+      if (!context.writable || !context.embeddingId) throw new MemoryError("store_uninitialized");
+      const counts = await client.query(
+        "SELECT EXISTS(SELECT 1 FROM memory_note) OR EXISTS(SELECT 1 FROM memory_op) AS occupied"
+      );
+      if (counts.rows.length !== 1 || counts.rows[0]?.occupied !== false) throw new MemoryError("legacy_store_unowned");
+      await client.query("INSERT INTO memory_store(id, owner, embedding_id) VALUES ('primary', $1, $2)", [context.owner, context.embeddingId]);
+    } else if (result.rows.length !== 1 || result.rows[0]?.owner !== context.owner) {
+      throw new MemoryError("store_owner_mismatch");
+    } else if (context.embeddingId && result.rows[0]?.embedding_id !== context.embeddingId) {
+      throw new MemoryError("embedding_identity_mismatch");
+    }
+    await client.query("COMMIT");
+    stores.set(db, Object.freeze({ ...context, embeddingId: context.embeddingId || result.rows[0].embedding_id }));
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {
+    });
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+function memoryAccess(write = false) {
+  if (process.env.LOOP_MEMORY_OFF === "1") throw new MemoryError("memory_off");
+  if (write && process.env.LOOP_LEARNING_OFF === "1") throw new MemoryError("learning_off");
+  if (write && process.env.LOOP_MEMORY_RECALL_ONLY === "1") throw new MemoryError("memory_recall_only");
+}
+function storeContext(db, write = false) {
+  memoryAccess(write);
+  const context = stores.get(db);
+  if (!context) throw new MemoryError("store_not_bound");
+  if (write && !context.writable) throw new MemoryError("worktree_read_only");
+  return context;
+}
+
 // src/client.ts
-var LOOP_DATABASE_URL = process.env.LOOP_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5434/loop_memory";
-function createLoopDb(connectionString = process.env.LOOP_DATABASE_URL || LOOP_DATABASE_URL) {
-  const pool = new Pool({ connectionString, connectionTimeoutMillis: 3e3, statement_timeout: 5e3 });
+function createLoopDb(connectionString) {
+  let config;
+  try {
+    config = connectionString === void 0 ? trustedDatabaseConfig(process.cwd()) : void 0;
+  } catch (e) {
+    throw new MemoryError(e.message);
+  }
+  const pool = new Pool({
+    ...config ? {
+      ...config,
+      password: () => config.password,
+      client_encoding: "UTF8",
+      application_name: "loop-memory",
+      sslnegotiation: "postgres"
+    } : { connectionString },
+    connectionTimeoutMillis: 3e3,
+    statement_timeout: 5e3
+  });
   const db = drizzle(pool, { schema: schema_exports });
   return { db, pool };
 }
@@ -12661,90 +12916,11 @@ function apiEmbedder(opts = {}) {
 
 // src/knowledge.ts
 import { createHash as createHash2 } from "node:crypto";
-import { lstatSync, readdirSync, readFileSync } from "node:fs";
+import { lstatSync as lstatSync2, readdirSync, readFileSync as readFileSync2 } from "node:fs";
 import { join } from "node:path";
 
 // src/ops.ts
 import { randomUUID } from "node:crypto";
-
-// src/store.ts
-import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { realpathSync } from "node:fs";
-import { basename, dirname, resolve } from "node:path";
-var MemoryError = class extends Error {
-  constructor(code) {
-    super(code);
-    this.code = code;
-    this.name = "MemoryError";
-  }
-};
-var sha256 = (text2) => createHash("sha256").update(text2).digest("hex");
-var stores = /* @__PURE__ */ new WeakMap();
-function repositoryIdentity(root) {
-  const current = realpathSync(root);
-  let canonical = current;
-  try {
-    const common = resolve(current, execFileSync("git", ["rev-parse", "--git-common-dir"], {
-      cwd: current,
-      encoding: "utf8",
-      timeout: 3e3,
-      stdio: ["ignore", "pipe", "ignore"]
-    }).trim());
-    if (basename(common) === ".git") canonical = realpathSync(dirname(common));
-  } catch {
-  }
-  return { owner: sha256(canonical), canonical, current, writable: current === canonical };
-}
-async function bindStore(db, pool, context) {
-  memoryAccess();
-  stores.delete(db);
-  if (!context.signingKey) throw new MemoryError("signing_key_missing");
-  if (!/^[a-f0-9]{64}$/.test(context.owner)) throw new MemoryError("store_identity_invalid");
-  const client = await pool.connect();
-  try {
-    const frozen = process.env.LOOP_LEARNING_OFF === "1" || process.env.LOOP_MEMORY_RECALL_ONLY === "1";
-    await client.query(frozen ? "BEGIN READ ONLY" : "BEGIN");
-    if (!frozen) await client.query("SELECT pg_advisory_xact_lock(1819109234)");
-    const result = await client.query(
-      "SELECT owner, embedding_id FROM memory_store WHERE id = 'primary'"
-    );
-    if (result.rows.length === 0) {
-      if (frozen) throw new MemoryError("frozen_store_uninitialized");
-      memoryAccess(true);
-      if (!context.writable || !context.embeddingId) throw new MemoryError("store_uninitialized");
-      const counts = await client.query(
-        "SELECT EXISTS(SELECT 1 FROM memory_note) OR EXISTS(SELECT 1 FROM memory_op) AS occupied"
-      );
-      if (counts.rows.length !== 1 || counts.rows[0]?.occupied !== false) throw new MemoryError("legacy_store_unowned");
-      await client.query("INSERT INTO memory_store(id, owner, embedding_id) VALUES ('primary', $1, $2)", [context.owner, context.embeddingId]);
-    } else if (result.rows.length !== 1 || result.rows[0]?.owner !== context.owner) {
-      throw new MemoryError("store_owner_mismatch");
-    } else if (context.embeddingId && result.rows[0]?.embedding_id !== context.embeddingId) {
-      throw new MemoryError("embedding_identity_mismatch");
-    }
-    await client.query("COMMIT");
-    stores.set(db, Object.freeze({ ...context, embeddingId: context.embeddingId || result.rows[0].embedding_id }));
-  } catch (e) {
-    await client.query("ROLLBACK").catch(() => {
-    });
-    throw e;
-  } finally {
-    client.release();
-  }
-}
-function memoryAccess(write = false) {
-  if (process.env.LOOP_MEMORY_OFF === "1") throw new MemoryError("memory_off");
-  if (write && process.env.LOOP_LEARNING_OFF === "1") throw new MemoryError("learning_off");
-  if (write && process.env.LOOP_MEMORY_RECALL_ONLY === "1") throw new MemoryError("memory_recall_only");
-}
-function storeContext(db, write = false) {
-  memoryAccess(write);
-  const context = stores.get(db);
-  if (!context) throw new MemoryError("store_not_bound");
-  if (write && !context.writable) throw new MemoryError("worktree_read_only");
-  return context;
-}
 
 // src/provenance.ts
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -13137,8 +13313,8 @@ async function syncKnowledge(db, pool, embedder, tag, desiredSource, source2) {
   }
 }
 function sourceText(path) {
-  if (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()) throw new MemoryError("source_symlink");
-  return readFileSync(path, "utf8");
+  if (!lstatSync2(path).isFile() || lstatSync2(path).isSymbolicLink()) throw new MemoryError("source_symlink");
+  return readFileSync2(path, "utf8");
 }
 function validateParsed(text2, chunks, retired = false) {
   if (!chunks.length && text2.trim() && !retired && !text2.includes("<!-- loop-memory: empty -->")) throw new MemoryError("source_format_unrecognized");
@@ -13203,20 +13379,20 @@ async function recallKnowledge(db, embedder, query, k = 5, tags = KNOWLEDGE_TAGS
 }
 
 // src/lessons.ts
-import { lstatSync as lstatSync3, existsSync, readdirSync as readdirSync3, readFileSync as readFileSync4 } from "node:fs";
+import { lstatSync as lstatSync4, existsSync, readdirSync as readdirSync3, readFileSync as readFileSync5 } from "node:fs";
 import { join as join4 } from "node:path";
 
 // ../loop-engine/lib/lesson-state.mjs
 import { createHash as createHash5 } from "node:crypto";
 
 // ../loop-engine/lib/lesson-evidence.mjs
-import { lstatSync as lstatSync2, realpathSync as realpathSync3, readFileSync as readFileSync3 } from "node:fs";
-import { basename as basename2, dirname as dirname3, resolve as resolve3, join as join3 } from "node:path";
+import { lstatSync as lstatSync3, realpathSync as realpathSync4, readFileSync as readFileSync4 } from "node:fs";
+import { basename as basename3, dirname as dirname4, resolve as resolve4, join as join3 } from "node:path";
 import { createHash as createHash4 } from "node:crypto";
 
 // ../loop-engine/lib/evidence-graph.mjs
-import { mkdirSync, readFileSync as readFileSync2, writeFileSync, realpathSync as realpathSync2, readdirSync as readdirSync2 } from "node:fs";
-import { join as join2, resolve as resolve2, relative, dirname as dirname2, isAbsolute } from "node:path";
+import { mkdirSync, readFileSync as readFileSync3, writeFileSync, realpathSync as realpathSync3, readdirSync as readdirSync2 } from "node:fs";
+import { join as join2, resolve as resolve3, relative as relative2, dirname as dirname3, isAbsolute as isAbsolute2 } from "node:path";
 
 // ../loop-engine/lib/workspace-identity.mjs
 import { createHash as createHash3 } from "node:crypto";
@@ -13225,10 +13401,10 @@ var sha2562 = (value) => createHash3("sha256").update(value).digest("hex");
 // ../loop-engine/lib/evidence-graph.mjs
 var KINDS = /* @__PURE__ */ new Set(["requirement", "ac", "artifact", "verification", "review", "approval", "knowledge"]);
 var safeId = (id) => typeof id === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(id);
-var evidenceDir = (root = process.cwd(), loopDir = process.env.LOOP_DIR || ".loop") => resolve2(root, loopDir, "evidence");
+var evidenceDir = (root = process.cwd(), loopDir = process.env.LOOP_DIR || ".loop") => resolve3(root, loopDir, "evidence");
 function readEvidence(dir, id) {
   if (!safeId(id)) throw new Error("invalid evidence id");
-  const record = JSON.parse(readFileSync2(join2(dir, `${id}.json`), "utf8"));
+  const record = JSON.parse(readFileSync3(join2(dir, `${id}.json`), "utf8"));
   const { content_hash, ...body } = record;
   if (record.id !== id || record.schema_version !== 1 || !KINDS.has(record.kind) || sha2562(JSON.stringify(body)) !== content_hash) throw new Error("evidence hash or schema mismatch");
   return record;
@@ -13240,12 +13416,12 @@ var digest = (x) => typeof x === "string" && /^[a-f0-9]{64}$/.test(x);
 function lessonReceipt(file, verdict, root = process.cwd()) {
   if (!file) throw Error("--receipt/--failure-receipt required for verified evidence");
   const expected = evidenceDir(root);
-  const abs = resolve3(file);
-  if (lstatSync2(abs).isSymbolicLink() || !lstatSync2(abs).isFile() || realpathSync3(dirname3(abs)) !== realpathSync3(expected)) throw Error("receipt outside local evidence directory");
-  const id = basename2(abs, ".json");
-  if (basename2(abs) !== `${id}.json`) throw Error("receipt extension invalid");
+  const abs = resolve4(file);
+  if (lstatSync3(abs).isSymbolicLink() || !lstatSync3(abs).isFile() || realpathSync4(dirname4(abs)) !== realpathSync4(expected)) throw Error("receipt outside local evidence directory");
+  const id = basename3(abs, ".json");
+  if (basename3(abs) !== `${id}.json`) throw Error("receipt extension invalid");
   const r = readEvidence(expected, id);
-  if (r.kind !== "verification" || r.verdict !== verdict || !Number.isInteger(r.exit) || (verdict === "PASS" ? r.exit !== 0 : r.exit === 0) || r.mode && r.mode !== "gate" || r.root_hash !== hash(realpathSync3(root)) || !digest(r.command_hash) || !digest(r.verdict_sha256) || !digest(r.target_before?.digest) || r.target_before.digest !== r.target_after?.digest || typeof r.run_id !== "string" || !r.run_id || !Number.isFinite(Date.parse(r.started_at)) || !Number.isFinite(Date.parse(r.finished_at)) || Date.parse(r.finished_at) < Date.parse(r.started_at)) throw Error("receipt does not prove stable local verification");
+  if (r.kind !== "verification" || r.verdict !== verdict || !Number.isInteger(r.exit) || (verdict === "PASS" ? r.exit !== 0 : r.exit === 0) || r.mode && r.mode !== "gate" || r.root_hash !== hash(realpathSync4(root)) || !digest(r.command_hash) || !digest(r.verdict_sha256) || !digest(r.target_before?.digest) || r.target_before.digest !== r.target_after?.digest || typeof r.run_id !== "string" || !r.run_id || !Number.isFinite(Date.parse(r.started_at)) || !Number.isFinite(Date.parse(r.finished_at)) || Date.parse(r.finished_at) < Date.parse(r.started_at)) throw Error("receipt does not prove stable local verification");
   return r;
 }
 function pairSummary(pass, fail) {
@@ -13274,9 +13450,9 @@ function backedSummary(summary, root) {
 }
 function verifiedLessonSummary(lesson, contentHash, candidate, root = process.cwd()) {
   const file = localFile(candidate.seal_id, root);
-  if (!lstatSync2(file).isFile() || lstatSync2(file).isSymbolicLink()) throw Error("invalid lesson seal file");
+  if (!lstatSync3(file).isFile() || lstatSync3(file).isSymbolicLink()) throw Error("invalid lesson seal file");
   const seal = readEvidence(evidenceDir(root), candidate.seal_id);
-  if (seal.kind !== "knowledge" || seal.purpose !== "lesson-verification" || seal.lesson_id !== lesson.id || seal.lesson_content_hash !== contentHash || seal.root_hash !== hash(realpathSync3(root))) throw Error("lesson seal content/workspace mismatch");
+  if (seal.kind !== "knowledge" || seal.purpose !== "lesson-verification" || seal.lesson_id !== lesson.id || seal.lesson_content_hash !== contentHash || seal.root_hash !== hash(realpathSync4(root))) throw Error("lesson seal content/workspace mismatch");
   const backing = backedSummary(seal.summary, root);
   for (const [key, value] of Object.entries(backing)) if (seal.summary[key] !== value) throw Error("lesson backing mismatch");
   const expected = { ...seal.summary, seal_id: seal.id };
@@ -13326,10 +13502,10 @@ function readLessonRecords(dir, options = {}) {
   const out = [];
   for (const f of readdirSync3(dir)) {
     if (!f.endsWith(".json")) continue;
-    if (!lstatSync3(join4(dir, f)).isFile() || lstatSync3(join4(dir, f)).isSymbolicLink()) throw new MemoryError("source_symlink");
+    if (!lstatSync4(join4(dir, f)).isFile() || lstatSync4(join4(dir, f)).isSymbolicLink()) throw new MemoryError("source_symlink");
     let raw;
     try {
-      raw = JSON.parse(readFileSync4(join4(dir, f), "utf8"));
+      raw = JSON.parse(readFileSync5(join4(dir, f), "utf8"));
     } catch {
       continue;
     }
@@ -13395,7 +13571,7 @@ async function graduateLessons(db, pool, embedder, dir, signingKey, source2) {
       return { added: 0, updated: 0, skipped: 0, stubbed: 0, purged: 0, locked: true };
     }
     try {
-      if (!existsSync(dir) || !lstatSync3(dir).isDirectory()) throw new MemoryError("lesson_source_missing");
+      if (!existsSync(dir) || !lstatSync4(dir).isDirectory()) throw new MemoryError("lesson_source_missing");
       const records = readLessonRecords(dir, { root: ctx.canonical || process.cwd() });
       let added = 0;
       let updated = 0;
@@ -13602,7 +13778,7 @@ async function recallLessonsDecayed(db, embedder, query, signingKey, dir, k = 5,
 }
 
 // src/liveness.ts
-import { readFileSync as readFileSync5, readdirSync as readdirSync4, statSync } from "node:fs";
+import { readFileSync as readFileSync6, readdirSync as readdirSync4, statSync } from "node:fs";
 import { join as join5 } from "node:path";
 var RECALL_TYPE = "memory.recall";
 var GRADUATE_TYPE = "memory.graduate";
@@ -13650,7 +13826,7 @@ function summarizeLiveness(root, opts = {}) {
   for (const { f } of byRecency) {
     let raw;
     try {
-      raw = readFileSync5(join5(dir, f), "utf8");
+      raw = readFileSync6(join5(dir, f), "utf8");
     } catch {
       continue;
     }
@@ -13697,106 +13873,46 @@ function formatLiveness(s) {
 `;
 }
 
-// hooks/lib/load-dotenv.mjs
-import { execFileSync as execFileSync2 } from "node:child_process";
-import { existsSync as existsSync2, readFileSync as readFileSync6 } from "node:fs";
-import { basename as basename3, dirname as dirname4, isAbsolute as isAbsolute2, relative as relative2, resolve as resolve4 } from "node:path";
-var DEFAULT_DOTENV_PATH = ".loop/.env";
-var ALLOWED_KEYS = Object.freeze([
-  // credentials — the reason this loader exists at all
-  "OPENAI_API_KEY",
-  "GEMINI_API_KEY",
-  "LOOP_MEMORY_SIGNING_KEY",
-  // connection
-  "LOOP_DATABASE_URL",
-  "LOOP_EMBED_PROVIDER",
-  "LOOP_EMBED_MODEL",
-  // recall tuning — numeric thresholds, no behaviour switch
-  "LOOP_RECALL_MAX_DISTANCE",
-  "LOOP_KNOWLEDGE_MAX_DISTANCE"
-]);
-var ALLOWED = new Set(ALLOWED_KEYS);
-function mainWorktreeRoot(cwd) {
-  try {
-    const out = execFileSync2("git", ["rev-parse", "--git-common-dir"], {
-      cwd,
-      encoding: "utf8",
-      timeout: 3e3,
-      stdio: ["ignore", "pipe", "ignore"]
-    }).trim();
-    if (!out) return null;
-    const commonDir = resolve4(cwd, out);
-    return basename3(commonDir) === ".git" ? dirname4(commonDir) : null;
-  } catch {
-    return null;
-  }
-}
-function resolveDotenvPath(projectDir, configured) {
-  const rel = configured || DEFAULT_DOTENV_PATH;
-  if (isAbsolute2(rel)) return existsSync2(rel) ? rel : null;
-  const local = contained(projectDir, rel);
-  if (local && existsSync2(local)) return local;
-  const mainRoot = mainWorktreeRoot(projectDir);
-  if (!mainRoot) return null;
-  const fallback = contained(mainRoot, rel);
-  return fallback && existsSync2(fallback) ? fallback : null;
-}
-function contained(root, rel) {
-  const abs = resolve4(root, rel);
-  const r = relative2(resolve4(root), abs);
-  return r === "" || !r.startsWith("..") && !isAbsolute2(r) ? abs : null;
-}
-function loadDotenv(projectDir, configured, target = process.env) {
-  try {
-    const file = resolveDotenvPath(projectDir, configured);
-    if (!file) return null;
-    for (const raw of readFileSync6(file, "utf8").split("\n")) {
-      const line2 = raw.trim();
-      if (!line2 || line2.startsWith("#")) continue;
-      const eq2 = line2.indexOf("=");
-      if (eq2 < 1) continue;
-      const key = line2.slice(0, eq2).replace(/^export\s+/, "").trim();
-      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) || !ALLOWED.has(key) || key in target) continue;
-      let val = line2.slice(eq2 + 1).trim();
-      const q = val[0];
-      if (q === '"' || q === "'") {
-        const end = val.indexOf(q, 1);
-        val = end === -1 ? val.slice(1) : val.slice(1, end);
-      } else {
-        const c = val.search(/\s#/);
-        if (c !== -1) val = val.slice(0, c).trim();
-      }
-      target[key] = val;
-    }
-    return file;
-  } catch {
-    return null;
-  }
-}
-
 // hooks/lib/runtime-env.mjs
+var MEMORY_KEYS = ALLOWED_KEYS.filter((key) => key !== "LOOP_DATABASE_URL");
+var CHILD_KEYS = /* @__PURE__ */ new Set([
+  ...MEMORY_KEYS,
+  "PATH",
+  "HOME",
+  "TMPDIR",
+  "TMP",
+  "TEMP",
+  "SystemRoot",
+  "WINDIR",
+  "LANG",
+  "LC_ALL",
+  "LOOP_DOTENV_PATH",
+  "LOOP_MEMORY_OFF",
+  "LOOP_LEARNING_OFF",
+  "LOOP_MEMORY_RECALL_ONLY",
+  "LOOP_RECALL_OFF",
+  "LOOP_MEMORY_SOURCE",
+  "LESSONS_DIR",
+  "LOOP_DIR",
+  "LOOP_RUN_ID",
+  "LOOP_LIVENESS_OFF",
+  "LOOP_LIVENESS_MAX_BYTES",
+  "CLAUDE_CODE_SESSION_ID"
+]);
 function runtimeEnv(root, input = process.env) {
-  const env = { ...input };
-  for (const name of [
-    "OPENAI_API_KEY",
-    "GEMINI_API_KEY",
-    "LOOP_DATABASE_URL",
-    "LOOP_MEMORY_SIGNING_KEY",
-    "LOOP_DOTENV_PATH",
-    "LOOP_EMBED_PROVIDER",
-    "LOOP_EMBED_MODEL",
-    "LOOP_RECALL_MAX_DISTANCE",
-    "LOOP_KNOWLEDGE_MAX_DISTANCE"
-  ]) {
+  const env = Object.fromEntries(Object.entries(input).filter(([key]) => CHILD_KEYS.has(key)));
+  for (const name of [...MEMORY_KEYS, "LOOP_DOTENV_PATH"]) {
     const option = `CLAUDE_PLUGIN_OPTION_${name}`;
-    if (!(name in env) && option in env) env[name] = env[option];
+    if (!(name in env) && option in input) env[name] = input[option];
   }
   const dotenv = loadDotenv(root, env.LOOP_DOTENV_PATH, env);
+  delete env.LOOP_DATABASE_URL;
   return { env, dotenv };
 }
 
 // src/cli.ts
 var runtime = runtimeEnv(process.cwd());
+for (const key of Object.keys(process.env)) if (!(key in runtime.env)) delete process.env[key];
 Object.assign(process.env, runtime.env);
 async function openBound(embeddingId = "") {
   const repository = repositoryIdentity(process.cwd());
@@ -13812,8 +13928,8 @@ async function openBound(embeddingId = "") {
   }
 }
 function sourcePath(value) {
-  const root = realpathSync4(process.cwd());
-  const target = realpathSync4(resolve5(root, value));
+  const root = realpathSync5(process.cwd());
+  const target = realpathSync5(resolve5(root, value));
   const rel = relative3(root, target);
   if (rel.startsWith("..") || isAbsolute3(rel)) throw new MemoryError("source_outside_repository");
   return target;
@@ -14131,8 +14247,8 @@ async function main() {
         return;
       }
       const canonicalLessons = join6(repository.current, ".loop", "lessons");
-      if ((existsSync3(opt.lessons) ? realpathSync4(opt.lessons) : resolve5(opt.lessons)) !== canonicalLessons) throw new MemoryError("lesson_source_not_canonical");
-      const r = existsSync3(canonicalLessons) ? await graduateLessons(db, pool, embedder, sourcePath(canonicalLessons), signingKey, source) : { added: 0, updated: 0, skipped: 0, stubbed: 0, purged: 0, missing: true };
+      if ((existsSync2(opt.lessons) ? realpathSync5(opt.lessons) : resolve5(opt.lessons)) !== canonicalLessons) throw new MemoryError("lesson_source_not_canonical");
+      const r = existsSync2(canonicalLessons) ? await graduateLessons(db, pool, embedder, sourcePath(canonicalLessons), signingKey, source) : { added: 0, updated: 0, skipped: 0, stubbed: 0, purged: 0, missing: true };
       const knowledge2 = {};
       if (opt.knowledge) knowledge2.adr = await graduateKnowledge(db, pool, embedder, sourcePath(opt.knowledge), source);
       if (opt.context) knowledge2.context = await graduateContext(db, pool, embedder, sourcePath(opt.context), source);

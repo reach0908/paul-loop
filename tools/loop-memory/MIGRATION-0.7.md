@@ -1,5 +1,13 @@
 # 0.6 → 0.7: deliberate store migration
 
+**0.8 configuration follow-up:** hooks and the standalone CLI no longer use DB URLs from environment,
+plugin options or repository dotenv. Before running them, put the reviewed dedicated DB URL under
+the canonical consumer checkout's real absolute path in the OS-user-owned
+`~/.config/paul-loop/memory-databases.json` (mode `0600`), as shown in the root README. Do not generate
+this authorization from repository-supplied values. Remote targets require explicit approval and TLS.
+The source-only `db:migrate` example below still takes an operator-selected `LOOP_DATABASE_URL`;
+copying that value into project dotenv does not configure automatic memory anymore.
+
 0.7 changes trust and ownership semantics before 1.0. Installing a plugin update is not approval to
 migrate, adopt, purge or reindex an existing database. Memory stays disabled by default; base loop
 features remain usable while memory migration is reviewed. **Never run these commands against a
@@ -49,7 +57,6 @@ or the gitignored `.loop/.env`. Ensure `.loop/.env` is ignored and mode 0600 bef
 it. Example entries (replace placeholders; never commit the actual file):
 
 ```dotenv
-LOOP_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55434/loop_memory
 LOOP_EMBED_PROVIDER=openai
 LOOP_EMBED_MODEL=text-embedding-3-small
 OPENAI_API_KEY=<your OpenAI embedding credential>
@@ -60,7 +67,7 @@ For Gemini use `LOOP_EMBED_PROVIDER=gemini`, `LOOP_EMBED_MODEL=gemini-embedding-
 `GEMINI_API_KEY`. Do not paste the `openssl` command as the key value; run it separately and securely
 store its output. Keep the signing key private to this repository's memory ingestion boundary.
 Shell variables, including explicit empty strings, override userConfig/dotenv. If a stale exported
-URL/key/provider overrides the new file, unset that variable in the invoking shell. Never print keys
+key/provider overrides the new file, unset that variable in the invoking shell. Never print keys
 or full connection strings into logs. Both credentials may exist, but provider selection must be
 explicit in that case. Model defaults are resolved into a stable identity at first binding.
 

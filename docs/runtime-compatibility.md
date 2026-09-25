@@ -24,7 +24,7 @@ supply independent host evidence; this doctor deliberately cannot manufacture th
 | Patch protection | Edit/Write/MultiEdit and shell heuristic | Codex `apply_patch` payload parsed before classifying all targets | A caller can invoke the classifier; shell alone cannot intercept another agent |
 | `PreToolUse` ask | Native review decision | Persistent deny; separate review alone does not make a retry pass | Caller decision boundary |
 | Telemetry events | Source events | PermissionDenied, InstructionsLoaded and PostToolUseFailure omitted and visibly diagnosed | Caller-defined |
-| Configuration | userConfig and environment | Explicit environment / allowlisted dotenv, dependency metadata | Explicit environment |
+| Configuration | userConfig credentials; OS-user DB authorization | Allowlisted credential environment/dotenv; OS-user DB authorization, dependency metadata | Explicit environment |
 | Workflow cancellation | Host-dependent; hard cancellation not attested | No native hard cancellation claimed | Caller-owned |
 
 Codex role templates are not silently copied into `.codex/agents/`. A role skill itself provides

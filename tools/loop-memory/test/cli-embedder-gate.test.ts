@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { afterAll, describe, expect, it } from 'vitest';
+import { userDatabaseProfile } from './helpers/user-database';
 
 // Fast unit test (NO docker needed): main() calls pickEmbedder() before createLoopDb(), so the
 // fail-closed gate refuses and exits before the CLI ever opens a DB connection. A manual
@@ -9,6 +12,9 @@ import { describe, expect, it } from 'vitest';
 // not empty" failure mode).
 const tsx = join(import.meta.dirname, '..', 'node_modules', '.bin', 'tsx');
 const cli = join(import.meta.dirname, '..', 'src', 'cli.ts');
+const home = mkdtempSync(join(tmpdir(), 'loop-memory-gate-'));
+const profile = userDatabaseProfile(home, {});
+afterAll(() => rmSync(home, { recursive: true, force: true }));
 
 // 두 상한은 **함께** 움직여야 한다: TEST_TIMEOUT_MS > SPAWN_TIMEOUT_MS. 어기면 테스트가 자기 상한에
 // 닿기도 전에 vitest가 먼저 죽여, 실패 메시지가 원인을 안 알려준다.
@@ -26,14 +32,13 @@ const SPAWN_TIMEOUT_MS = 45_000;
 const TEST_TIMEOUT_MS = 60_000;
 
 function runCli(args: string[], env: NodeJS.ProcessEnv) {
-  const r = spawnSync(tsx, [cli, ...args], { encoding: 'utf8', env, timeout: SPAWN_TIMEOUT_MS });
+  const r = spawnSync(tsx, ['--import', profile, cli, ...args], { encoding: 'utf8', env, timeout: SPAWN_TIMEOUT_MS });
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
 // '' (not delete) keeps the var PRESENT but falsy in process.env, so pickEmbedder reads "no key" even
-// if the parent shell running this test suite happens to export a real one. An
-// unroutable LOOP_DATABASE_URL keeps this "fast lane, no docker/infra" — without it, the --allow-stub
-// case below would open a real connection to whatever pgvector happens to be reachable at localhost:5434.
+// if the parent shell running this test suite happens to export a real one. The test-only empty
+// user profile prevents --allow-stub from opening any developer-configured DB.
 function noKeyEnv(): NodeJS.ProcessEnv {
   return {
     ...process.env,
@@ -43,7 +48,6 @@ function noKeyEnv(): NodeJS.ProcessEnv {
     LOOP_DOTENV_PATH: '/nonexistent-loop-fixture.env',
     OPENAI_API_KEY: '',
     GEMINI_API_KEY: '',
-    LOOP_DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:1/nope',
   };
 }
 
@@ -73,13 +77,12 @@ describe('cli — embedder fail-closed gate (ADR-0062 decision 9)', () => {
   it(
     'recall with no embedding key but --allow-stub proceeds past the refusal gate',
     () => {
-      const r = runCli(['recall', '--query', 'anything', '--allow-stub'], noKeyEnv());
-      // Past the gate the CLI goes on to try a DB connection (which fails fast — noKeyEnv() points
-      // LOOP_DATABASE_URL at an unroutable port, so this stays hermetic) — that's not what this test
-      // asserts. It only proves --allow-stub actually routes past the fail-closed refusal (not a dead
-      // flag like the deleted `--top`, ADR-0062 decision 5).
+      const r = runCli(['recall', '--query', 'anything', '--allow-stub'], { ...noKeyEnv(), LOOP_MEMORY_SIGNING_KEY: 'fixture' });
+      // --allow-stub passes the embedder gate, then the empty test profile refuses DB access.
       expect(r.stderr).toMatch(/using stub \(--allow-stub\)/);
       expect(r.stderr).not.toMatch(/refusing to run/);
+      expect(r.status).toBe(1);
+      expect(r.stderr).toMatch(/database_config_missing/);
     },
     TEST_TIMEOUT_MS,
   );
@@ -89,7 +92,7 @@ describe('cli — embedder fail-closed gate (ADR-0062 decision 9)', () => {
     () => {
       const r = runCli(
         ['graduate', '--lessons', '/nonexistent-lessons-dir', '--allow-stub'],
-        noKeyEnv(),
+        { ...noKeyEnv(), LOOP_MEMORY_SIGNING_KEY: 'fixture' },
       );
       // Same proof as the recall case above, for the other command that shares pickEmbedder() —
       // --allow-stub must not be a flag that only recall respects.

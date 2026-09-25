@@ -21,7 +21,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadDotenv } from '../lib/load-dotenv.mjs';
+import { loadDotenv, trustedDatabaseConfig } from '../lib/load-dotenv.mjs';
 
 const env = process.env;
 const DAY = 86_400_000;
@@ -33,7 +33,6 @@ const EVERY_DAYS = 7;
 for (const [pluginOpt, plain] of [
   ['CLAUDE_PLUGIN_OPTION_OPENAI_API_KEY', 'OPENAI_API_KEY'],
   ['CLAUDE_PLUGIN_OPTION_GEMINI_API_KEY', 'GEMINI_API_KEY'],
-  ['CLAUDE_PLUGIN_OPTION_LOOP_DATABASE_URL', 'LOOP_DATABASE_URL'],
   // Without this one the dotenv load below silently falls back to the default `.loop/.env`, so a repo
   // that points loop-memory at its own path still reports "no embedding key" on every session.
   ['CLAUDE_PLUGIN_OPTION_LOOP_DOTENV_PATH', 'LOOP_DOTENV_PATH'],
@@ -98,13 +97,18 @@ try {
         );
       } else {
         const { tcpReachable } = await import('../lib/tcp-reachable.mjs');
-        const dbUrl = env.LOOP_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5434/loop_memory';
-        const db = await tcpReachable(dbUrl, 2000);
-        if (!db.ok) {
-          nudges.push(
-            `semantic recall is off — an embedding key is set but pgvector isn't reachable (${db.label}) — ` +
-              'start loop-memory\'s database (see its docker-compose.yml / README)',
-          );
+        const config = trustedDatabaseConfig(root);
+        // A TCP heartbeat cannot diagnose Unix sockets; preserve the other independent nudges.
+        if (!config.host.startsWith('/')) {
+          const host = config.host.includes(':') ? `[${config.host}]` : config.host;
+          const dbUrl = `postgresql://${host}:${config.port}/${encodeURIComponent(config.database)}`;
+          const db = await tcpReachable(dbUrl, 2000);
+          if (!db.ok) {
+            nudges.push(
+              `semantic recall is off — an embedding key is set but pgvector isn't reachable (${db.label}) — ` +
+                'start loop-memory\'s database (see its docker-compose.yml / README)',
+            );
+          }
         }
       }
     }

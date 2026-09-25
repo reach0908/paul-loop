@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -27,7 +27,7 @@ function writeFakeCli(root = pluginRoot) {
     [
       "const fs = require('node:fs');",
       "const sub = process.argv[2] || 'none';",
-      'fs.writeFileSync(`${process.env.TEST_ENV_DUMP}.${sub}.json`, JSON.stringify(process.env));',
+      `fs.writeFileSync(${JSON.stringify(join(dataDir, 'cli-env'))} + '.' + sub + '.json', JSON.stringify(process.env));`,
       // recall parses a single-line JSON object off stdout; distance 0.1 is inside the 0.65 default cutoff.
       "if (sub === 'recall')",
       "  process.stdout.write(JSON.stringify({ schema_version: 1, command: 'recall', outcome: 'ok', lessons: [{ id: 'l1', content: 'a recalled lesson', distance: 0.1 }], knowledge: [] }) + '\\n');",
@@ -185,8 +185,32 @@ describe('hooks — .env loading before the embedding-key gate', () => {
     expect(res.status).toBe(0);
     const env = spawnedEnv('graduate');
     expect(env?.GEMINI_API_KEY).toBe('quoted key');
-    expect(env?.LOOP_DATABASE_URL).toBe('postgres://u:p@localhost:5434/db');
+    expect(env?.LOOP_DATABASE_URL).toBeUndefined();
     expect(env?.LOOP_MEMORY_SIGNING_KEY).toBe('single=quoted=with=equals');
+  });
+
+  it('both hooks drop ambient DB, pg, interpreter and arbitrary child variables', () => {
+    for (const run of [runGraduate, runRecall]) {
+      const r = run({ GEMINI_API_KEY: 'fixture', LOOP_DATABASE_URL: 'postgres://fixture@unapproved.invalid/db',
+        CLAUDE_PLUGIN_OPTION_LOOP_DATABASE_URL: 'postgres://fixture@other.invalid/db',
+        PGHOST: 'unapproved.invalid', PGPASSWORD: 'fixture', PGOPTIONS: 'fixture',
+        NODE_EXTRA_CA_CERTS: '/nonexistent-fixture', GIT_CONFIG_COUNT: '0', UNRELATED_SECRET: 'fixture' });
+      expect(r.status).toBe(0);
+    }
+    for (const cmd of ['graduate', 'recall']) {
+      const env = spawnedEnv(cmd)!;
+      expect(env.GEMINI_API_KEY).toBe('fixture');
+      for (const key of ['LOOP_DATABASE_URL', 'CLAUDE_PLUGIN_OPTION_LOOP_DATABASE_URL', 'PGHOST', 'PGPASSWORD', 'PGOPTIONS', 'NODE_EXTRA_CA_CERTS', 'GIT_CONFIG_COUNT', 'UNRELATED_SECRET']) expect(env[key]).toBeUndefined();
+    }
+  });
+
+  it('rejects repo-relative leaf and parent dotenv symlinks while staying fail-open', () => {
+    const outside = join(base, 'outside'); mkdirSync(outside);
+    writeFileSync(join(outside, 'keys'), 'GEMINI_API_KEY=fixture\n');
+    symlinkSync(join(outside, 'keys'), join(projectDir, '.loop', '.env'));
+    expect(runGraduate().status).toBe(0); expect(spawnedEnv('graduate')).toBeNull();
+    symlinkSync(outside, join(projectDir, 'linked'));
+    expect(runRecall({ LOOP_DOTENV_PATH: 'linked/keys' }).status).toBe(0); expect(spawnedEnv('recall')).toBeNull();
   });
 });
 

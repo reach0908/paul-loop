@@ -39,6 +39,7 @@ import { runtimeEnv } from '../hooks/lib/runtime-env.mjs';
 import { sanitizeMemory } from '../hooks/lib/privacy.mjs';
 
 const runtime = runtimeEnv(process.cwd());
+for (const key of Object.keys(process.env)) if (!(key in runtime.env)) delete process.env[key];
 Object.assign(process.env, runtime.env);
 async function openBound(embeddingId = '') {
   const repository = repositoryIdentity(process.cwd());

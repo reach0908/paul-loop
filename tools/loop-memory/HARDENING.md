@@ -79,9 +79,24 @@ rename or stop any existing installation. Choose a separate port and DB URL for 
 
 ## Model, configuration and signatures
 
+As of 0.8, DB selection is separate from credential precedence: automatic CLI/hooks and the engine
+heartbeat read the OS-user-owned `~/.config/paul-loop/memory-databases.json`, keyed by canonical
+repository real path. Environment, dotenv and plugin options cannot authorize a DB destination;
+only registered worktrees inherit the canonical checkout's entry, not a forged `.git` pointer.
+missing configuration never falls back to localhost. See the root README for the file format,
+permissions, explicit remote approval/TLS, supported Unix sockets and query fields. The `pg` URL
+parser never receives repository-selected URLs. Approved fields are passed separately, including a
+password callback that avoids ambient `PGPASSWORD`/pgpass lookup and explicit TLS/options settings.
+Hook children receive only required credentials, controls and runtime metadata and use the current
+Node executable. Standalone CLI also removes non-allowlisted environment values before DB access.
+Explicit library `createLoopDb(url)` and the source-only `db:migrate` command remain operator-owned
+entry points: the caller must choose their target deliberately; they are not called by automatic hooks.
+These filesystem controls do not sandbox an actor already able to run arbitrary code as the OS user.
+
 CLI and hooks share `runtimeEnv`: explicit shell values (including empty) > plugin userConfig >
 allowlisted dotenv entries. Default dotenv is `.loop/.env`; a missing worktree file may read the main
-checkout's copy. An existing empty worktree file suppresses fallback. Control flags come from the
+checkout's copy. Relative symlink files/directories are refused, and an unsafe existing file never
+falls back. An existing empty worktree file suppresses fallback. Control flags come from the
 process environment, not dotenv, so held-out evaluation policy cannot be overwritten by source files.
 
 `LOOP_EMBED_PROVIDER` is `openai` or `gemini`. An explicitly selected provider without its key fails;
