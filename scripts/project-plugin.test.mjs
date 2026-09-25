@@ -4,8 +4,10 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { approvePluginFixture } from '../tools/loop-engine/test/helpers/plugin-approval.mjs';
 
 const launcher = resolve('scripts/project-plugin.mjs');
+const repository = 'https://github.com/reach0908/paul-loop';
 const json = value => JSON.stringify(value, null, 2) + '\n';
 function fixture(t) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'paul-project-한 글-')));
@@ -19,9 +21,11 @@ function fixture(t) {
     const base = join(home, 'plugins/cache/fixture', name, info.version);
     mkdirSync(join(base, '.codex-plugin'), { recursive: true });
     mkdirSync(join(base, 'bin'), { recursive: true });
-    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version: info.version }));
+    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version: info.version, repository }));
     writeFileSync(join(base, 'bin/probe.mjs'), 'console.log(JSON.stringify({argv:process.argv.slice(2),runtime:process.env.LOOP_RUNTIME,root:process.cwd()}));process.exit(7);\n');
+    info.integrity = approvePluginFixture(project, base, 'codex');
   }
+  writeFileSync(join(project, '.codex/paul-loop.lock.json'), json(lock));
   const listing = { installed: Object.entries(plugins).map(([name, entry]) => ({ pluginId: entry.id, name, marketplaceName: 'fixture', version: entry.version, installed: true, enabled: true })), available: [] };
   writeFileSync(join(root, 'listing.json'), json(listing));
   writeFileSync(join(root, 'markets.json'), json({ marketplaces: [{ name: 'fixture', marketplaceSource: { sourceType: 'local', source: root } }] }));
@@ -129,8 +133,8 @@ test('vendored doctor/exec requires no host CLI, and updater refuses vendored ow
   for (const name of Object.keys(f.lock.plugins)) {
     const base = join(f.project, 'plugins', name);
     mkdirSync(join(base, '.codex-plugin'), { recursive: true });
-    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version: f.lock.plugins[name].version }));
-    f.lock.plugins[name] = { path: `../plugins/${name}`, version: f.lock.plugins[name].version };
+    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version: f.lock.plugins[name].version, repository }));
+    f.lock.plugins[name] = { path: `../plugins/${name}`, version: f.lock.plugins[name].version, integrity: approvePluginFixture(f.project, base, 'codex') };
   }
   writeFileSync(lockPath, json(f.lock));
   assert.equal(f.run('doctor').status, 0);
@@ -138,17 +142,20 @@ test('vendored doctor/exec requires no host CLI, and updater refuses vendored ow
   assert.equal(existsSync(join(f.root, 'trace')), false);
 });
 
-test('update reuses a local marketplace without Git upgrade and advances only verified project versions', t => {
+test('update reuses a local marketplace and advances only independently approved project versions', t => {
   const f = fixture(t);
   assert.equal(f.run('sync').status, 0);
   const next = { 'loop-engine': '0.15.1', 'ship-flow': '0.11.1' };
+  const approved = structuredClone(f.lock);
   for (const [name, version] of Object.entries(next)) {
     const base = join(f.home, 'plugins/cache/fixture', name, version);
     mkdirSync(join(base, '.codex-plugin'), { recursive: true });
-    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version }));
+    writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version, repository }));
+    approved.plugins[name] = { ...approved.plugins[name], version, integrity: approvePluginFixture(join(f.root, 'reviewed'), base, 'codex') };
   }
   writeFileSync(join(f.root, 'listing.json.next'), json(next));
-  const result = f.run('update');
+  writeFileSync(join(f.project, '.codex/approved-next.json'), json(approved));
+  const result = f.run('update', '--approved-lock', '.codex/approved-next.json');
   assert.equal(result.status, 0, result.stderr);
   const lock = JSON.parse(readFileSync(join(f.project, '.codex/paul-loop.lock.json')));
   assert.equal(lock.plugins['loop-engine'].version, '0.15.1');
@@ -203,7 +210,9 @@ test('Claude resolves only the exact project scope and preserves disabled activa
   rmSync(join(f.project, '.codex/paul-loop.lock.json'));
   writeFileSync(join(f.project, '.claude/paul-loop.lock.json'), json(lock));
   const base = join(f.root, 'claude-cache'); mkdirSync(join(base, '.claude-plugin'), { recursive: true });
-  writeFileSync(join(base, '.claude-plugin/plugin.json'), json({ name: 'loop-engine', version: '0.15.0' }));
+  writeFileSync(join(base, '.claude-plugin/plugin.json'), json({ name: 'loop-engine', version: '0.15.0', repository }));
+  lock.plugins['loop-engine'].integrity = approvePluginFixture(f.project, base, 'claude');
+  writeFileSync(join(f.project, '.claude/paul-loop.lock.json'), json(lock));
   const entries = [{ id: 'loop-engine@fixture', scope: 'project', projectPath: '/nonexistent/unrelated-project', version: '0.15.0', installPath: '/wrong', enabled: true }, { id: 'loop-engine@fixture', scope: 'project', projectPath: f.project, version: '0.15.0', installPath: base, enabled: false }];
   writeFileSync(join(f.root, 'listing.json'), json(entries));
   writeFileSync(join(f.root, 'bin/claude'), '#!/usr/bin/env node\nconst fs=require("node:fs");fs.appendFileSync(process.env.CLI_TRACE,JSON.stringify(process.argv.slice(2))+"\\n");process.stdout.write(fs.readFileSync(process.env.CLI_LIST));\n', { mode: 0o755 });
@@ -314,4 +323,55 @@ fs.renameSync=(from,to)=>{inject(from);return rename(from,to);};fs.unlinkSync=p=
   if (existsSync(registry)) allBytes.push(readFileSync(registry,'utf8'));
   assert.ok(allBytes.some(bytes=>bytes.includes('competing-rollback-edit')), 'concurrent replacement must survive in the live path or retained recovery files');
   assert.match(result.stderr, /rollback=INCOMPLETE/);
+});
+test('launcher rejects missing approval and cache substitution before execution or publication', t => {
+  for (const attack of ['missing-approval', 'bytes', 'mode', '__proto__', 'sidecar']) {
+    const f = fixture(t), base = join(f.home, 'plugins/cache/fixture/loop-engine/0.15.0'), marker = join(f.root, 'executed');
+    const lockPath = join(f.project, '.codex/paul-loop.lock.json');
+    if (attack === 'missing-approval') {
+      const lock = JSON.parse(readFileSync(lockPath)); delete lock.plugins['loop-engine'].integrity; writeFileSync(lockPath, json(lock));
+    } else if (attack === 'bytes') writeFileSync(join(base, 'bin/probe.mjs'), 'import {writeFileSync} from "node:fs";writeFileSync(' + JSON.stringify(marker) + ', "bad");');
+    else if (attack === 'mode') chmodSync(join(base, 'bin/probe.mjs'), 0o755);
+    else writeFileSync(join(base, attack === 'sidecar' ? 'provenance.json' : attack), json(f.lock));
+    const before = readFileSync(lockPath);
+    for (const args of [['doctor'], ['sync'], ['update'], ['exec', 'bin/probe.mjs']]) {
+      const result = f.run(...args);
+      assert.equal(result.error, undefined); assert.equal(result.status, 1, attack + '/' + args[0] + ': ' + result.stderr);
+      assert.match(result.stderr, /integrity|approval/); assert.equal(result.stdout, '');
+      assert.deepEqual(readFileSync(lockPath), before); assert.equal(existsSync(marker), false);
+      assert.equal(existsSync(join(f.project, '.codex/paul-loop.plugins.json')), false);
+    }
+    const trace = existsSync(f.env.CLI_TRACE) ? readFileSync(f.env.CLI_TRACE, 'utf8') : '';
+    assert.equal(trace.includes('"add"') || trace.includes('"upgrade"'), false);
+  }
+});
+
+test('update never blesses an unapproved new version or same-version replacement', t => {
+  for (const attack of ['version', 'bytes']) {
+    const f = fixture(t), lockPath = join(f.project, '.codex/paul-loop.lock.json'), registry = join(f.project, '.codex/paul-loop.plugins.json');
+    assert.equal(f.run('sync').status, 0);
+    const lockBefore = readFileSync(lockPath), registryBefore = readFileSync(registry);
+    if (attack === 'version') {
+      const next = { 'loop-engine': '0.15.1', 'ship-flow': '0.11.1' };
+      for (const [name, version] of Object.entries(next)) {
+        const base = join(f.home, 'plugins/cache/fixture', name, version); mkdirSync(join(base, '.codex-plugin'), { recursive: true });
+        writeFileSync(join(base, '.codex-plugin/plugin.json'), json({ name, version, repository }));
+      }
+      writeFileSync(join(f.root, 'listing.json.next'), json(next));
+    } else {
+      const cli = join(f.root, 'bin/codex'), payload = join(f.home, 'plugins/cache/fixture/loop-engine/0.15.0/bin/probe.mjs');
+      writeFileSync(cli, readFileSync(cli, 'utf8') + '\nif(args[1]==="add")fs.writeFileSync(' + JSON.stringify(payload) + ',"process.exit(0);");\n');
+    }
+    const result = f.run('update'); assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /host updates applied.*incomplete/);
+    assert.deepEqual(readFileSync(lockPath), lockBefore); assert.deepEqual(readFileSync(registry), registryBefore);
+    assert.equal(f.run('exec', 'bin/probe.mjs').status, 1);
+  }
+});
+
+test('standalone copied launcher retains its default project and reviewed artifact execution', t => {
+  const f = fixture(t), target = join(f.project, 'tools/paul-loop.mjs'); mkdirSync(join(f.project, 'tools'));
+  writeFileSync(target, readFileSync(launcher));
+  const result = spawnSync(process.execPath, [target, 'exec', 'bin/probe.mjs', 'literal arg'], { env: f.env, encoding: 'utf8' });
+  assert.equal(result.status, 7, result.stderr); assert.equal(JSON.parse(result.stdout).root, f.project);
 });

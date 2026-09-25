@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { buildPackages, writePackages } from '../../../scripts/generate-runtime-packages.mjs';
 import { adaptOutput } from '../runtime/hook-adapter.mjs';
+import { verifyPluginIntegrity } from '../bin/plugin-path.mjs';
 import { embedRoleResources, localMarkdownLinks, rebaseDocLinks, validateGeneratedDocRefs } from '../../../scripts/runtime-docs.mjs';
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const json = (p) => JSON.parse(readFileSync(p, 'utf8'));
@@ -60,10 +61,15 @@ test('both generated runtimes are deterministic, internally versioned and packag
       const plugin = join(dir, 'one', runtime, 'plugins', name);
       const manifest = json(join(plugin, `.${runtime}-plugin/plugin.json`));
       assert.equal(manifest.name, name); assert.equal(manifest.version, version);
+      const approval = json(join(dir, 'one', runtime, 'plugin-integrity.json')).plugins[name];
+      assert.equal(approval.version, version);
+      assert.deepEqual(verifyPluginIntegrity(plugin, runtime, name, version, approval.integrity), approval.integrity);
       if (runtime === 'codex') assert.equal(existsSync(join(plugin, '.claude-plugin/plugin.json')), false);
     }
   }
   const catalog = json(join(dir, 'one/codex/.agents/plugins/marketplace.json'));
+  const sourceApproval = json(join(dir, 'one/claude/source-integrity.json')).plugins['loop-engine'];
+  assert.deepEqual(verifyPluginIntegrity(join(root, 'tools/loop-engine'), 'claude', 'loop-engine', sourceApproval.version, sourceApproval.integrity), sourceApproval.integrity);
   assert.equal(catalog.name, 'paul-loop-codex');
   assert.equal(catalog.plugins.length, 3);
   for (const plugin of catalog.plugins) {
@@ -198,6 +204,7 @@ test('setup action executes twice with independent temporary dirs, preserves spa
     for (const key of ['LOOP_ENGINE', 'SHIP_FLOW']) {
       assert.ok(entries[`${key}_PATH`].startsWith(runner+'/paul-loop.'));
       assert.equal(git(entries[`${key}_PATH`], 'rev-parse', 'HEAD'), pins[`${key}_COMMIT`]);
+      assert.equal(entries[`${key}_COMMIT`], pins[`${key}_COMMIT`]);
     }
     outputs.push(entries.LOOP_ENGINE_PATH);
   }

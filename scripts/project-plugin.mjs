@@ -1,36 +1,90 @@
 #!/usr/bin/env node
 // Copyable project launcher. Host installation, native activation and hook trust are distinct.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { accessSync, constants, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { accessSync, constants, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+// BEGIN PLUGIN INTEGRITY — identical in both standalone entrypoints; tested for drift.
+function pluginInventory(root, gitObjects = false) {
+  const files = Object.create(null);
+  function visit(dir = '') {
+    for (const entry of readdirSync(join(root, dir))) {
+      const path = dir ? dir + '/' + entry : entry, absolute = join(root, path), info = lstatSync(absolute);
+      if (info.isSymbolicLink() || (!info.isDirectory() && !info.isFile()) || (info.mode & 0o7000)) throw new Error('plugin integrity: unsafe file type/mode: ' + path);
+      if (info.isDirectory()) visit(path);
+      else {
+        const bytes = readFileSync(absolute);
+        files[path] = gitObjects
+          ? { oid: createHash('sha1').update('blob ' + bytes.length + '\0').update(bytes).digest('hex'), mode: info.mode & 0o111 ? 0o755 : 0o644 }
+          : { sha256: createHash('sha256').update(bytes).digest('hex'), mode: info.mode & 0o7777 };
+      }
+    }
+  }
+  visit();
+  return Object.fromEntries(Object.entries(files).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+}
+
+function pluginManifest(artifact, runtime) {
+  const dir = join(artifact, '.' + runtime + '-plugin'), file = join(dir, 'plugin.json');
+  if (!lstatSync(dir).isDirectory() || !lstatSync(file).isFile()) throw new Error('plugin manifest must be a regular file in a real directory');
+  try {
+    const manifest = JSON.parse(readFileSync(file, 'utf8'));
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error();
+    return manifest;
+  } catch { throw new Error('invalid plugin manifest JSON'); }
+}
+
+function approvalDescriptor(approval, name) {
+  if (!approval || typeof approval !== 'object' || Array.isArray(approval)
+      || Object.keys(approval).sort().join(',') !== 'repository,sha256,sourceCommit'
+      || typeof approval.repository !== 'string' || !approval.repository.startsWith('https://')
+      || typeof approval.sourceCommit !== 'string' || ![40, 64].includes(approval.sourceCommit.length) || !/^[a-f0-9]+$/.test(approval.sourceCommit)
+      || typeof approval.sha256 !== 'string' || approval.sha256.length !== 64 || !/^[a-f0-9]+$/.test(approval.sha256)) throw new Error(name + ': independent integrity approval missing or invalid; review provider pins');
+  const repository = new URL(approval.repository);
+  if (repository.href !== approval.repository || repository.username || repository.password || repository.search || repository.hash || repository.pathname === '/') throw new Error(name + ': invalid approved repository identity');
+  return approval;
+}
+
+export function verifyPluginIntegrity(artifact, runtime, name, version, approval) {
+  const { repository, sourceCommit } = approvalDescriptor(approval, name);
+  const manifest = pluginManifest(artifact, runtime);
+  if (manifest.name !== name || manifest.version !== version || manifest.repository !== repository) throw new Error(name + ': approved repository/manifest identity drift');
+  const files = pluginInventory(artifact);
+  const digest = createHash('sha256').update(JSON.stringify({ runtime, name, version, repository, sourceCommit, files })).digest('hex');
+  if (digest !== approval.sha256) throw new Error(name + ': plugin integrity mismatch; preserve reviewed pins and inspect the changed artifact');
+  return { repository, sourceCommit, sha256: digest };
+}
+// END PLUGIN INTEGRITY
+
 const ENV = { 'loop-engine': 'LOOP_ENGINE_PATH', 'ship-flow': 'SHIP_FLOW_PATH', 'loop-memory': 'LOOP_MEMORY_PATH' };
 const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\+[0-9A-Za-z.-]+)?$/;
 const identifier = /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9_-]+$/;
-const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const canonical = path => { try { return realpathSync(path); } catch { return resolve(path); } };
 const stat = path => { try { return lstatSync(path); } catch (error) { if (error.code === 'ENOENT') return null; throw error; } };
 const inside = (root, file) => { const rel = relative(root, file); return rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel); };
 const hostJson = (host, args, project) => JSON.parse(execFileSync(host, args, { cwd: project, encoding: 'utf8', timeout: 30000, maxBuffer: 8 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }));
 
-export function readLock(project) {
+export function readLock(project, approvedPath) {
   project = realpathSync(project);
-  const candidates = ['.codex', '.claude'].map(dir => join(project, dir, 'paul-loop.lock.json'));
+  const candidates = approvedPath ? [resolve(project, approvedPath)] : ['.codex', '.claude'].map(dir => join(project, dir, 'paul-loop.lock.json'));
   const matches = candidates.filter(path => {
     try { return statSync(path).isFile(); }
     catch (error) { if (error.code === 'ENOENT') return false; throw error; }
   });
   if (matches.length !== 1) throw new Error('exactly one .codex/.claude paul-loop.lock.json is required');
-  const path = matches[0], bytes = readFileSync(path), lock = JSON.parse(bytes);
+  const path = matches[0];
   if (!inside(project, realpathSync(path))) throw new Error('lock escapes project');
+  if (!lstatSync(dirname(path)).isDirectory() || !lstatSync(path).isFile()) throw new Error('integrity approval requires a regular lock file and directory');
+  const bytes = readFileSync(path), lock = JSON.parse(bytes);
   if (lock.schemaVersion !== 1 || !['codex', 'claude'].includes(lock.runtime) || !lock.plugins || Array.isArray(lock.plugins)) throw new Error('invalid lock schema/runtime');
   if (dirname(path) !== join(project, `.${lock.runtime}`)) throw new Error('lock runtime/location mismatch');
   if (!lock.plugins['loop-engine']) throw new Error('lock must include loop-engine');
   for (const [name, entry] of Object.entries(lock.plugins)) {
-    if (!ENV[name] || !entry || !stable.test(entry.version)) throw new Error(`invalid plugin/version: ${name}`);
+    if (!Object.hasOwn(ENV, name) || !entry || !stable.test(entry.version)) throw new Error(`invalid plugin/version: ${name}`);
+    approvalDescriptor(entry.integrity, name);
     if (entry.path !== undefined) {
       if (typeof entry.path !== 'string' || !entry.path || isAbsolute(entry.path) || entry.id !== undefined) throw new Error('vendored path must be relative and distinct from an installed id');
     } else if (!identifier.test(entry.id || '') || entry.id.split('@')[0] !== name) throw new Error(`invalid plugin identity: ${name}`);
@@ -71,9 +125,11 @@ export function inspect(context) {
       const cache = resolve(process.env.CODEX_HOME || join(homedir(), '.codex'), 'plugins/cache', market, plugin, entry.version);
       artifact = realpathSync(lock.runtime === 'codex' ? cache : match.installPath);
     }
-    const manifest = readJson(join(artifact, `.${lock.runtime}-plugin/plugin.json`));
+    const manifest = pluginManifest(artifact, lock.runtime);
     if (!statSync(artifact).isDirectory() || manifest.name !== name || manifest.version !== entry.version) throw new Error(`cache/manifest identity drift: ${name}`);
-    plugins[name] = { path: artifact, version: manifest.version, source: entry.path ? 'vendored' : entry.id, enabled: match?.enabled ?? null, scope: match?.scope ?? null };
+    if (inside(artifact, realpathSync(path))) throw new Error('integrity approval must be outside the plugin artifact');
+    const integrity = verifyPluginIntegrity(artifact, lock.runtime, name, entry.version, entry.integrity);
+    plugins[name] = { path: artifact, version: manifest.version, source: entry.path ? 'vendored' : entry.id, enabled: match?.enabled ?? null, scope: match?.scope ?? null, integrity };
   }
   return { runtime: lock.runtime, project, plugins, nativeHookTrust: 'not-checked' };
 }
@@ -171,7 +227,9 @@ function save(context, snapshot, before, after, nextLock = null) {
   for (const change of changed) rmSync(change.stage);
 }
 
-function update(context, before) {
+function update(context, before, approved = context) {
+  if (approved.lock.runtime !== context.lock.runtime || Object.keys(approved.lock.plugins).sort().join(',') !== Object.keys(context.lock.plugins).sort().join(',')
+      || Object.entries(approved.lock.plugins).some(([name, entry]) => entry.id !== context.lock.plugins[name].id || entry.scope !== context.lock.plugins[name].scope || entry.path)) throw new Error('approved update must retain plugin identities, runtime and scopes');
   const snapshot = registrySnapshot(context);
   registryDocument(snapshot, before, before); // Detect local conflicts before shared host mutations.
   writableParents(context, snapshot);
@@ -190,6 +248,7 @@ function update(context, before) {
   const completed = [];
   const host = (args) => {
     unchanged(context.path, context.bytes); unchanged(snapshot.path, snapshot.bytes);
+    unchanged(approved.path, approved.bytes);
     const result = spawnSync(context.lock.runtime, args, { cwd: context.project, encoding: 'utf8', timeout: 120000, maxBuffer: 8 * 1024 * 1024 });
     if (result.status !== 0 || result.error) throw new Error(`host command failed or outcome uncertain: ${args.join(' ')}; completed=${JSON.stringify(completed)}; inspect host state before retry`);
     completed.push(args);
@@ -201,13 +260,14 @@ function update(context, before) {
     const native = hostJson(context.lock.runtime, ['plugin', 'list', '--json'], context.project);
     const installed = context.lock.runtime === 'codex' ? native?.installed : native;
     if (!Array.isArray(installed)) throw new Error('unsupported host response after update');
-    const nextLock = structuredClone(context.lock);
+    const nextLock = structuredClone(approved.lock);
     for (const [name, entry] of Object.entries(nextLock.plugins)) {
       const matches = installed.filter(p => (p.pluginId || p.id) === entry.id && (context.lock.runtime === 'codex' || (p.scope === before.plugins[name].scope && (p.scope === 'user' || p.projectPath && canonical(p.projectPath) === context.project))));
       if (matches.length !== 1 || !stable.test(matches[0].version) || matches[0].enabled !== before.plugins[name].enabled) throw new Error(`post-update identity/activation drift: ${entry.id}`);
-      entry.version = matches[0].version;
+      if (entry.version !== matches[0].version) throw new Error(`post-update version lacks independent approval: ${entry.id}; supply a reviewed --approved-lock`);
     }
     const after = inspect({ ...context, lock: nextLock });
+    unchanged(approved.path, approved.bytes);
     save(context, snapshot, before, after, nextLock);
     return { ...after, completedHostCommands: completed };
   } catch (error) { throw new Error(`host updates applied but project synchronization incomplete: ${error.message}`); }
@@ -218,13 +278,14 @@ function main() {
   let project = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   if (args[0] === '--project') { if (!args[1]) throw new Error('--project requires a path'); project = resolve(args[1]); args.splice(0, 2); }
   const [command, target, ...childArgs] = args;
-  if (!['doctor', 'exec', 'sync', 'update'].includes(command) || (command !== 'exec' && args.length !== 1)) throw new Error('Usage: project-plugin.mjs [--project DIR] doctor|sync|update|exec bin/<file> [args...]');
+  const approvedPath = command === 'update' && args.length === 3 && target === '--approved-lock' ? childArgs[0] : undefined;
+  if (!['doctor', 'exec', 'sync', 'update'].includes(command) || (command !== 'exec' && args.length !== 1 && !approvedPath)) throw new Error('Usage: project-plugin.mjs [--project DIR] doctor|sync|update [--approved-lock FILE]|exec bin/<file> [args...]');
   const context = readLock(project);
   if (command === 'update' && Object.values(context.lock.plugins).some(p => p.path)) throw new Error('vendored plugins require their reviewed source updater; no files changed');
   const found = inspect(context);
   if (command === 'doctor') { console.log(JSON.stringify(found, null, 2)); return; }
   if (command === 'sync') { save(context, registrySnapshot(context), found, found); console.log(JSON.stringify(found, null, 2)); return; }
-  if (command === 'update') { console.log(JSON.stringify(update(context, found), null, 2)); return; }
+  if (command === 'update') { console.log(JSON.stringify(update(context, found, approvedPath ? readLock(project, approvedPath) : context), null, 2)); return; }
   if (typeof target !== 'string' || !target.startsWith('bin/') || target.split(/[\\/]/).some(p => p === '..' || !p)) throw new Error('exec target must remain inside plugin bin/');
   const bin = realpathSync(join(found.plugins['loop-engine'].path, 'bin'));
   if (!inside(found.plugins['loop-engine'].path, bin)) throw new Error('exec bin directory escapes plugin');
