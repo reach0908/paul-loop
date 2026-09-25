@@ -11,6 +11,7 @@ import { addNote as productionAdd, type NoteInput } from '../../src/ops';
 import { signContent, signNote } from '../../src/provenance';
 import { sanitizeMemory } from '../../hooks/lib/privacy.mjs';
 import { backedLesson } from '../../../loop-engine/test/helpers/backed-lesson.mjs';
+import { userDatabaseProfile } from './user-database';
 
 // Explicit disposable target only. Collection itself refuses the production/default DB URL.
 const value=process.env.LOOP_MEMORY_TEST_DATABASE_URL;
@@ -23,6 +24,8 @@ url.searchParams.set('options',`-c search_path=${schema},public`);
 export const LOOP_DATABASE_URL=url.toString();
 export const FIXTURE_SIGNING_KEY='disposable-memory-fixture-signing-key'; // gitleaks:allow
 export const fixtureRoot=realpathSync(mkdtempSync(join(tmpdir(),'loop-memory-postgres-fixture-')));
+const userHome=realpathSync(mkdtempSync(join(tmpdir(),'loop-memory-user-fixture-')));
+const userProfile=userDatabaseProfile(userHome,{[fixtureRoot]:{url:LOOP_DATABASE_URL}});
 let primary=false;
 export function createLoopDb(signingKey=()=>FIXTURE_SIGNING_KEY) {
   const conn=connect(LOOP_DATABASE_URL);
@@ -36,7 +39,7 @@ export function createLoopDb(signingKey=()=>FIXTURE_SIGNING_KEY) {
       await bindStore(conn.db,conn.pool,{...repositoryIdentity(fixtureRoot),embeddingId:stubEmbedder().identity!,signingKey:signingKey()});
     });
     const end=conn.pool.end.bind(conn.pool);
-    conn.pool.end=async()=>{await conn.pool.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await end();rmSync(fixtureRoot,{recursive:true,force:true});};
+    conn.pool.end=async()=>{await conn.pool.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await end();rmSync(fixtureRoot,{recursive:true,force:true});rmSync(userHome,{recursive:true,force:true});};
   }
   return conn;
 }
@@ -66,5 +69,5 @@ export function spawnSync(command:string,args:string[],opts:SpawnSyncOptionsWith
   const env={...opts.env,LOOP_DIR:'.loop',CLAUDE_PROJECT_DIR:fixtureRoot,LOOP_DATABASE_URL,
     LOOP_DOTENV_PATH:'/nonexistent-fixture.env',LOOP_MEMORY_SIGNING_KEY:opts.env?.LOOP_MEMORY_SIGNING_KEY??FIXTURE_SIGNING_KEY,
     OPENAI_API_KEY:'',GEMINI_API_KEY:'',LOOP_EMBED_PROVIDER:'',LOOP_EMBED_MODEL:''};
-  return nativeSpawnSync(command,next,{...opts,cwd:fixtureRoot,env});
+  return nativeSpawnSync(command,['--import',userProfile,...next],{...opts,cwd:fixtureRoot,env});
 }

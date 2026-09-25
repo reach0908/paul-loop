@@ -1,50 +1,12 @@
-// Loads a dotenv-shaped file into a hook's child-env object.
-//
-// Why this exists: Claude Code hands a hook the *session process env* — it does not load `.env` files.
-// A repo that keeps its embedding key in a gitignored `.env` (the normal way to hold a secret that
-// must not be committed) and never `export`s it to the shell therefore hits both hooks' own
-// no-key gate, and recall/graduate no-op **silently**. That failure mode already burned this
-// plugin's origin repo once for six weeks, so the loader ships *with the plugin* rather than being
-// something each consuming repo has to re-implement as a local hook.
-//
-// Contract (all three properties are load-bearing — see test/hooks-dotenv.test.ts):
-//   1. Never overwrite a key already present in `target` — an explicit shell/session export, and the
-//      `CLAUDE_PLUGIN_OPTION_*` userConfig bridge the hooks run first, both outrank the file.
-//   2. Worktree fallback: a gitignored `.env` does not exist in a freshly-created feature worktree,
-//      which is exactly where an isolated agent loop runs. If the primary path is missing, resolve the
-//      *main* worktree via `git rev-parse --git-common-dir` and read its copy instead. Without this,
-//      every worktree fails closed. No file is copied — the key stays untracked, in one place.
-//   3. Best-effort: any failure (missing file, unreadable, non-git, no git binary) leaves `target`
-//      untouched and returns null. A hook must never break a session over its own optional config.
-//   4. ALLOWLIST. Only the keys in `ALLOWED_KEYS` are ever copied into `target`. Everything else in
-//      the file is ignored, silently and by design.
-//
-// Why 4 exists — the threat model this loader sits in the middle of:
-//
-//   This file is READ FROM THE REPOSITORY BEING WORKED ON. `.loop/.env` is a path any repo can carry,
-//   and a repo you merely *open* is not a repo you trust: reviewing a pull request, trying someone
-//   else's project, or cloning to reproduce a bug all mean a hostile file can be sitting there before
-//   you type anything. What `target` then becomes is a process environment — `graduate-lessons.mjs`
-//   passes it as `spawnSync(..., { env })`, and `loop-doctor-heartbeat.mjs` merges it into its OWN
-//   `process.env` before running `git`. So without an allowlist this loader hands a repository the
-//   ability to set ANY environment variable for a child process, and both of those hooks are wired to
-//   `SessionStart` — i.e. it fires on opening the repo, with no user action at all.
-//
-//   That is remote code execution, not a theoretical weakness, and it was reproduced both ways before
-//   this allowlist was written: `NODE_OPTIONS=--require ./payload.cjs` (the spawned `node` runs the
-//   repo's file) and `GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_0=core.fsmonitor` (the `git` call runs the
-//   repo's program). Those two are examples, not the set — `BASH_ENV`, `LD_PRELOAD`, `PERL5OPT`,
-//   `DYLD_INSERT_LIBRARIES` and others reach the same place, which is exactly why this is an
-//   allowlist and not a denylist. A denylist has to be complete forever; an allowlist has to be
-//   correct once.
-//
-//   The allowlist's own rule, so future keys land on the right side of it: **a dotenv file supplies
-//   credentials and connection settings. It never changes behaviour and never turns a gate off.**
-//   That is why `LOOP_*_OFF` / `LOOP_*_GATE_OFF` / `LOOP_SANITIZE_OFF` are absent — a repo must not be
-//   able to disable the stop gate, the worktree gate, or log redaction by shipping a file. `LOOP_DOTENV_PATH`
-//   is absent too: a dotenv file redirecting where dotenv files are read from is a loop, and a lever.
+// Shared credential loader and user-owned DB authorization for memory hooks/CLI and heartbeat.
+// Credential precedence: explicit session value (including empty) > plugin option > dotenv.
+// Missing worktree files may use the main checkout; unsafe existing paths never trigger fallback.
+// Dotenv never enables/disables behavior. Its legacy DB field is parsed for compatibility only:
+// actual DB consumers use trustedDatabaseConfig, which ignores all project/env DB settings.
+// No same-user arbitrary-code-execution protection is claimed by these filesystem checks.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from 'node:fs';
+import { userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 
 /** Repo-relative default. `.loop/` is loop-engine's own convention directory (it already holds
@@ -62,7 +24,7 @@ export const ALLOWED_KEYS = Object.freeze([
   'OPENAI_API_KEY',
   'GEMINI_API_KEY',
   'LOOP_MEMORY_SIGNING_KEY',
-  // connection
+  // Legacy parsing compatibility only: DB consumers must use trustedDatabaseConfig, never this value.
   'LOOP_DATABASE_URL',
   'LOOP_EMBED_PROVIDER',
   'LOOP_EMBED_MODEL',
@@ -72,19 +34,26 @@ export const ALLOWED_KEYS = Object.freeze([
 ]);
 const ALLOWED = new Set(ALLOWED_KEYS);
 
-/** Absolute path of the main worktree, via `git rev-parse --git-common-dir`. null if not a git repo,
- * git is missing/slow, or the common dir isn't a `.git` directory (i.e. nothing to fall back to). */
+/** Resolve the main checkout only for a registered worktree containing cwd.
+ * A repository-supplied .git file alone must not inherit another checkout's authority. */
 function mainWorktreeRoot(cwd) {
   try {
-    const out = execFileSync('git', ['rev-parse', '--git-common-dir'], {
+    const options = {
       cwd,
       encoding: 'utf8',
       timeout: 3000,
       stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-    if (!out) return null;
-    const commonDir = resolve(cwd, out);
-    // The main worktree's `.git` is a directory (= commonDir itself) — its parent is that worktree's root.
+      env: { PATH: process.env.PATH },
+    };
+    const [top, common] = execFileSync('git', ['rev-parse', '--show-toplevel', '--git-common-dir'], options).trim().split('\n');
+    if (!top || !common) return null;
+    const root = realpathSync(top);
+    if (!contained(root, realpathSync(cwd))) return null;
+    const registered = execFileSync('git', ['worktree', 'list', '--porcelain', '-z'], options).split('\0');
+    if (!registered.some(field => {
+      try { return field.startsWith('worktree ') && realpathSync(field.slice(9)) === root; } catch { return false; }
+    })) return null;
+    const commonDir = realpathSync(resolve(cwd, common));
     return basename(commonDir) === '.git' ? dirname(commonDir) : null;
   } catch {
     return null;
@@ -96,18 +65,27 @@ function mainWorktreeRoot(cwd) {
  * outside the project has no "main worktree" counterpart to fall back to). */
 export function resolveDotenvPath(projectDir, configured) {
   const rel = configured || DEFAULT_DOTENV_PATH;
-  if (isAbsolute(rel)) return existsSync(rel) ? rel : null;
-  // A RELATIVE path stays inside the directory it is relative to. `LOOP_DOTENV_PATH` is ordinary
-  // session env, which a repo-committed `.claude/settings.json` can set — so without this, `../../..`
-  // walks the loader out of the project and into whatever it names. An ABSOLUTE path is left alone on
-  // purpose (documented in the plugin manifest: a repo may keep its key outside the tree), and the
-  // allowlist above is what keeps even that from being interesting to point somewhere hostile.
-  const local = contained(projectDir, rel);
-  if (local && existsSync(local)) return local;
+  if (isAbsolute(rel)) return lstatSync(rel, { throwIfNoEntry: false })?.isFile() ? rel : null;
+  // Relative credential paths stay within their physical project root.
+  const root = realpathSync(projectDir);
+  const local = contained(root, rel);
+  if (!local || !withoutSymlinks(root, local)) return null;
+  const localStat = lstatSync(local, { throwIfNoEntry: false });
+  if (localStat) return localStat.isFile() ? local : null;
   const mainRoot = mainWorktreeRoot(projectDir);
   if (!mainRoot) return null;
-  const fallback = contained(mainRoot, rel);
-  return fallback && existsSync(fallback) ? fallback : null;
+  const canonical = realpathSync(mainRoot);
+  const fallback = contained(canonical, rel);
+  return fallback && withoutSymlinks(canonical, fallback) && lstatSync(fallback, { throwIfNoEntry: false })?.isFile() ? fallback : null;
+}
+
+function withoutSymlinks(root, file) {
+  let cursor = file;
+  while (cursor !== root) {
+    if (lstatSync(cursor, { throwIfNoEntry: false })?.isSymbolicLink()) return false;
+    cursor = dirname(cursor);
+  }
+  return true;
 }
 
 /** `resolve(root, rel)` if the result is still under `root`, else null. Compares via `relative()`
@@ -122,10 +100,13 @@ function contained(root, rel) {
  * Returns the path actually read, or null if nothing was loaded (so callers can log which it was —
  * "silently loaded nothing" and "silently found nothing" must be distinguishable in the debug log). */
 export function loadDotenv(projectDir, configured, target = process.env) {
+  let fd;
   try {
     const file = resolveDotenvPath(projectDir, configured);
     if (!file) return null;
-    for (const raw of readFileSync(file, 'utf8').split('\n')) {
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    if (!fstatSync(fd).isFile()) return null;
+    for (const raw of readFileSync(fd, 'utf8').split('\n')) {
       const line = raw.trim(); // also drops CRLF's \r
       if (!line || line.startsWith('#')) continue; // blank / comment line
       const eq = line.indexOf('='); // split on the FIRST '=' only — values may contain '='
@@ -153,5 +134,58 @@ export function loadDotenv(projectDir, configured, target = process.env) {
     return file;
   } catch {
     return null; // best-effort: the caller's own key gate handles "still no key"
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+
+/** Automatic DB access is authorized by an OS-user-owned file, never repository/session env.
+ * Each canonical repository has its own entry. HOME/XDG/plugin options cannot redirect this file. */
+export function trustedDatabaseConfig(projectDir) {
+  let fd;
+  try {
+    const user = userInfo();
+    const home = realpathSync(user.homedir);
+    const homeStat = lstatSync(home);
+    if (homeStat.uid !== user.uid || (homeStat.mode & 0o022)) throw Error('database_config_untrusted');
+    const canonical = realpathSync(mainWorktreeRoot(projectDir) || projectDir);
+    const file = resolve(home, '.config/paul-loop/memory-databases.json');
+    if (contained(canonical, file)) throw Error('database_config_untrusted');
+    let cursor = file;
+    while (cursor !== home) {
+      const st = lstatSync(cursor);
+      if (st.isSymbolicLink() || st.uid !== user.uid || (st.mode & 0o022)) throw Error('database_config_untrusted');
+      cursor = dirname(cursor);
+    }
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const st = fstatSync(fd);
+    if (!st.isFile() || st.uid !== user.uid || st.nlink !== 1 || (st.mode & 0o077)) throw Error('database_config_untrusted');
+    const entry = JSON.parse(readFileSync(fd, 'utf8'))[canonical];
+    if (!entry) throw Error('database_config_missing');
+    if (typeof entry.url !== 'string' || /[\s\u0000-\u001f]/.test(entry.url)) throw Error('database_config_invalid');
+    const url = new URL(entry.url);
+    if (!['postgres:', 'postgresql:'].includes(url.protocol) || url.hash || !url.hostname || !url.username || url.pathname.length < 2) throw Error('database_config_invalid');
+    for (const key of url.searchParams.keys()) {
+      if (!['host', 'options', 'sslmode'].includes(key) || url.searchParams.getAll(key).length !== 1) throw Error('database_config_invalid');
+    }
+    // A host query is supported only for an explicitly selected Unix socket, never a TCP override.
+    const socket = url.searchParams.get('host');
+    if (socket !== null && !isAbsolute(socket)) throw Error('database_config_invalid');
+    const host = socket || url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+    const local = socket || ['localhost', '127.0.0.1', '::1'].includes(host);
+    const mode = url.searchParams.get('sslmode');
+    if (mode !== null && !['disable', 'require', 'verify-full'].includes(mode)) throw Error('database_config_invalid');
+    if (!local && (entry.allowRemote !== true || !['require', 'verify-full'].includes(mode))) throw Error('database_remote_not_approved');
+    const port = Number(url.port || 5432);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('database_config_invalid');
+    const userName = decodeURIComponent(url.username), password = decodeURIComponent(url.password), database = decodeURIComponent(url.pathname.slice(1));
+    if ([host, userName, password, database].some(v => /[\u0000-\u001f]/.test(v))) throw Error('database_config_invalid');
+    return { host: host === 'localhost' ? '127.0.0.1' : host, port, user: userName, password, database,
+      ssl: mode === 'require' || mode === 'verify-full', options: url.searchParams.get('options') || ' ' };
+  } catch (e) {
+    const code = e?.code === 'ENOENT' ? 'database_config_missing' : e?.message;
+    throw Error(['database_config_missing', 'database_config_untrusted', 'database_config_invalid', 'database_remote_not_approved'].includes(code) ? code : 'database_config_invalid');
+  } finally {
+    if (fd !== undefined) closeSync(fd);
   }
 }

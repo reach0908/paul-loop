@@ -62,7 +62,7 @@ function writeFakeCli(mode = 'hit') {
   writeFileSync(
     join(pluginRoot, 'dist', 'cli.js'),
     [
-      "const mode = process.env.CLI_MODE || 'hit';",
+      `const mode = ${JSON.stringify(mode)};`,
       "if (mode === 'fail') process.exit(3);",
       "if (mode === 'privacy' && process.argv[2] === 'recall') { const q = require('node:fs').readFileSync(0, 'utf8'); if (!process.argv.includes('--query-stdin') || process.argv.includes('--query') || /sensitive@example.com|fixture-prompt-secret/.test(q)) process.exit(3); }",
       "if (mode === 'malformed') { process.stdout.write('not JSON'); process.exit(0); }",
@@ -82,6 +82,7 @@ function writeFakeCli(mode = 'hit') {
 }
 
 function baseEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
+  writeFakeCli(extra.CLI_MODE || 'hit');
   return {
     PATH: process.env.PATH,
     CLAUDE_PLUGIN_ROOT: pluginRoot,

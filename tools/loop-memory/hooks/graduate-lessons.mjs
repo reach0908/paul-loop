@@ -112,7 +112,7 @@ try {
   ]) {
     if (env[pluginOpt]) args.push(flag, join(projectDir, env[pluginOpt]));
   }
-  const res = spawnSync('node', args, { cwd: projectDir, timeout: 12000, encoding: 'utf8', env: childEnv });
+  const res = spawnSync(process.execPath, args, { cwd: projectDir, timeout: 12000, encoding: 'utf8', env: childEnv });
   // null on timeout/signal — kept distinct from a real exit code rather than flattened.
   live.cli_status = typeof res.status === 'number' ? res.status : null;
   if (res.status !== 0) {

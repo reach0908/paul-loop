@@ -5,6 +5,19 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-memory 0.8.0
+
+- Require user-owned, repository-bound DB authorization before automatic connections. Ignore DB
+  URLs from project dotenv, environment and plugin options; validate approved destinations and
+  remote TLS before the driver sees them. Existing setups need an explicit configuration migration.
+- Allowlist hook child environments, preserve credential precedence and fail-open sessions, and
+  reject repo-relative credential symlinks. No DB or installed consumer configuration is migrated.
+
+## loop-engine 0.15.11
+
+- Apply the same user-owned DB authorization to the automatic memory heartbeat. Refuse unsafe
+  relative dotenv paths while retaining regular credential files and missing-worktree fallback.
+
 ## ship-flow 0.11.4
 
 - Bind consumer CI setup to independently reviewed full commit SHAs for both plugin releases.

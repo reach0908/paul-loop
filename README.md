@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.10**, ship-flow **0.11.4**, loop-memory **0.7.0**.
+> **Source versions:** loop-engine **0.15.11**, ship-flow **0.11.4**, loop-memory **0.8.0**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -221,12 +221,36 @@ interactively via `/plugin configure loop-memory@paul-loop`:
 | Key | Required | Notes |
 |---|---|---|
 | `openai_api_key` / `gemini_api_key` | no (but you need at least one) | `sensitive: true` — stored in the OS keychain / `~/.claude/.credentials.json`, never in `settings.json`. Without either key both hooks no-op. |
-| `loop_database_url` | no | Defaults to `postgresql://postgres:postgres@localhost:5434/loop_memory` — this plugin's `docker-compose.yml` matches that default (`docker compose up -d --wait` from `tools/loop-memory/`). |
 | `loop_memory_signing_key` | no | HMAC-SHA256 key required for store writes and recall, including knowledge. Missing configuration fails closed — see "Threat model" below. `sensitive: true`. |
 | `loop_dotenv_path` | no | Repo-relative (or absolute) dotenv-shaped file the hooks read **before** their key gate. Default `.loop/.env`. See "Keys that live in a `.env`" below. |
 | `loop_adr_dir` / `loop_context_file` / `loop_research_dir` / `loop_design_dir` | no | Optional *knowledge* corpus sources (separate from lessons) — a directory of `# ADR-NNNN: Title`-headed decision docs, a single `**Term**:`-chunked glossary file, and two `##`-section-chunked doc directories, respectively. Unset = that source is skipped entirely; nothing is assumed about your repo's docs unless you point at them. |
 | `loop_embed_provider` / `loop_embed_model` | no | Explicit provider/model selection; provider is required when both API keys are set. Identity changes require deliberate reindexing. |
 | `loop_recall_max_distance` / `loop_knowledge_max_distance` | no | Cosine-distance cutoffs (0=identical..2=opposite) for the lessons and knowledge corpora respectively — a hit farther than this is dropped instead of injected. **Embedder-dependent**, calibrate for your provider/corpus; the code default (0.65) is a loose safety net if left unset. |
+
+### Database destination
+
+Database destinations are configured separately in the OS user's
+`~/.config/paul-loop/memory-databases.json` (mode `0600`), keyed by the **canonical checkout's real
+absolute path**. For example, with your own dedicated endpoint:
+
+```json
+{
+  "/absolute/path/example-app": {
+    "url": "postgresql://memory_user:YOUR_PASSWORD@127.0.0.1:5434/loop_memory"
+  }
+}
+```
+
+Create this user-owned file deliberately outside the repository; it and its configuration directories
+must not be symlinks or writable by other users. `HOME`, XDG and plugin options cannot redirect it.
+There is **no automatic default DB connection**. `LOOP_DATABASE_URL` and `loop_database_url` no longer
+select the hooks/CLI/heartbeat endpoint. Registered worktrees use their canonical checkout's entry; separate
+clones need their own entry. Missing or invalid configuration fails closed before networking.
+Remote hosts additionally require `"allowRemote": true` and `?sslmode=verify-full` (or `require`, also
+certificate-verified). Supported query fields are `sslmode`, `options`, and `host` for an explicitly
+selected absolute Unix socket directory. TCP host/port overrides, SSL file parameters and other query
+fields are rejected. This is destination authorization, not proof that the selected DB is empty or
+appropriate; store ownership checks and explicit migration approval still apply.
 
 ### Keys that live in a `.env`
 
@@ -243,12 +267,17 @@ hooks load a dotenv-shaped file themselves, before that gate:
   which is exactly where an isolated agent loop runs. If the path is missing there, the *main*
   worktree's copy is read instead (resolved via `git rev-parse --git-common-dir`). Nothing is
   copied; the key stays untracked and in one place.
+- **Symlinks**: repo-relative files and intermediate directories must be real paths; unsafe existing
+  entries do not fall back to another credential file. An explicit absolute regular credential file
+  remains supported.
 - **Best-effort**: a missing/unreadable file, or a non-git directory, leaves the env untouched and
   the hooks fall back to their normal fail-open no-op.
 
 Only the allowlist is loaded: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `LOOP_MEMORY_SIGNING_KEY`,
-`LOOP_DATABASE_URL`, `LOOP_EMBED_PROVIDER`, `LOOP_EMBED_MODEL`, `LOOP_RECALL_MAX_DISTANCE`, and
+`LOOP_EMBED_PROVIDER`, `LOOP_EMBED_MODEL`, `LOOP_RECALL_MAX_DISTANCE`, and
 `LOOP_KNOWLEDGE_MAX_DISTANCE`. Shell control variables and guard-off switches are ignored.
+The generic parser retains its legacy DB field for compatibility, but memory children discard it
+and every automatic DB consumer reads the separate user authorization file.
 The CLI and hooks share precedence: explicit session env (including an empty value) > Claude
 `userConfig` bridge > allowlisted file. Codex uses explicit env/file configuration; its package does
 not claim Claude's native configuration UI or secret storage.

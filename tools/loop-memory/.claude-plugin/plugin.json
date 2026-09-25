@@ -1,6 +1,6 @@
 {
   "name": "loop-memory",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "pgvector semantic recall for verified dev-loop lessons (and, optionally, ADR/glossary/research knowledge). Opt-in: installs disabled by default — this is a database dependency, not core loop mechanics.",
   "author": {
     "name": "paulkim-lansik"
@@ -37,12 +37,6 @@
       "sensitive": true,
       "required": false
     },
-    "loop_database_url": {
-      "type": "string",
-      "title": "loop-memory Postgres connection URL",
-      "description": "pgvector-enabled Postgres to store notes in. Defaults to this plugin's docker-compose.yml (postgresql://postgres:postgres@localhost:5434/loop_memory).",
-      "required": false
-    },
     "loop_memory_signing_key": {
       "type": "string",
       "title": "Write-path signing key",
@@ -53,7 +47,7 @@
     "loop_dotenv_path": {
       "type": "string",
       "title": "Dotenv file the hooks load keys from",
-      "description": "Repo-relative (or absolute) path to a dotenv-shaped file the hooks read before their embedding-key gate — Claude Code hands hooks the session process env only and never loads .env files, so a key that lives solely in an (unexported, gitignored) .env would otherwise make both hooks no-op silently. Values already set in the session env or via the options above always win. Default (if unset): .loop/.env. If the path is missing in a feature worktree, the main worktree's copy is used (a gitignored .env is never copied into a new worktree).",
+      "description": "Repo-relative (or absolute) path to a dotenv-shaped file the hooks read before their embedding-key gate — Claude Code hands hooks the session process env only and never loads .env files, so a key that lives solely in an (unexported, gitignored) .env would otherwise make both hooks no-op silently. Values already set in the session env or via the options above always win. Default (if unset): .loop/.env. If the path is missing in a feature worktree, the main worktree's copy is used (a gitignored .env is never copied into a new worktree). Database destinations use the OS user-owned memory-databases.json instead; dotenv and environment DB URLs are ignored. Repository-relative symlinks are refused.",
       "required": false
     },
     "loop_adr_dir": {

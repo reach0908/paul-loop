@@ -88,7 +88,7 @@ function out(text, why, outcome, reason) {
 function recordInjected(cliPath, hits, cliEnv) {
   if (hits.length === 0 || cliEnv.LOOP_LEARNING_OFF === '1' || cliEnv.LOOP_MEMORY_RECALL_ONLY === '1') return;
   try {
-    const child = spawn('node', [cliPath, 'record-recall', '--hits', JSON.stringify(hits)], {
+    const child = spawn(process.execPath, [cliPath, 'record-recall', '--hits', JSON.stringify(hits)], {
       cwd: projectDir,
       stdio: 'ignore',
       detached: true,
@@ -164,7 +164,7 @@ try {
   const lessonsDir = join(projectDir, '.loop', 'lessons');
   // k=3 per corpus: lessons and knowledge each get their own top-3 so neither starves the other.
   const res = spawnSync(
-    'node',
+    process.execPath,
     [cli, 'recall', '--query-stdin', '--json', '--k', '3', '--lessons', lessonsDir],
     { cwd: projectDir, input: prompt, timeout: 6000, encoding: 'utf8', env: childEnv },
   );
