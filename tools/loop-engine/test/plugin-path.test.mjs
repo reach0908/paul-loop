@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { resolvePluginInstallation, resolvePluginPath } from '../bin/plugin-path.mjs';
+import { approvePluginFixture } from './helpers/plugin-approval.mjs';
 const cli = fileURLToPath(new URL('../bin/plugin-path.mjs', import.meta.url));
 const versions = { 'loop-engine': '0.15.0', 'ship-flow': '0.11.0', 'loop-memory': '0.7.0' };
 function fixture(t) {
@@ -13,12 +14,29 @@ function fixture(t) {
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const write = (path, data) => { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, typeof data === 'string' ? data : JSON.stringify(data)); };
   const plugin = (id = 'loop-engine', runtime = 'claude', suffix = '', version = versions[id]) => {
-    const path = join(root, `${runtime}-${id}${suffix}`); write(join(path, `.${runtime}-plugin/plugin.json`), { name: id, version }); return path;
+    const path = join(root, `${runtime}-${id}${suffix}`); write(join(path, `.${runtime}-plugin/plugin.json`), { name: id, version, repository: 'https://github.com/reach0908/paul-loop' }); return path;
   };
   const registry = join(root, 'claude/plugins/installed_plugins.json');
   const opts = { root, pluginsFile: registry, runtime: 'claude', env: {} };
   return { root, write, plugin, registry, opts, set: (entries, id = 'loop-engine') => write(registry, { plugins: { [`${id}@paul-loop`]: entries } }) };
 }
+test('fixture approval pins bytes and modes outside the artifact; symlinks cannot refresh it', (t) => {
+  const f = fixture(t), path = f.plugin(), payload = join(path, 'bin/probe.mjs');
+  f.write(payload, 'process.exit(0);');
+  chmodSync(join(path, '.claude-plugin/plugin.json'), 0o644); chmodSync(payload, 0o644);
+  const approved = approvePluginFixture(f.root, path);
+  assert.equal(approved.sha256, '9c2d8a9c98da256a5755b97c61953e3c32e8bea323417faedefd93782b8041d7');
+  const lock = join(f.root, '.claude/paul-loop.lock.json'), bytes = readFileSync(lock, 'utf8');
+  f.write(payload, 'process.exit(1);');
+  assert.equal(readFileSync(lock, 'utf8'), bytes);
+  const changed = approvePluginFixture(f.root, path); assert.notEqual(changed.sha256, approved.sha256);
+  chmodSync(payload, 0o755);
+  const executable = approvePluginFixture(f.root, path); assert.notEqual(executable.sha256, changed.sha256);
+  const lastApproval = readFileSync(lock, 'utf8');
+  symlinkSync(payload, join(path, 'bin/alias.mjs'));
+  assert.throws(() => approvePluginFixture(f.root, path), /rejects symlinks/);
+  assert.equal(readFileSync(lock, 'utf8'), lastApproval);
+});
 test('missing/malformed/empty registry and unknown plugins fail without guessing', (t) => {
   const f = fixture(t);
   assert.equal(resolvePluginPath(f.opts), null);
@@ -30,6 +48,7 @@ test('missing/malformed/empty registry and unknown plugins fail without guessing
 });
 test('exact project, local override, user fallback, no unrelated-project fallback', (t) => {
   const f = fixture(t), a = f.plugin(), b = f.plugin('loop-engine', 'claude', '-other'), u = f.plugin('loop-engine', 'claude', '-user');
+  approvePluginFixture(f.root, a); // The three locations contain identical approved bytes.
   const entries = [{ scope: 'project', projectPath: join(f.root, 'other'), installPath: b }, { scope: 'project', projectPath: f.root, installPath: a }];
   f.set([entries[1]]); assert.equal(resolvePluginPath(f.opts), a);
   f.set(entries); assert.equal(resolvePluginPath(f.opts), a);
@@ -39,6 +58,7 @@ test('exact project, local override, user fallback, no unrelated-project fallbac
 });
 test('validated overrides have priority; names, stable versions, floors and stale paths are enforced', (t) => {
   const f = fixture(t), path = f.plugin();
+  approvePluginFixture(f.root, path);
   f.set([{scope:'project', projectPath:f.root, installPath:f.plugin('loop-engine', 'claude', '-ignored')}]);
   assert.equal(resolvePluginPath({ ...f.opts, env: { LOOP_ENGINE_PATH: path } }), path);
   for (const invalid of ['relative', join(f.root, 'absent'), f.plugin('ship-flow'), f.plugin('loop-engine', 'claude', '-old', '0.12.1'), f.plugin('loop-engine', 'claude', '-pre', '0.15.0-rc.1')]) {
@@ -51,6 +71,7 @@ test('each sibling key and override is independent, and inspection does not clai
   const f = fixture(t);
   for (const [id, envName] of [['loop-engine', 'LOOP_ENGINE_PATH'], ['ship-flow', 'SHIP_FLOW_PATH'], ['loop-memory', 'LOOP_MEMORY_PATH']]) {
     const path = f.plugin(id);
+    approvePluginFixture(f.root, path);
     const found = resolvePluginInstallation({ ...f.opts, plugin: id, env: { [envName]: path } });
     assert.equal(found.path, path); assert.equal(found.hookTrust, 'unknown'); assert.equal(found.activation, 'unknown');
     f.set([{ scope: 'project', projectPath: f.root, installPath: path }], id);
@@ -68,12 +89,14 @@ test('CLAUDE_CONFIG_DIR and canonical linked-worktree identity resolve the main 
   execFileSync('git', ['-C', repo, '-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'fixture']);
   execFileSync('git', ['-C', repo, 'worktree', 'add', '-qb', 'feature', worktree]);
   const path = f.plugin(); f.set([{ scope: 'project', projectPath: repo, installPath: path }]);
+  approvePluginFixture(repo, path);
   assert.equal(resolvePluginPath({ root: worktree, env: { CLAUDE_CONFIG_DIR: join(f.root, 'claude') }, runtime: 'claude' }), path);
   const alias = join(f.root, 'alias'); symlinkSync(repo, alias);
   assert.equal(resolvePluginPath({ ...f.opts, root: alias }), path);
 });
 test('Codex uses explicit artifact registration, rejects Claude-only overrides, and reports unknown activation', (t) => {
   const f = fixture(t), path = f.plugin('loop-engine', 'codex');
+  approvePluginFixture(f.root, path, 'codex');
   const registry = join(f.root, 'artifacts.json');
   f.write(registry, { schemaVersion: 1, runtime: 'codex', plugins: { 'loop-engine': { path, version: '0.15.0' } } });
   const opts = { root: f.root, runtime: 'codex', env: { PAUL_LOOP_INSTALLATIONS: registry } };
@@ -88,15 +111,19 @@ test('CLI dispatch preserves cwd, spaced argv and exit codes; rejects escapes an
   const env = { PATH: process.env.PATH, HOME: join(f.root, 'empty-home'), LOOP_ENGINE_PATH: path, LOOP_RUNTIME: 'claude' };
   f.write(join(path, 'bin/args.mjs'), 'console.log(JSON.stringify({argv:process.argv.slice(2),cwd:process.cwd()}));process.exitCode=7;');
   const run = (args, overrides = {}) => spawnSync(process.execPath, [cli, ...args], { cwd: f.root, encoding: 'utf8', env: { ...env, ...overrides } });
+  approvePluginFixture(f.root, path);
   assert.equal(run(['resolve']).stdout.trim(), path);
   const ship = f.plugin('ship-flow');
+  approvePluginFixture(f.root, ship);
   assert.equal(run(['resolve', 'ship-flow'], {SHIP_FLOW_PATH:ship}).stdout.trim(), ship);
   const result = run(['exec', 'bin/args.mjs', 'a b', '한글', '']);
   assert.equal(result.status, 7); assert.deepEqual(JSON.parse(result.stdout), { argv: ['a b', '한글', ''], cwd: f.root });
   f.write(join(path, 'bin/hello.sh'), '[[ -n \"$1\" ]] || exit 9; printf "sh:%s" "$1"');
+  approvePluginFixture(f.root, path);
   assert.equal(run(['exec', 'bin/hello.sh', 'two words']).stdout, 'sh:two words');
   f.write(join(path, 'bin/hello.bin'), '#!/bin/sh\nprintf \"bin:%s\" \"$1\"');
   chmodSync(join(path, 'bin/hello.bin'), 0o755);
+  approvePluginFixture(f.root, path);
   assert.equal(run(['exec', 'bin/hello.bin', 'two words']).stdout, 'bin:two words');
   f.write(join(path, 'outside.mjs'), 'process.exit(0)');
   symlinkSync(join(path, 'outside.mjs'), join(path, 'bin/escape.mjs'));
@@ -117,6 +144,7 @@ test('CLI dispatch preserves cwd, spaced argv and exit codes; rejects escapes an
 
 test('symlink CLI runs with default and preserved main URLs; imports never run the CLI', (t) => {
   const f = fixture(t), path = f.plugin(), alias = join(f.root, 'resolver alias 한글.mjs');
+  approvePluginFixture(f.root, path);
   symlinkSync(cli, alias);
   const env = { PATH: process.env.PATH, HOME: f.root, CLAUDE_CONFIG_DIR: join(f.root, 'absent-config'), LOOP_RUNTIME: 'claude', LOOP_ENGINE_PATH: path };
   for (const flags of [[], ['--preserve-symlinks-main']]) {

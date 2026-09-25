@@ -5,6 +5,12 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.12
+
+- Prepare explicit content/mode approvals for resolver test fixtures before enforcing plugin
+  integrity. Retain existing resolution, execution and rejection assertions. Runtime behavior is
+  unchanged; issue #97 remains open until the follow-up enforces independently approved pins.
+
 ## loop-memory 0.8.0
 
 - Require user-owned, repository-bound DB authorization before automatic connections. Ignore DB
