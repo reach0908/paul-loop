@@ -5,6 +5,18 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.4
+
+- Bind consumer CI setup to independently reviewed full commit SHAs for both plugin releases.
+  Validate literal pins before transport, reject moved or shadowed tags before checkout/execution,
+  and retain independent versions, artifact validation and failure cleanup. Existing copied actions
+  require an explicit update; marketplace publication does not change consumer workflows.
+
+## loop-engine 0.15.10
+
+- Extend the real Git setup regression with moved tags, branch aliases, invalid pins, inert shell
+  input, annotated tags and proof that rejected code/checkout filters never run. Runtime unchanged.
+
 ## loop-engine 0.15.9
 
 - Exercise consumer setup with real local Git repositories instead of a clone-only stub.

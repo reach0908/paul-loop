@@ -109,7 +109,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
       "localPath": "tools/ship-flow/skills/setup/SKILL.md",
-      "computedHash": "773c195aa7df4d646dad55db65157e66ca9cc39eced764d511c91a870b9240fa",
+      "computedHash": "2f610d682fe8dcb60cecc4ccbac227ac529185eaff721cdee659e5bbbd6f2ea1",
       "fork": {
         "reason": "Deliberate divergence: this one configures the plugin; upstream's configures a tracker, labels and doc layout.",
         "since": "2026-08-26"
