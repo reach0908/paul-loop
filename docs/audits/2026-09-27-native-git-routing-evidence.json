@@ -1,0 +1,467 @@
+{
+  "schema": "routing-observations/1",
+  "observed_date": "2026-09-27",
+  "runtime": "codex-cli 0.155.0-alpha.16.4",
+  "scope": "Bounded native routing observations and publisher context correction; not a speed benchmark, adversarial security qualification or actual publication.",
+  "accepted_benchmark_metrics": null,
+  "budget": {
+    "limit_ms": 600000,
+    "used_ms": 351524,
+    "authorization": "2026-09-27 user: 다음 작업 진행해줘; bounded issue #87 native Git routing follow-up, disposable fixtures only, no trust/global/consumer changes",
+    "prior_ledger_sha256": "799e6ac11a576aeab4a77d688d1bd5c1719659db2a9bd23b393415c47f009139",
+    "prior_used_ms": 215784
+  },
+  "rows": [
+    {
+      "id": "current-commit-push",
+      "source": "c79f0078233042612a7dc7a8d4696c569247ac30",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 39253,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-6-luna"
+      ],
+      "plugin_setup": {
+        "pluginIds": [
+          "loop-engine@paul-loop-codex",
+          "ship-flow@paul-loop-codex"
+        ],
+        "versions": [
+          {
+            "name": "loop-engine",
+            "version": "0.15.13"
+          },
+          {
+            "name": "ship-flow",
+            "version": "0.11.5"
+          }
+        ],
+        "trust": "unchanged; not attested"
+      },
+      "session_metadata_sequence": [
+        {
+          "id": "01a0de6c-bb6d-7fb1-8bb3-cf762c40793b",
+          "role": null
+        }
+      ],
+      "observed_contexts": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        }
+      ],
+      "spawn_calls": [],
+      "catalog_counts_in_trace": [
+        32
+      ],
+      "publisher_in_implicit_catalog": false,
+      "stdout_command_items": 8,
+      "usage_parent_stdout": {
+        "input_tokens": 56122,
+        "cached_input_tokens": 25088,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1357,
+        "reasoning_output_tokens": 481
+      },
+      "cost_usd": null,
+      "after": {
+        "head": "9e0cf6aa248677ad61c6b5eb8b92c23e1bc06bcb",
+        "remote": "9e0cf6aa248677ad61c6b5eb8b92c23e1bc06bcb",
+        "status": "M note.txt",
+        "note": "Updated note.\n"
+      },
+      "evidence": {
+        "input.json": "dfdaf027dfcd8dd3d4a0332e888fda069db0a76113069ed8dfefd5f4462d0c51",
+        "after.json": "f30f5c6d84737e061990cb58a17ef550e9d87841ed06d070934955845ef312d3",
+        "native/target.json": "748e8cee81e0fd008eea678e3bea35b1b3f9b721f80ca155e54e6d632fc04507",
+        "native/stdout.jsonl": "014ca3e2061ab32e01971677abfe001de42d712768faec859ca6080031d61e7e",
+        "native/rollout.jsonl": "17e47aa2610ea8a2c668e52685328147c29392400465a5fae15cf6b379b2376a",
+        "native/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native/plugin-setup.json": "de2be05867e402b681b44dac5b5312c2132866f54d6d16edb987111bfd108b02"
+      },
+      "git_failure": {
+        "call_id": "call_wpeztBraWMYg28WiAmx6wXcW",
+        "command": "git fetch origin main",
+        "exit": 255,
+        "output": "error: cannot open '.git/FETCH_HEAD': Operation not permitted\n"
+      },
+      "before": {
+        "head": "9e0cf6aa248677ad61c6b5eb8b92c23e1bc06bcb",
+        "remote": "9e0cf6aa248677ad61c6b5eb8b92c23e1bc06bcb",
+        "status": "M note.txt",
+        "note": "Updated note.\n"
+      },
+      "task_status": "BLOCKED: host denied required Git write; commit/push not run"
+    },
+    {
+      "id": "publisher-present",
+      "source": "c79f0078233042612a7dc7a8d4696c569247ac30",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 99723,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-6-luna"
+      ],
+      "plugin_setup": {
+        "pluginIds": [
+          "loop-engine@paul-loop-codex",
+          "ship-flow@paul-loop-codex"
+        ],
+        "versions": [
+          {
+            "name": "loop-engine",
+            "version": "0.15.13"
+          },
+          {
+            "name": "ship-flow",
+            "version": "0.11.5"
+          }
+        ],
+        "trust": "unchanged; not attested"
+      },
+      "session_metadata_sequence": [
+        {
+          "id": "01a0de6f-5844-7031-a32e-2beaadcf3caa",
+          "role": null
+        },
+        {
+          "id": "01a0de70-0830-7551-88eb-ca13a01c668b",
+          "role": "publisher"
+        },
+        {
+          "id": "01a0de6f-5844-7031-a32e-2beaadcf3caa",
+          "role": null
+        }
+      ],
+      "observed_contexts": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        },
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        },
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        }
+      ],
+      "spawn_calls": [
+        {
+          "call_id": "call_620xJShmOC2B2itd2EWMxK6D",
+          "agent_type": "publisher",
+          "fork_turns": "all",
+          "task_name": "publisher"
+        }
+      ],
+      "catalog_counts_in_trace": [
+        32,
+        32,
+        143
+      ],
+      "publisher_in_implicit_catalog": false,
+      "stdout_command_items": 1,
+      "usage_parent_stdout": {
+        "input_tokens": 66647,
+        "cached_input_tokens": 31232,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2507,
+        "reasoning_output_tokens": 1467
+      },
+      "cost_usd": null,
+      "after": {
+        "head": "5be58ef7f790d784301a35a4712e784596d0d9e4",
+        "status": "?? handoff.json",
+        "handoff_sha256": "dcb0e54dc2c5f6952cb50509f7e78c8e09e7400b8c37f23d70c3aca149c5eb66"
+      },
+      "evidence": {
+        "input.json": "c27bb1966d27e243766f75af2225cf2e063adc1f1eca8fcbe4bf21b6f5c0cb82",
+        "after.json": "9bcf2c288af73295ca6a23add0f57b0b163c996edd888bc0b0ed009b36cca1fa",
+        "native/target.json": "f40b43a20222ac00458322d4f4706397d436c5f0f4a214c17f72d515133f3290",
+        "native/stdout.jsonl": "fb55fa5b3aae38c46ff1162bd20379608069e528a766e409590b488045353aa8",
+        "native/rollout.jsonl": "3b75818f0c839e562b14e4af6b60999730a2f5a57da2484336406371e273b8aa",
+        "native/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native/plugin-setup.json": "bf372aa6de6d80b07405fa32a3efffb96623562f4e82ee185454f8db83ccac69",
+        "role-setup.json": "e7734b8ce311f69c547d67c9c645f4f086996f2e926b31a1665c74a030dded62"
+      },
+      "marker": {
+        "call_id": "call_HXA37JKYDPl5FhruwW6gJTry",
+        "exit": 0,
+        "output": "PUBLISHER_FIXTURE_OK\n",
+        "meaning": "literal stdout fixture only, not publication"
+      },
+      "task_status": "FAIL context boundary: publisher spawned with all Builder history",
+      "profile_removed": true
+    },
+    {
+      "id": "publisher-missing",
+      "source": "c79f0078233042612a7dc7a8d4696c569247ac30",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 115001,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-6-luna"
+      ],
+      "plugin_setup": {
+        "pluginIds": [
+          "loop-engine@paul-loop-codex",
+          "ship-flow@paul-loop-codex"
+        ],
+        "versions": [
+          {
+            "name": "loop-engine",
+            "version": "0.15.13"
+          },
+          {
+            "name": "ship-flow",
+            "version": "0.11.5"
+          }
+        ],
+        "trust": "unchanged; not attested"
+      },
+      "session_metadata_sequence": [
+        {
+          "id": "01a0de71-ada6-7412-a033-8883adbccb50",
+          "role": null
+        }
+      ],
+      "observed_contexts": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        }
+      ],
+      "spawn_calls": [],
+      "catalog_counts_in_trace": [
+        32
+      ],
+      "publisher_in_implicit_catalog": false,
+      "stdout_command_items": 8,
+      "usage_parent_stdout": {
+        "input_tokens": 107808,
+        "cached_input_tokens": 68352,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4787,
+        "reasoning_output_tokens": 3472
+      },
+      "cost_usd": null,
+      "after": {
+        "head": "963c73943b885af5a9d60c5819aaa0aa2922eceb",
+        "status": "?? handoff.json",
+        "handoff_sha256": "82916bda52903ccfe4c7eb3a3eb42ea05eca06f3579147860ae100475b65db9b"
+      },
+      "evidence": {
+        "input.json": "cdde71995e2e80b2097dc0486f38f901e0601370e719f7c29e7a4c8a7a6fc87d",
+        "after.json": "9a019dc387f9f3e8a8ebc042206bb3746b4963741f6dcd66565d7b3519efe118",
+        "native/target.json": "ef1799bd9350627894e8eabcf3aee631b8e0ab222438ca485dc2bf71deb4d2ca",
+        "native/stdout.jsonl": "46eef40155ba91646e1376550c8101d43abe4aa93af27c8423fa6fc4a340f877",
+        "native/rollout.jsonl": "669e1573a9022339d99dd266544ec53819a842893907313fdddb0c9122544cee",
+        "native/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native/plugin-setup.json": "fc1c0454f69c2ddf91de1ecf8874ff7bb3747c291c7bb68b8f0d15b2da905dd1"
+      },
+      "task_status": "BLOCK: named publisher unavailable; no inline marker execution",
+      "limitations": [
+        "Caller unnecessarily searched other worktrees and installed caches for registration; not a minimal capability lookup."
+      ]
+    },
+    {
+      "id": "publisher-candidate",
+      "source": "158bf7b1b57b63b4fda896c6d347b0ada52762e9",
+      "process": {
+        "completed": true,
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 97545,
+        "timeout_ms": 180000,
+        "cleanup": "group_absent"
+      },
+      "configured_model": "gpt-6-luna",
+      "configured_effort": "xhigh",
+      "observed_models": [
+        "gpt-6-luna"
+      ],
+      "plugin_setup": {
+        "pluginIds": [
+          "loop-engine@paul-loop-codex",
+          "ship-flow@paul-loop-codex"
+        ],
+        "versions": [
+          {
+            "name": "loop-engine",
+            "version": "0.15.13"
+          },
+          {
+            "name": "ship-flow",
+            "version": "0.11.6"
+          }
+        ],
+        "trust": "unchanged; not attested"
+      },
+      "session_metadata_sequence": [
+        {
+          "id": "01a0de74-2f00-70b0-8f0c-7b35359f3bf6",
+          "role": null
+        },
+        {
+          "id": "01a0de75-372f-7c71-9dda-d1d4ff4666c4",
+          "role": "publisher"
+        }
+      ],
+      "observed_contexts": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        },
+        {
+          "model": "gpt-6-luna",
+          "effort": "xhigh",
+          "sandbox": {
+            "type": "workspace-write",
+            "network_access": false,
+            "exclude_tmpdir_env_var": false,
+            "exclude_slash_tmp": false
+          }
+        }
+      ],
+      "spawn_calls": [
+        {
+          "call_id": "call_ep8e8taWgYvmWRPpcRy0PP8Q",
+          "agent_type": "publisher",
+          "fork_turns": "none",
+          "task_name": "publisher"
+        }
+      ],
+      "catalog_counts_in_trace": [
+        32,
+        143
+      ],
+      "publisher_in_implicit_catalog": false,
+      "stdout_command_items": 3,
+      "usage_parent_stdout": {
+        "input_tokens": 70766,
+        "cached_input_tokens": 32256,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3939,
+        "reasoning_output_tokens": 2924
+      },
+      "cost_usd": null,
+      "after": {
+        "head": "8256b2c3e795a5fd64a8ddb9517ae0919598d347",
+        "status": "?? handoff.json",
+        "handoff_sha256": "89d4334c268faee95b1b2f0b6043e9eba9136569495c0107693ffff4b70b81f5"
+      },
+      "evidence": {
+        "input.json": "4d1fc9eea31d2f93a006414ada17309c127ad74006db0f16fda42221d1076ad1",
+        "after.json": "bb3a21c4f029359ee1578f523b9790d7aee40c53492c1e6867abaf8d752b553a",
+        "native/target.json": "bf752e5ced58e54910047f033767849848982ed17da4a4ac341cb388257067f4",
+        "native/stdout.jsonl": "b42eb2fa5c1161570be665f69c17c425121c23f8527ca34acb1c4a22b86b770f",
+        "native/rollout.jsonl": "48f53bfd769ae9734bfbd04213769c82078879d94994fe5736f5b3e8262593ad",
+        "native/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native/plugin-setup.json": "09b0b3cb01b2ad262a3eb4b4e0b1d5bc4ec1d93d92c69f756ec39094ed41a712",
+        "role-setup.json": "99a3114cf1beb125085abd8b78dab685b0a48af0d9c1214cc8864b36e819c08c"
+      },
+      "marker": {
+        "call_id": "call_MIZwKZqJMAVbJmghsafVH0Rf",
+        "exit": 0,
+        "output": "PUBLISHER_FIXTURE_OK\n",
+        "meaning": "literal stdout fixture only, not publication"
+      },
+      "task_status": "OBSERVED: explicit no-history publisher dispatch and child marker execution",
+      "profile_removed": true
+    }
+  ],
+  "not_run": [
+    "push-only and behind-main Git cases: required Git writes denied in preflight",
+    "bare comparison: same Git prerequisite unresolved"
+  ],
+  "checks": {
+    "adapter-tests.txt": "153f19844e6aa1b6e766cc463efb74c73122c2caf716a62f7c5cf4ea1031f36b",
+    "routing-policy-tests.txt": "97f93086f85e15876a7a2cf8d65cd0224733316d63d6d418b4437ca778859c08",
+    "context-boundary-red.txt": "9fbb125c7fdf8aaa0fcdd36cda88c042f6786151f5686da8c1761a3f70798923",
+    "context-boundary-green.txt": "4dc97eda4655493c43a94b1f2e5a78f4bc7e99f2baf8dee12d6508dbde50aa76",
+    "runtime-tests.txt": "28b3c9b16f1046413ddaa959d4360601e89db2d779040c84b5464990412222f8",
+    "engine-full.txt": "6af3f1410b7fd22918e53929f4d85a045246b281831755806fb5b13d43f95361",
+    "engine-full-green.txt": "8de08e8e577cd25029383f6c33e3fd9d0242ef95f65224c628af5317d4f74e9f",
+    "install-tests.txt": "873e39a680da0577abee7c919561bed814638ea07836b2c983d4951976bacdbb",
+    "install-tests-final.txt": "4bc4e089fde87f29af9e697991758e2ff98facd0c8ec6366b0bcb8032a6e3994"
+  },
+  "verification": {
+    "engine_initial": {
+      "exit": 1,
+      "passed": 80,
+      "total": 81,
+      "reason": "publish-freshness: added engine-local assertion changed the published engine tree"
+    },
+    "engine_final": {
+      "exit": 0,
+      "passed": 81,
+      "total": 81,
+      "command": "bash tools/loop-engine/test/run.sh"
+    },
+    "installer_final": {
+      "exit": 0,
+      "passed": 87,
+      "skipped": 1,
+      "command": "node --test scripts/install-codex.test.mjs"
+    },
+    "regression_location": "Context assertions moved intact to existing installer publisher conversion test; engine test restored to base bytes."
+  }
+}

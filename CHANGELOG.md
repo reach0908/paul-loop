@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.6
+
+- Require publisher handoffs to exclude inherited Builder conversation, explicitly using
+  `fork_turns="none"` where supported. Pass only the literal handoff and contracts; block when
+  the host cannot provide that context boundary or the executor observes inherited history.
+  This instruction preserves existing role/permission checks; it is not a technical sandbox.
+
 ## loop-engine 0.15.13 / ship-flow 0.11.5
 
 - Require independently reviewed repository/commit/content pins before launcher or resolver
