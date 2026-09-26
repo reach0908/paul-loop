@@ -34,6 +34,12 @@ test('Codex packages retain manual skill policy and keep publisher out of implic
   assert.equal(generated.get(prefix + 'skills/publisher/agents/openai.yaml')?.content.toString(), 'policy:\n  allow_implicit_invocation: false\n');
   assert.ok(generated.has(prefix + 'skills/publisher/SKILL.md'), 'explicit handoff remains available');
   assert.match(generated.get(prefix + 'agent-templates/publisher.toml').content.toString(), /sandbox_mode = "workspace-write"/);
+  const publisher = generated.get(prefix + 'agent-templates/publisher.toml').content.toString();
+  const instructions = JSON.parse(/^developer_instructions = (.*)$/m.exec(publisher)[1]);
+  for (const text of [instructions, generated.get(prefix + 'skills/publisher/SKILL.md').content.toString(), generated.get(prefix + 'skills/ship-feature/SKILL.md').content.toString()]) {
+    assert.match(text, /fork_turns="none"/, 'publisher dispatch must explicitly exclude builder history');
+  }
+  assert.match(instructions, /inherited Builder conversation.*BLOCK/);
   assert.equal(generated.has(prefix + 'skills/ship-feature/agents/openai.yaml'), false, 'delivery remains discoverable');
   assert.deepEqual(generated.get(prefix + 'skills/diagnosing-bugs/agents/openai.yaml'), generated.get('claude/plugins/ship-flow/skills/diagnosing-bugs/agents/openai.yaml'));
 });
