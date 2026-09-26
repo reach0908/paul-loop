@@ -131,6 +131,17 @@ export function buildPackages(root) {
     put(`${runtime}/plugins.example.json`, json({ schemaVersion: 1, runtime, plugins: Object.fromEntries(Object.entries(versions).map(([name, version]) => [name, { path: `./plugins/${name}`, version }])) }));
   }
   provenance.documentation = validateGeneratedDocRefs(files);
+  // Review these from the provider build; never derive an expected pin from an installed cache.
+  const pins = (runtime, source = false) => ({ schemaVersion: 1, runtime, plugins: Object.fromEntries(sourceCatalog.plugins.map(plugin => {
+    const name = plugin.name, version = versions[name], repository = readJson(join(root, plugin.source, '.claude-plugin/plugin.json')).repository;
+    const prefix = source ? 'tools/' + name + '/' : runtime + '/plugins/' + name + '/';
+    const entries = source ? Object.entries(provenance.sourceHashes) : [...files].map(([path, data]) => [path, { sha256: sha(data.content), mode: data.mode }]);
+    const inventory = Object.fromEntries(entries.filter(([path]) => path.startsWith(prefix)).map(([path, data]) => [path.slice(prefix.length), data]).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+    const sourceCommit = provenance.sourceCommit;
+    return [name, { version, integrity: { repository, sourceCommit, sha256: sha(JSON.stringify({ runtime, name, version, repository, sourceCommit, files: inventory })) } }];
+  })) });
+  for (const runtime of ['claude', 'codex']) put(runtime + '/plugin-integrity.json', json(pins(runtime)));
+  put('claude/source-integrity.json', json(pins('claude', true)));
   put('provenance.json', json(provenance));
   const inventory = Object.fromEntries([...files].sort(([a], [b]) => a.localeCompare(b, 'en')).map(([p, { content, mode }]) => [p, { sha256: sha(content), mode }]));
   put('.paul-loop-generated.json', json({ schemaVersion: 1, adapterVersion, files: inventory }));

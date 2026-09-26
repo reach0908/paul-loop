@@ -5,6 +5,17 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.13 / ship-flow 0.11.5
+
+- Require independently reviewed repository/commit/content pins before launcher or resolver
+  inspection, synchronization and execution. Reject changed bytes, modes, files and symlinks;
+  preserve standalone entrypoints and explicitly approved forks/vendor copies.
+- Generate reference pins from provider builds. Updates accept a reviewed next lock and never
+  approve new cache contents automatically. Existing copied launchers/locks need explicit migration.
+- Preserve the CI action's independent commit pins across steps and compare actual source files
+  with pinned Git objects, including files hidden from ordinary Git status. Native activation
+  and the first execution of an untrusted launcher are separate trust boundaries.
+
 ## loop-engine 0.15.12
 
 - Prepare explicit content/mode approvals for resolver test fixtures before enforcing plugin

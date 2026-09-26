@@ -51,3 +51,6 @@ runs:
         echo "LOOP_RUNTIME=shell" >> "$GITHUB_ENV"
         echo "LOOP_ENGINE_PATH=$setup_dir/engine/tools/loop-engine" >> "$GITHUB_ENV"
         echo "SHIP_FLOW_PATH=$setup_dir/ship/tools/ship-flow" >> "$GITHUB_ENV"
+        # Preserve independent approval for later resolver calls; never infer it from the cache.
+        echo "LOOP_ENGINE_COMMIT=$LOOP_ENGINE_COMMIT" >> "$GITHUB_ENV"
+        echo "SHIP_FLOW_COMMIT=$SHIP_FLOW_COMMIT" >> "$GITHUB_ENV"
