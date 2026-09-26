@@ -77,6 +77,19 @@ See the [routing observations](../../docs/audits/2026-09-23-native-routing.md),
 [isolation follow-up](../../docs/audits/2026-09-23-native-isolation.md)
 and [official skill discovery/settings documentation](https://learn.chatgpt.com/docs/build-skills).
 
+For routine Git evaluation, first use one disposable repository with an actual pending change and
+a local bare remote. Record HEAD, remote ref, worktree status and file bytes before/after. A clean
+repository is a routing observation, not proof of commit, fetch, fast-forward or push. If the host
+denies a required Git write, preserve that result and leave dependent cases unrun; do not widen the
+sandbox, relocate Git metadata or switch tools to turn it into success. Requalify only after a
+relevant host/precondition change. Independent non-Git routing cases may still run.
+
+Inspect both `stdout.jsonl` and `rollout.jsonl` before grading tool behavior. In the September 27
+app CLI observation, a failed `git fetch` appeared in the rollout's `custom_tool_call`/output pair
+but had no stdout `command_execution` item. Counting stdout items alone therefore misses an
+attempted operation. Bind the actual call/output and inspect child session roles and permissions;
+neither a final answer nor a fixture marker proves the required execution boundary.
+
 For the engine driver, set `NATIVE_EVAL_CLI`, `NATIVE_EVAL_MODEL`, `NATIVE_EVAL_EFFORT`,
 `NATIVE_EVAL_BUDGET`, `NATIVE_EVAL_CASE_MS` and optionally `NATIVE_EVAL_MARKETPLACE` (Codex) or
 `NATIVE_EVAL_PLUGINS` (Claude JSON array of source directories). Grader selection uses
