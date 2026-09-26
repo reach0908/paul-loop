@@ -141,20 +141,20 @@ source commit establish local integrity/traceability, not authenticity, approval
 
 After installation, a consuming project can use the
 [`scripts/project-plugin.mjs`](../scripts/project-plugin.mjs) launcher. Review and copy the launcher
-into the project's `scripts/` and create a project `.codex/paul-loop.lock.json` with installed
-identities and the **exact versions reported by this install**. For the source versions at this
-guide's verification:
+into the project's `scripts/`. Create `.codex/paul-loop.lock.json` using the
+[project lock and approval format](project-installations.md#codex-설정-예시), with entries for
+`loop-engine@paul-loop-codex` and `ship-flow@paul-loop-codex`.
 
-```json
-{
-  "schemaVersion": 1,
-  "runtime": "codex",
-  "plugins": {
-    "loop-engine": {"id": "loop-engine@paul-loop-codex", "version": "0.15.0"},
-    "ship-flow": {"id": "ship-flow@paul-loop-codex", "version": "0.11.0"}
-  }
-}
-```
+For each core plugin, copy its `version` and complete `integrity` object (`repository`,
+`sourceCommit`, `sha256`) from `build/runtime-packages/codex/plugin-integrity.json` in the
+**reviewed build used for this installation**. The versions must also match the install result.
+Generate that build from the clean, fixed provider commit you reviewed; keep its approval values
+separate from installed caches. Do not compute expected hashes from a cache or leave placeholder
+approval values in the project lock. An ID and version alone are insufficient, even after a
+successful install. Existing locks also need these explicit approval values before using the new
+launcher; the [project update contract](project-installations.md) covers reviewed next locks.
+
+After preparing the lock, check it against the installed artifacts:
 
 ```bash
 node /absolute/consumer/scripts/project-plugin.mjs --project /absolute/consumer doctor

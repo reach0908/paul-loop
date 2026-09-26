@@ -102,6 +102,14 @@ Resolution order:
    Exact local scope precedes project scope, then the same repo's main worktree, then user scope.
    An unrelated project's registration is never a fallback.
 
+The selected artifact must also match its independently reviewed approval in the project's
+`.claude/paul-loop.lock.json` or `.codex/paul-loop.lock.json`, matching the artifact's manifest
+runtime. Each plugin entry needs its exact `version` and `integrity` object (repository, source
+commit and complete file fingerprint). See the
+[project approval and migration contract](https://github.com/reach0908/paul-loop/blob/main/docs/project-installations.md).
+Paths and registries locate artifacts; they do not supply approval. Missing or mismatched approval
+stops resolution. The pinned source-checkout alternative for shell use is shown below.
+
 Codex does not guess private cache layout or scan global host settings. An explicit registration is
 an artifact mapping, not an enable/trust registry. A compatible Codex manifest is required for a
 Codex override; a Claude-only source directory is rejected. Plain shell accepts either manifest.
@@ -118,13 +126,19 @@ Codex override; a Claude-only source directory is rejected. Plain shell accepts 
 ```
 
 Relative entry paths resolve from the registry file's directory. Generated `plugins.example.json`
-works at its generated location; moving it to `.loop/` requires updating its paths. Registering a
-review artifact does not install it. Do not silently activate optional loop-memory.
+has paths valid at its generated location; moving it to `.loop/` requires updating those paths.
+The project approval lock is still required. Registering a review artifact does not install it.
+Do not silently activate optional loop-memory.
 
-From the repository, an offline read-only probe is:
+For an offline read-only source probe, use a clean provider checkout whose `origin` is
+`https://github.com/reach0908/paul-loop.git`. Replace `REVIEWED_FULL_COMMIT` below with the full
+40-character commit already approved independently; the checkout must be at that commit.
+Do not derive the expected approval from the checkout during the probe. The resolver compares
+the plugin's actual files and executable bits with the approved Git tree.
 
 ```bash
 LOOP_RUNTIME=shell LOOP_ENGINE_PATH="$PWD/tools/loop-engine" \
+  LOOP_ENGINE_COMMIT=REVIEWED_FULL_COMMIT \
   node tools/loop-engine/bin/runtime-doctor.mjs
 ```
 
@@ -133,7 +147,8 @@ including in Codex. Existing hooks read that path. Generated constitution refere
 this does not rename or modify the consuming project's existing files. Generated skill examples use
 explicit plugin-root inputs derived from the skill's absolute location; no Codex bin PATH injection
 is assumed. The setup action resolves independently pinned engine/ship clones in a new temporary
-directory for each invocation and exports paths only after both validate.
+directory for each invocation and exports their paths and independent `*_COMMIT` pins only after
+both validate.
 
 ## Protection and authority
 
