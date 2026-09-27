@@ -96,7 +96,7 @@ for _ in $(seq 1 50); do [ -s "$DIR/port.txt" ] && break; sleep 0.1; done
 PORT="$(cat "$DIR/port.txt")"
 [ -n "$PORT" ] || fail "mock count_tokens server did not start"
 
-# Explicit local measurement must not read personal inputs, transmit text or execute a recall hook,
+# Default and explicit local measurement must not read personal inputs, transmit text or execute a recall hook,
 # even with a configured API key and an available hook. Observe actual I/O, not just report fields.
 mkdir -p "$H/.claude/plugins" "$R/.claude/hooks"
 printf 'PRIVATE_FIXTURE_SENTINEL' > "$H/.claude/CLAUDE.md"
@@ -119,21 +119,30 @@ appendFileSync(process.env.CB_HOOK_LOG, 'hook executed\n')
 process.stdout.write('HOOK_FIXTURE_SENTINEL')
 EOF
 cp "$DIR/observed-hook.mjs" "$R/.claude/hooks/recall-lessons.mjs"
-JSON_DEFAULT="$(env HOME="$H" ANTHROPIC_API_KEY=dummy ANTHROPIC_BASE_URL="http://127.0.0.1:$PORT" \
-  CB_PRIVATE_ROOT="$H/.claude" CB_READ_LOG="$DIR/reads.log" CB_HOOK_LOG="$DIR/hook.log" \
-  node --import "$DIR/observe-reads.mjs" "$BUDGET" --local --json --root "$R")" || fail "local measurement must exit 0"
-[ ! -s "$DIR/requests.jsonl" ] || fail "local measurement must make zero API requests despite a configured key"
-[ ! -s "$DIR/reads.log" ] || fail "local measurement must not read personal files"
-[ ! -s "$DIR/hook.log" ] || fail "local measurement must not run a recall hook"
-node -e '
-  const m = JSON.parse(process.argv[1]);
-  if (m.legacy_defaults !== false || Object.values(m.capabilities).some(Boolean)) throw Error("local mode must disable all capabilities");
-  if (m.method !== "approx" || m.o1a.includes_personal !== false) throw Error("local mode must report local repo-only measurement");
-  if (Object.values(m.o1a.personal).some(v => v !== null)) throw Error("excluded personal buckets must be null");
-  if (m.o1b.status !== "NOT_REQUESTED" || m.total.includes_o1b !== false) throw Error("unrequested recall is not a measured zero");
-' "$JSON_DEFAULT" || fail "local report must disclose excluded measurement axes"
+for mode in default local configured; do
+  args=(--json --root "$R")
+  case "$mode" in
+    local) args+=(--local) ;;
+    configured) args+=(--project-dir "$R" --plugins-file "$H/.claude/plugins/installed_plugins.json"
+      --hook "$DIR/observed-hook.mjs" --model fixture-model --turns 5 --o1b-prompt fixture-prompt) ;;
+  esac
+  JSON_DEFAULT="$(env HOME="$H" ANTHROPIC_API_KEY=dummy ANTHROPIC_BASE_URL="http://127.0.0.1:$PORT" \
+    CB_PRIVATE_ROOT="$H/.claude" CB_READ_LOG="$DIR/reads.log" CB_HOOK_LOG="$DIR/hook.log" \
+    node --import "$DIR/observe-reads.mjs" "$BUDGET" "${args[@]}" 2> "$DIR/local-stderr")" || fail "$mode measurement must exit 0"
+  [ ! -s "$DIR/requests.jsonl" ] || fail "local measurement must make zero API requests despite a configured key"
+  [ ! -s "$DIR/reads.log" ] || fail "local measurement must not read personal files"
+  [ ! -s "$DIR/hook.log" ] || fail "local measurement must not run a recall hook"
+  [ ! -s "$DIR/local-stderr" ] || fail "local measurement must not emit a legacy migration notice"
+  node -e '
+    const m = JSON.parse(process.argv[1]);
+    if (m.legacy_defaults !== false || Object.values(m.capabilities).some(Boolean)) throw Error("local mode must disable all capabilities");
+    if (m.method !== "approx" || m.o1a.includes_personal !== false) throw Error("local mode must report local repo-only measurement");
+    if (Object.values(m.o1a.personal).some(v => v !== null)) throw Error("excluded personal buckets must be null");
+    if (m.o1b.status !== "NOT_REQUESTED" || m.total.includes_o1b !== false) throw Error("unrequested recall is not a measured zero");
+  ' "$JSON_DEFAULT" || fail "local report must disclose excluded measurement axes"
+  echo "PASS: $mode measurement performs no personal reads, API calls or hook executions"
+done
 rm "$H/.claude/CLAUDE.md" "$H/.claude/plugins/installed_plugins.json" "$R/.claude/hooks/recall-lessons.mjs"
-echo "PASS: local measurement performs no personal reads, API calls or hook executions"
 
 JSON_API="$(env HOME="$H" ANTHROPIC_API_KEY=dummy ANTHROPIC_BASE_URL="http://127.0.0.1:$PORT" \
   node "$BUDGET" --api --include-personal --run-hook --root "$R" --plugins-file "$DIR/none.json" --json)" || fail "api mode must exit 0"
@@ -344,7 +353,7 @@ for capability in --api --include-personal --run-hook; do
   [ "$?" = 2 ] || fail "--local must reject conflicting capability flags"
 done
 LOCAL_TEXT="$(env HOME="$H" ANTHROPIC_API_KEY=dummy ANTHROPIC_BASE_URL="http://127.0.0.1:$PORT" \
-  node "$BUDGET" --local --root "$R")" || fail "local text report must succeed"
+  node "$BUDGET" --root "$R")" || fail "default text report must succeed"
 printf '%s' "$LOCAL_TEXT" | grep -q 'NOT_REQUESTED' || fail "local text report must disclose excluded measurements"
 echo "PASS: conflicting flags are rejected and local text output discloses unmeasured inputs"
 

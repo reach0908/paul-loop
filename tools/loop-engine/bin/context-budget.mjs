@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // context-budget.mjs — O1(상시 컨텍스트 예산) 3층 분리 계측 (BAC-582). 레포/설정 상태는 안 바꾼다
-// (--write-baseline의 baseline 파일 기록만 예외). --local은 개인 레이어 읽기·API·훅 실행 없이 계측한다.
-// --api / --include-personal / --run-hook 중 하나라도 지정하면 선택한 기능만 허용한다.
-// 호환성 전환 단계: 위 옵션이 모두 없으면 기존 전체 계측을 유지한다. 다음 기본값 전환과 별개다.
+// (--write-baseline의 baseline 파일 기록만 예외). 기본값/--local은 개인 레이어 읽기·API·훅 실행 없이 계측한다.
+// --api / --include-personal / --run-hook으로 명시적으로 선택한 기능만 허용한다.
 // --run-hook은 실 recall 훅을 spawn(임베딩 API·DB 접근 가능), --api는 선택한 텍스트를 전송한다.
 //
 // 3층 정의(총합 보고식과 함께 이 헤더가 정의 문서다):
@@ -28,7 +27,7 @@
 // Usage: node context-budget.mjs [--root <dir>] [--project-dir <dir>] [--model <id>] [--turns <n>]
 //        [--o1b-prompt <text>] [--hook <path>] [--plugins-file <path>] [--json]
 //        [--local | --api --include-personal --run-hook] [--write-baseline [<path>]]
-//   --local      : 로컬 레포 입력만 bytes/3 근사. API 키가 있어도 전송·개인 파일 읽기·훅 실행 없음.
+//   --local      : 기본 동작을 명시. 로컬 레포 입력만 bytes/3 근사하며 키가 있어도 전송·개인 읽기·훅 실행 없음.
 //   --api        : 선택한 버킷의 내용을 count_tokens API로 보낼 수 있도록 허용(키 부재 시 approx).
 //   --include-personal : 글로벌 CLAUDE.md, 프로젝트 MEMORY.md, 설치 플러그인 입력을 포함.
 //   --run-hook   : 지정한 recall 훅 실행을 허용. 훅 자체의 외부 I/O도 발생할 수 있다.
@@ -103,12 +102,6 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 if (opt.local && (opt.api || opt.includePersonal || opt.runHook)) usage('--local cannot be combined with capability flags')
-// Staged compatibility: old callers keep their behavior until explicit callers/tests are adopted.
-const legacyDefaults = !opt.local && !opt.api && !opt.includePersonal && !opt.runHook
-if (legacyDefaults) {
-  opt.api = opt.includePersonal = opt.runHook = true
-  process.stderr.write('context-budget: legacy defaults include personal inputs, API counting and recall execution; use --local or explicit capability flags.\n')
-}
 opt.root = resolve(opt.root)
 if (!opt.projectDir) opt.projectDir = opt.root
 if (!opt.hook) opt.hook = join(opt.root, '.claude', 'hooks', 'recall-lessons.mjs')
@@ -359,7 +352,7 @@ const report = {
   turns: opt.turns,
   turns_source: opt.turnsSource,
   capabilities: { api: opt.api, personal: opt.includePersonal, hook: opt.runHook },
-  legacy_defaults: legacyDefaults,
+  legacy_defaults: false,
   o1a: {
     includes_personal: opt.includePersonal,
     repo: { claude_md: claudeMd, skill_frontmatter: skillFm },
@@ -412,7 +405,7 @@ if (opt.json) {
   const lines = []
   lines.push('=== CONTEXT BUDGET (O1) ===')
   lines.push(`model: ${opt.model}  method: ${method}  turns: ${opt.turns} (${opt.turnsSource})`)
-  lines.push(`capabilities: api=${opt.api} personal=${opt.includePersonal} hook=${opt.runHook} legacy_defaults=${legacyDefaults}`)
+  lines.push(`capabilities: api=${opt.api} personal=${opt.includePersonal} hook=${opt.runHook} legacy_defaults=false`)
   lines.push('O1a repo (세션 1회 상주 — 레포 자산):')
   lines.push(fmtB('CLAUDE.md', claudeMd))
   lines.push(fmtB('skill frontmatter', skillFm, `, ${skillFm.files} files`))

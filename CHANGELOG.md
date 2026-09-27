@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.15
+
+- Make `context-budget` local by default: no personal-input reads, counting API requests or recall
+  execution unless their respective flags are selected. API keys and input paths do not enable
+  these capabilities. Existing full measurements must explicitly use `--api --include-personal
+  --run-hook`; reports continue to disclose excluded inputs and preserve `legacy_defaults: false`.
+
 ## loop-engine 0.15.14
 
 - Add `context-budget --local` and independent API, personal-input and recall-execution flags.
