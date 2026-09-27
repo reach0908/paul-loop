@@ -213,9 +213,10 @@ if [ ! -x "$VERDICT_RUN" ]; then
 fi
 ARTIFACT_ROOT="$(pwd -P)" || { echo "ac-verify.sh: cannot resolve invocation directory" >&2; exit 2; }
 
-mkdir -p "$LOGSUBDIR" 2>/dev/null || { echo "ac-verify.sh: cannot create log directory '$LOGSUBDIR'" >&2; exit 2; }
+# Scope creation permissions to our artifacts; verify commands keep the caller's umask.
+(umask 077; mkdir -p "$LOGSUBDIR") 2>/dev/null || { echo "ac-verify.sh: cannot create log directory '$LOGSUBDIR'" >&2; exit 2; }
 AGG_LOG="$LOG_DIR/ac-verify.log"
-: > "$AGG_LOG" 2>/dev/null || { echo "ac-verify.sh: cannot write aggregate log file '$AGG_LOG'" >&2; exit 2; }
+(umask 077; : > "$AGG_LOG") 2>/dev/null || { echo "ac-verify.sh: cannot write aggregate log file '$AGG_LOG'" >&2; exit 2; }
 case "$AGG_LOG" in
   /*) AGG_LOG_ABS="$AGG_LOG" ;;
   *)  AGG_LOG_ABS="$(pwd)/$AGG_LOG" ;;
@@ -417,7 +418,7 @@ while IFS= read -r line || [ -n "$line" ]; do
       # a defined (empty) target to grep. A write failure here means the environment itself is
       # broken (unwritable log dir) — fail closed with exit 2 rather than silently mis-reporting
       # it as an ordinary AC FAIL.
-      if ! : > "$ac_log" 2>/dev/null; then
+      if ! (umask 077; : > "$ac_log") 2>/dev/null; then
         echo "ac-verify.sh: cannot write per-AC log '$ac_log' for AC #$idx (\"$desc\")" >&2
         exit 2
       fi

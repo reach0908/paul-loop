@@ -51,9 +51,9 @@ function tagBoundaries(payload) {
 }
 
 function append(kind, record) {
-  mkdirSync(OUT_DIR, { recursive: true })
+  mkdirSync(OUT_DIR, { recursive: true, mode: 0o700 })
   const date = new Date().toISOString().slice(0, 10)
-  appendFileSync(join(OUT_DIR, `${date}.${kind}.jsonl`), `${JSON.stringify(record)}\n`)
+  appendFileSync(join(OUT_DIR, `${date}.${kind}.jsonl`), `${JSON.stringify(record)}\n`, { mode: 0o600 })
 }
 
 function handler(req, res) {

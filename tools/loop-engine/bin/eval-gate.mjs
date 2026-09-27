@@ -228,11 +228,11 @@ if (recording) gateFails.push('baseline recorded; RECORD is not verification —
 
 // ---- write log + (record mode) baseline ----
 const logPath = opt.log || join(process.env.LOOP_DIR || '.loop', 'eval-last.log')
-mkdirSync(dirname(resolve(logPath)), { recursive: true })
-writeFileSync(logPath, logLines.join('\n') + '\n')
+mkdirSync(dirname(resolve(logPath)), { recursive: true, mode: 0o700 })
+writeFileSync(logPath, logLines.join('\n') + '\n', { mode: 0o600 })
 if (recording) {
-  mkdirSync(dirname(resolve(opt.baseline)), { recursive: true })
-  writeFileSync(opt.baseline, JSON.stringify({ schema_version: 2, identity, pass_at_k: passAtK, pass_caret_k: passCaretK, quality_status: qualityStatus, operation_status: 'recorded' }, null, 2) + '\n')
+  mkdirSync(dirname(resolve(opt.baseline)), { recursive: true, mode: 0o700 })
+  writeFileSync(opt.baseline, JSON.stringify({ schema_version: 2, identity, pass_at_k: passAtK, pass_caret_k: passCaretK, quality_status: qualityStatus, operation_status: 'recorded' }, null, 2) + '\n', { mode: 0o600 })
   notes.push(`quality_status=${qualityStatus}; operation_status=recorded; baseline recorded -> ${opt.baseline} (pass_at_k=${f4(passAtK)} pass_caret_k=${f4(passCaretK)})`)
 }
 

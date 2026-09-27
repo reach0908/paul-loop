@@ -390,8 +390,8 @@ if (opt.writeBaseline) {
     process.stderr.write(
       `context-budget: baseline method=${method} — API 실측은 --api와 키가 필요. 전후 비교는 반드시 같은 capabilities·method·model·turns·o1b.status로.\n`,
     )
-  mkdirSync(dirname(opt.baselinePath), { recursive: true })
-  writeFileSync(opt.baselinePath, `${JSON.stringify(report, null, 2)}\n`)
+  mkdirSync(dirname(opt.baselinePath), { recursive: true, mode: 0o700 })
+  writeFileSync(opt.baselinePath, `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 })
   process.stderr.write(`context-budget: baseline written to ${opt.baselinePath}\n`)
 }
 
