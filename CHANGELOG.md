@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.14
+
+- Add `context-budget --local` and independent API, personal-input and recall-execution flags.
+  Report excluded measurements explicitly and retain API/error/recall coverage with explicit
+  fixture invocations. Unflagged callers keep the previous behavior with a migration notice;
+  making local measurement the default is a separate follow-up after this compatibility step.
+
 ## ship-flow 0.11.7
 
 - Bound publisher availability checks to exposed host roles or one scoped host-native lookup.
