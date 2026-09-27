@@ -48,6 +48,14 @@ marketplace/engine manifests passed. Memory and ship-flow source trees are uncha
 Final-head package provenance and publication/CI receipts are retained privately when available;
 this audit does not claim a future hosted result, merge, release or consumer installation.
 
+An additional run with GNU `stat` exposed **2/3 PASS, 1 FAIL** after the macOS suite: the old BSD-first
+`mode_of` probe emitted GNU filesystem information before failing, polluting its GNU fallback's
+mode record. Restoration left the backup's 0400 mode instead of the original 0751. The saved
+`regression-gnu-stat-red.log` retains the failure. The helper now captures and discards failed probe
+output; only a successful probe's permissions reach the existing restoration logic. The regression
+assertions and verifier are unchanged. After the correction, native and GNU focused runs both
+pass **3/3**. The complete rerun and follow-up reviews will be recorded after execution.
+
 ## Authorization and prior release
 
 The implementation classifier returned **DENY_AND_LOG**, high/full/low, for 11 planned paths.

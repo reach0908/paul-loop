@@ -11,6 +11,7 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
   0700 lifecycle/lease/backup directories and 0400 backup snapshots. Preserve verifier/fixer
   umasks, restored protected-file modes, existing directory modes and append targets. Apply the
   same creation policy when the supervisor records cancellation or an incomplete/protected run.
+  Discard failed BSD-stat probe output before GNU fallback so Linux restores the original file mode.
 
 ## loop-engine 0.15.16
 

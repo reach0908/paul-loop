@@ -302,7 +302,11 @@ rm -f "$WATCHDOG_FIRED" 2>/dev/null  # reset per run: a stale fired flag must no
 WATCHDOG_PID=""
 
 sha_of() { shasum -a 256 "$1" 2>/dev/null || sha256sum "$1" 2>/dev/null; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1" 2>/dev/null; }   # BSD vs GNU stat
+mode_of() {
+  local _mode
+  # GNU stat -f can emit filesystem details before failing: discard a failed BSD probe's stdout.
+  _mode="$(stat -f '%Lp' "$1" 2>/dev/null)" && printf '%s\n' "$_mode" || stat -c '%a' "$1" 2>/dev/null
+}
 
 # Normalized form of $LOOP_DIR used to exclude the guard's own backup tree from '**' protect scans
 # (issue #34 round-2 finding 2): snapshot_protected() writes byte-backups under
