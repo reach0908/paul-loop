@@ -43,9 +43,18 @@ changing their assertions. Memory `npm ci`, typecheck, tests and build succeeded
 2 live embedding-provider tests skipped**; rebuilt `dist/cli.js` is byte-identical. No DB integration
 or live embedding test was enabled.
 
-Private evidence is retained under `.loop/private-run-artifacts/`. Complete engine, package and
-independent review results will be recorded after execution; local tests, hosted CI, merge and
-release remain separate claims. No real memory DB, provider API or consumer installation is used.
+The first complete engine run failed **81/82**: the new top-level Node test entry increased the
+inherited inline snapshot enough for the nested Node-entry TOCTOU fixture to exceed its 60,000-byte
+limit. `engine-full.log` and `engine-initial-result.json` retain that failure. The same three
+regressions now live inline in their shell test, following the existing shell snapshot pattern;
+their assertions remain frozen before execution. The runner, size limit and existing tests are
+unchanged. The inline regression passes **3/3**; the complete suite is being rerun without narrowing.
+
+Private evidence is retained under `.loop/private-run-artifacts/`. Runtime generation/check,
+vendor lock and strict marketplace/engine/memory manifests passed. Both independent review axes
+reported no actionable findings before the test-layout correction; follow-up review and the
+complete rerun will be recorded after execution. Local tests, hosted CI, merge and release remain
+separate claims. No real memory DB, provider API or consumer installation is used.
 
 ## Risk and previous release
 
