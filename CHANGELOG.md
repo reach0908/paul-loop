@@ -5,6 +5,12 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.18
+
+- Restrict new Stop-gate counters and shared red-event logs to 0600, and new hook-state/log
+  directories to 0700, including worktree-session state created before a run ledger. Preserve
+  existing directory/append/counter modes and hook denial, escape and best-effort behavior.
+
 ## loop-engine 0.15.17
 
 - Make newly created loop-fix handoffs, history/error files and lifecycle sentinels private, with

@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.17**, ship-flow **0.11.7**, loop-memory **0.8.1**.
+> **Source versions:** loop-engine **0.15.18**, ship-flow **0.11.7**, loop-memory **0.8.1**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -60,9 +60,11 @@ file's permission limits, and new state/evidence directories are private. The ve
 umask is unchanged. `loop-fix` also creates private handoffs, history/error files and sentinels;
 new lifecycle/lease/backup directories use 0700 and completed backup snapshots use 0400. Both
 verifier and fixer commands retain the caller's umask, and protected files regain their original
-mode on restore. Existing directories and append targets are not migrated; user-owned `.loop/.env`
-is not modified. Ancillary hook logs and other producers remain outside this creation-mode
-guarantee. See the [loop-fix scope and remaining work](docs/audits/2026-09-27-private-loop-fix-artifacts.md).
+mode on restore. Stop counters and shared red-event logs also create files with 0600; their new
+directories and worktree-session state directories use 0700 (state files already use 0600).
+Existing directories, append targets and in-place counters are not migrated; user-owned `.loop/.env`
+is not modified. Other producers remain outside this creation-mode guarantee. See the
+[hook scope and remaining work](docs/audits/2026-09-27-private-hook-artifacts.md).
 
 For a local context-size estimate, use `context-budget.mjs --root <project>` (`--local` is optional).
 Since 0.15.15, the default skips personal inputs, API requests and recall execution, even with a
