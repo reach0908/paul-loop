@@ -98,7 +98,7 @@ try {
     summary: { accepted: passed, trials: results.length, pass_at_k: perCase.filter(rs => rs.some(r => r.status === 'pass')).length / cases.length,
       pass_caret_k: perCase.filter(rs => rs.length === opt.k && rs.every(r => r.status === 'pass')).length / cases.length,
       cost_per_accepted_task: null, cost_status: 'unavailable' } }
-  mkdirSync(dirname(resolve(opt.report)), { recursive: true }); writeFileSync(opt.report, JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
+  mkdirSync(dirname(resolve(opt.report)), { recursive: true, mode: 0o700 }); writeFileSync(opt.report, JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
   process.stdout.write(JSON.stringify({ status: report.status, report: resolve(opt.report), ...report.summary }) + '\n')
   if (report.status !== 'PASS') process.exitCode = cancelled ? 130 : 1
 } catch (e) { process.stderr.write(`agent-eval: ${e.message}\n`); process.exitCode = 2 }

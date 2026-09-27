@@ -5,6 +5,14 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.19
+
+- Restrict newly created AC aggregate/artifact-only logs, eval logs/baselines, context baselines
+  and OTel records to owner-only permissions; also restrict new agent-eval report directories.
+  Keep existing file/directory modes, child command umasks, verifier outcomes and report overwrite
+  rules. Eval baselines remain bound to the grader source hash, so older grader baselines require
+  an explicit new record and subsequent verification.
+
 ## loop-engine 0.15.18
 
 - Restrict new Stop-gate counters and shared red-event logs to 0600, and new hook-state/log
