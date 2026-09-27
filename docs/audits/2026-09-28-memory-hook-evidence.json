@@ -1,0 +1,332 @@
+{
+  "observed_at": "2026-09-27T23:17:17.095Z",
+  "source": "ec54a02254b8aa4c580f81b48f9161aa0bf6039a",
+  "versions": {
+    "engine": "0.15.20",
+    "memory": "0.8.2",
+    "ship_flow": "0.11.7"
+  },
+  "runtime": "2.1.212 (Claude Code)",
+  "classification": "bounded native hook observation; semantic recall and real-use efficacy unqualified",
+  "budget": {
+    "limit_ms": 180000,
+    "used_ms": 21189,
+    "authorization": "2026-09-28 next task: observe issue35 hooks in disposable native sessions; no consumer activation or DB"
+  },
+  "cases": [
+    {
+      "id": "off-control",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 3023,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [],
+      "native_hook_responses": [],
+      "memory_events": [],
+      "reported_cost_usd": 0.019566999999999998,
+      "evidence_sha256": {
+        "input.json": "fb52dd6e1a8c02516890ededea93b19b2d39dfdba0d72aa7b100c0e429a8d973",
+        "result.json": "a835796a05b15b1dcb2a056b73704965d6c0ef928479f623eb15b704f4d69eb1",
+        "stdout.jsonl": "063ac7cab2f702ce0544b5fe1ecdf71eba345a1635fbdc955f5c0a6a231834c0",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      }
+    },
+    {
+      "id": "no-key-active",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 2669,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [],
+      "native_hook_responses": [],
+      "memory_events": [],
+      "reported_cost_usd": 0.019562,
+      "evidence_sha256": {
+        "input.json": "52d18c419b0a39f7a9f8926b3c1b5bdf516afcaf86667ec3c31df567e160617a",
+        "result.json": "110bae70fb74ef1b3caad5af82337c9154a79db75b9137be39809c3ba901fb49",
+        "stdout.jsonl": "b6859f7e89b29eb0f612bc4b5881aec26cfa864b3081ba41b4ad4a4526ee9120",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      }
+    },
+    {
+      "id": "enabled-no-key-active",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 2958,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [],
+      "native_hook_responses": [],
+      "memory_events": [],
+      "reported_cost_usd": 0.019542,
+      "evidence_sha256": {
+        "input.json": "010c4086af7f3148927809eebf5c775464d641de0f1c506a55de13cfb4b53357",
+        "result.json": "d0cc7bc56e93374d6bcd4b0f16a2f8a06a2d273a5ffa1ca816be16d544f78a3d",
+        "stdout.jsonl": "b653adb51e5428ee35557bf7dc57cd96e36e268167d372269e7ed5fbefbc3b2e",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "debug.log": "e440e125ba99de621abc24ff3ed63b364aee573fdc6f0c316c3e12bac756aeda"
+      }
+    },
+    {
+      "id": "enabled-off-control",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 3011,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [],
+      "native_hook_responses": [],
+      "memory_events": [],
+      "reported_cost_usd": 0.019566999999999998,
+      "evidence_sha256": {
+        "input.json": "8a8e53755e7dee5253bed8d70c7bbbbf9a41afef064f13d36b449f8fc0d486e8",
+        "result.json": "911e2453356df57d2aea2cca7e5902ef1901f6b4b1fb862297ef898a7124397a",
+        "stdout.jsonl": "58c06e72187d1ea3d1643518934b760621e44a8f87342cf8a79b71b846d6f349",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "debug.log": "21672c027db9ec3e7a8a8c5afbca670cf0573616398eced2d2528e9d90a2da0b"
+      }
+    },
+    {
+      "id": "dependencies-no-key-active",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 3411,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [
+        {
+          "name": "loop-memory",
+          "source": "loop-memory@inline"
+        },
+        {
+          "name": "loop-engine",
+          "source": "loop-engine@inline"
+        }
+      ],
+      "native_hook_responses": [
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "UserPromptSubmit",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "Stop",
+          "exit": 0,
+          "outcome": "success"
+        }
+      ],
+      "memory_events": [
+        {
+          "type": "memory.graduate",
+          "event": "SessionStart",
+          "outcome": "skipped",
+          "reason": "no_embedding_key",
+          "injected_chars": null
+        },
+        {
+          "type": "memory.recall",
+          "event": null,
+          "outcome": "skipped",
+          "reason": "no_embedding_key",
+          "injected_chars": 0
+        },
+        {
+          "type": "memory.graduate",
+          "event": "SessionEnd",
+          "outcome": "skipped",
+          "reason": "no_embedding_key",
+          "injected_chars": null
+        }
+      ],
+      "reported_cost_usd": 0.020325,
+      "evidence_sha256": {
+        "input.json": "98f68ef454f66de2e7dccf9901c53a8c1bb45fb31e834ebbb3fb5237b5ca6206",
+        "result.json": "83e1c80c49798694aaba95add9e8fac2739d1ec28539184c7e77b3d136e66d18",
+        "stdout.jsonl": "bd1d7bd3595078a9dfb188c4330dd5fa8675ba8f1ff479f31db4d90d201f2dce",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "99955b2751e47305f19b119db7d2ee1e9c4e431446be61d05d881a0201eab4bf",
+        "runs/35f83cf0-7532-4d83-865a-d4816ec02eba.jsonl": "e6c98002e8de2769a7887835e7f34e8018af456e0d853bb74d6fe8cd7c10dbac",
+        "debug.log": "064bac2054345c0eef908bf0c6ed1a4009379605db966e35f55bacbdf721eeb5"
+      }
+    },
+    {
+      "id": "dependencies-off-control",
+      "completed": true,
+      "process": {
+        "exit": 0,
+        "fault": null,
+        "duration_ms": 2920,
+        "cleanup": "group_absent"
+      },
+      "observed_model_labels": [
+        "claude-opus-4-8[1m]",
+        "claude-opus-4-8"
+      ],
+      "loaded_plugins": [
+        {
+          "name": "loop-memory",
+          "source": "loop-memory@inline"
+        },
+        {
+          "name": "loop-engine",
+          "source": "loop-engine@inline"
+        }
+      ],
+      "native_hook_responses": [
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "SessionStart",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "UserPromptSubmit",
+          "exit": 0,
+          "outcome": "success"
+        },
+        {
+          "event": "Stop",
+          "exit": 0,
+          "outcome": "success"
+        }
+      ],
+      "memory_events": [],
+      "reported_cost_usd": 0.020335,
+      "evidence_sha256": {
+        "input.json": "f2abf7eaef3f1b4161d4615a581309321316cb3ee92fac5e210597dadc6b1a5d",
+        "result.json": "1370b2866859f6ab861c5a3b303a0d866f2172b7c58e5d748bff7d2b835cf6f1",
+        "stdout.jsonl": "76179bf469b4614b5336365073173bbe4e13fbd012056a5be2f2c55abc794688",
+        "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hook-events.json": "ffb818e95b4576dac1610a1d1b65e11f65682f1cb4932717e657326a762bde56",
+        "runs/3a6ecfd4-1cde-4fc6-bda3-e8694ca3bc49.jsonl": "4ab9e1ffd13b65ffdbfd6a4cf03ac92547b6d9f389008aa2cf603b78b3ff53ce",
+        "debug.log": "8b1d642c10a3ff7796858319f939ed1035025d9604b0ed650d5a439b40b5c9b6"
+      }
+    }
+  ],
+  "inventory": {
+    "scope": "Registered worktrees; default .loop/runs newest100 and default file lessons/shared history; no DB, custom paths, configuration or native memory inspection",
+    "projects": [
+      {
+        "project": "Rabbit Hole",
+        "registered_worktrees": 2,
+        "existing_worktrees": 1,
+        "missing_worktrees": 1,
+        "unreadable_worktrees": 0,
+        "runs_scanned": 36,
+        "memory_recall": 0,
+        "memory_graduate": 0,
+        "skipped_lines": 0,
+        "file_lessons": 0,
+        "shared_history": 0
+      },
+      {
+        "project": "Digging",
+        "registered_worktrees": 45,
+        "existing_worktrees": 12,
+        "missing_worktrees": 33,
+        "unreadable_worktrees": 0,
+        "runs_scanned": 51,
+        "memory_recall": 0,
+        "memory_graduate": 0,
+        "skipped_lines": 0,
+        "file_lessons": 0,
+        "shared_history": 0
+      },
+      {
+        "project": "Signal Feed",
+        "registered_worktrees": 8,
+        "existing_worktrees": 8,
+        "missing_worktrees": 0,
+        "unreadable_worktrees": 0,
+        "runs_scanned": 73,
+        "memory_recall": 0,
+        "memory_graduate": 0,
+        "skipped_lines": 0,
+        "file_lessons": 0,
+        "shared_history": 0
+      },
+      {
+        "project": "paul-loop",
+        "registered_worktrees": 11,
+        "existing_worktrees": 11,
+        "missing_worktrees": 0,
+        "unreadable_worktrees": 0,
+        "runs_scanned": 26,
+        "memory_recall": 0,
+        "memory_graduate": 0,
+        "skipped_lines": 0,
+        "file_lessons": 0,
+        "shared_history": 0
+      }
+    ],
+    "evidence_sha256": "d8e3dda4fdc64c85b95d543a579d56227b3d4577aad065ae5908f7bedb3fb83a"
+  },
+  "limitations": [
+    "Disposable no-tool prompt, not a development task or speed benchmark",
+    "No embedding key, DB, real lesson retrieval or useful-context comparison",
+    "Original installed consumer plugins and configurations were not changed",
+    "Default-path snapshots exclude custom locations, missing worktrees, DB and native memory",
+    "SessionEnd uses native debug completion and matching ledger records; it is absent from streamed hook events",
+    "Model labels retain init context suffix and assistant label without claiming identical identifiers"
+  ]
+}

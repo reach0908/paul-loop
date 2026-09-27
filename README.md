@@ -223,6 +223,11 @@ happily exit `0` over nothing — this guard turns that into an explicit `FAILED
 ## What's in `loop-memory`
 
 **Opt-in** (`defaultEnabled: false` — install it, then `claude plugin enable loop-memory@paul-loop`).
+Its declared `loop-engine` dependency must also be available. A completed Claude turn does not
+prove plugin loading: inspect the actual loaded plugins and hook events. For a session-only
+`--plugin-dir` check, load both generated plugin directories and explicitly enable
+`loop-memory@inline` in that invocation's `--settings`; this does not install or enable it for
+other projects. See the [bounded native observation](docs/audits/2026-09-28-memory-hook-observation.md).
 It's a database dependency (pgvector-enabled Postgres), not core loop mechanics, so it doesn't ride
 along with `loop-engine`/`ship-flow`. It gives verified lessons semantic recall — instead of a
 grep-shaped `.loop/lessons` directory, a `UserPromptSubmit` hook embeds the current prompt and
@@ -314,9 +319,10 @@ and *fired and broke* all look the same from outside (exit 0, empty stdout, noth
 hooks once stayed a silent no-op for days for exactly that reason, and it was caught only because
 someone noticed recall felt absent.
 
-So every firing appends one small JSONL line — always on, nothing to enable — to `loop-engine`'s
+When bookkeeping is permitted, each firing appends one small JSONL line to `loop-engine`'s
 session run ledger at `<repo>/.loop/runs/<run-id>.jsonl`, in its schema v1 shape, as
-`memory.recall` / `memory.graduate`:
+`memory.recall` / `memory.graduate`. Debug logging need not be enabled. Memory-off, learning-off,
+recall-only and liveness-off modes suppress these records:
 
 ```json
 {"id":"…","type":"memory.recall","ts":"2026-08-24T15:13:05.700Z","aggregate_id":"<session-id>","version":1,
@@ -327,7 +333,8 @@ session run ledger at `<repo>/.loop/runs/<run-id>.jsonl`, in its schema v1 shape
 
 `outcome` is `injected` | `no_match` | `skipped` | `error`, and `reason` says which gate or failure
 (`no_embedding_key`, `recall_off`, `prompt_too_short`, `stdin_parse_fail`, `no_hits`, `above_cutoff`,
-`cli_failed`, `exception`). "Never fired" is the absence of all of them. Only counts, booleans,
+`cli_failed`, `exception`). No records means no evidence in the inspected location/window; disabled
+bookkeeping, missing files or a custom `LOOP_DIR` can also explain absence. Only counts, booleans,
 distances and fixed slugs are ever written — never your prompt, note content, an env value, a
 resolved dotenv path, or an error message.
 
@@ -342,7 +349,10 @@ node "$MEMORY_ROOT/dist/cli.js" liveness --root "$PWD" --assert
 ```
 
 `--assert` deliberately treats self-gating and honest misses as evidence of life — a check that
-alarms on a legitimately empty corpus is a check nobody keeps. Tuning: `LOOP_LIVENESS_OFF=1` disables
+alarms on a legitimately empty corpus is a check nobody keeps. It is not a recall-success or
+usefulness check: inspect `reason`, timestamps and injected counts separately. This reader scans
+the default `<root>/.loop/runs` path and does not follow a custom `LOOP_DIR`.
+Tuning: `LOOP_LIVENESS_OFF=1` disables
 the record entirely, `LOOP_LIVENESS_MAX_BYTES` (default 8 MiB) caps how large a run file it will keep
 appending to.
 
