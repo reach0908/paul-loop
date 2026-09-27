@@ -38,7 +38,12 @@ test('Codex packages retain manual skill policy and keep publisher out of implic
   const instructions = JSON.parse(/^developer_instructions = (.*)$/m.exec(publisher)[1]);
   for (const text of [instructions, generated.get(prefix + 'skills/publisher/SKILL.md').content.toString(), generated.get(prefix + 'skills/ship-feature/SKILL.md').content.toString()]) {
     assert.match(text, /fork_turns="none"/, 'publisher dispatch must explicitly exclude builder history');
+    assert.match(text, /active\s+host registry/, 'publisher availability requires runtime registration evidence');
+    assert.match(text, /at most one host-native capability lookup/);
+    assert.match(text, /unavailable or unknown[^.]*BLOCK/s);
+    assert.match(text, /Do not search[^.]*worktrees[^.]*plugin caches/s);
   }
+  assert.match(instructions, /template[^.]*does not prove active registration/s);
   assert.match(instructions, /inherited Builder conversation.*BLOCK/);
   assert.equal(generated.has(prefix + 'skills/ship-feature/agents/openai.yaml'), false, 'delivery remains discoverable');
   assert.deepEqual(generated.get(prefix + 'skills/diagnosing-bugs/agents/openai.yaml'), generated.get('claude/plugins/ship-flow/skills/diagnosing-bugs/agents/openai.yaml'));

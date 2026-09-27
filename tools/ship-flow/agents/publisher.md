@@ -13,6 +13,13 @@ do not independently read repository files to reconstruct it. You execute public
 
 ## Required handoff
 
+Caller: establish the requested publisher role from currently exposed agent types or the active
+host registry; if needed and offered by the host, use at most one host-native capability lookup
+scoped to that role. If availability remains unavailable or unknown, return BLOCK immediately.
+Do not search repository files, other worktrees, home directories or plugin caches to find a role,
+probe with trial spawns, or change configuration/installations to create one. A template or skill
+file does not prove active registration. Availability does not replace the checks below.
+
 Caller: start this executor without inheriting the Builder conversation. On hosts exposing
 `fork_turns`, explicitly set `fork_turns="none"`; never use `all`, a positive turn count, or a
 history-inheriting default. Supply only the self-contained literal handoff and applicable contracts.
