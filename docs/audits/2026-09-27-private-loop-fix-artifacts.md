@@ -39,9 +39,14 @@ and mode 0751 after a mutation, and checks cancellation-created history/compromi
 subsequent fail-closed refusal. It uses only local disposable fixtures and no model/API/DB calls.
 
 Initial failure and focused green logs are retained in `.loop/private-loop-fix-artifacts/`.
-The complete engine suite, baseline-file hashes, independent Standards/Spec review and final
-package checks will be recorded after execution. Local verification, hosted CI, merge and release
-are separate claims.
+The complete engine suite at `5a58965da13530fd3ff88684841f5d0e923a5e9e` passed **83/83**, exit 0.
+All 95 pre-existing engine test files remain byte-identical to the base, with hashes retained.
+Independent code-review: **Standards 0 / Spec 0 actionable findings**; static review is distinct
+from the executed suite. Runtime package generation/reproducibility, vendor lock and strict
+marketplace/engine manifests passed. Memory and ship-flow source trees are unchanged.
+
+Final-head package provenance and publication/CI receipts are retained privately when available;
+this audit does not claim a future hosted result, merge, release or consumer installation.
 
 ## Authorization and prior release
 
@@ -51,5 +56,7 @@ review, as specified by the shared authorization contract. No command-execution 
 bypassed; CI or this classification does not authorize a merge.
 
 The #133 merge tree equals reviewed head `ca59241d3ba8f413b4f333eaeba2a6913bdba4b9`.
-Its post-merge workflow was initially in progress; exact workflow/tag evidence is being retained
-privately and will be confirmed before claiming the previous release complete.
+[Post-merge validation](https://github.com/reach0908/paul-loop/actions/runs/36302509014) completed
+successfully. Remote `loop-engine--v0.15.16` and `loop-memory--v0.8.1` both point to that exact
+merge commit; workflow/tag receipts are retained privately. The working checkout was synchronized;
+the canonical checkout and consumer installations were unchanged.
