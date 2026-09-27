@@ -20,7 +20,7 @@ export function writeEvidence(dir, data) {
     readEvidence(dir, edge.id)
   }
   record.content_hash = sha256(JSON.stringify(record))
-  mkdirSync(dir, { recursive: true })
+  mkdirSync(dir, { recursive: true, mode: 0o700 })
   writeFileSync(join(dir, `${record.id}.json`), JSON.stringify(record, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
   return record
 }

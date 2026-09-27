@@ -5,6 +5,18 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.16
+
+- Create new run-ledger files and verifier logs with owner-only permissions, including the raw
+  capture before redaction. Restrict new ledger, verifier-state and evidence directories, and
+  preserve restrictive file modes when redacting logs. Verified commands retain their caller's
+  umask. Existing directories/files are not recursively migrated.
+
+## loop-memory 0.8.1
+
+- Create new hook-liveness ledgers with 0600 file and 0700 directory modes, including when memory
+  creates the shared ledger before loop-engine. Existing files and hook failure behavior are retained.
+
 ## loop-engine 0.15.15
 
 - Make `context-budget` local by default: no personal-input reads, counting API requests or recall

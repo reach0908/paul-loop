@@ -33,7 +33,7 @@ try {
     const state = { verdict, exit: Number(code), sha: start.target.sha, dirty: start.target.dirty || after.dirty || changed,
       target_changed: changed, finished_at, started_at: start.started_at, cmd: sanitizeText(command).slice(0, 500),
       log: resolve(log), receipt_id: receipt.id, target_before: start.target, target_after: after }
-    mkdirSync(dirname(stateFile), { recursive: true })
+    mkdirSync(dirname(stateFile), { recursive: true, mode: 0o700 })
     const tmp = `${stateFile}.${process.pid}.tmp`
     writeFileSync(tmp, JSON.stringify(state) + '\n', { mode: 0o600 })
     renameSync(tmp, stateFile)

@@ -17,7 +17,7 @@
 // 검사·카운트 추출·FAIL 추출이 전부 살균 *후* 텍스트를 보기 때문이다.
 
 import { createHash } from 'node:crypto'
-import { readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, statSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const CAP = 256                                   // preview 캡 (ouroboros 256자)
@@ -122,7 +122,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (mode === '--in-place' && file) {
     const raw = readFileSync(file, 'utf8')
     const tmp = `${file}.${process.pid}.tmp`
-    writeFileSync(tmp, sanitizeText(raw))
+    writeFileSync(tmp, sanitizeText(raw), { flag: 'wx', mode: statSync(file).mode & 0o777 })
     renameSync(tmp, file)                        // 동일 디렉토리 원자 교체
   } else if (mode === '--text') {
     process.stdout.write(sanitizeText(readFileSync(0, 'utf8')))

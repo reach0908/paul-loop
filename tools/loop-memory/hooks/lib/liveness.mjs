@@ -114,7 +114,7 @@ export function recordLiveness(root, { type, sessionId, payload }, env = process
     } catch {
       /* absent file = size 0 — fall through and create it */
     }
-    mkdirSync(dir, { recursive: true });
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
     const event = {
       id: randomUUID(),
       type,
@@ -125,7 +125,7 @@ export function recordLiveness(root, { type, sessionId, payload }, env = process
     };
     // One appendFileSync of a single sub-PIPE_BUF line: O_APPEND makes it atomic on POSIX, so a
     // concurrent writer (loop-engine's own hook, another session) can't interleave with it.
-    appendFileSync(file, `${JSON.stringify(event)}\n`);
+    appendFileSync(file, `${JSON.stringify(event)}\n`, { mode: 0o600 });
     return event;
   } catch {
     return null; // contract 1 — instrumentation never reaches the exit code
