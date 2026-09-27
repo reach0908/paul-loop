@@ -7,7 +7,7 @@ import { readEvidence } from './evidence-graph.mjs';
 export const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 export const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 export function atomicJson(path, data) {
-  mkdirSync(dirname(path), { recursive: true });
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const temp = `${path}.${randomUUID()}.tmp`;
   try {
     const fd = openSync(temp, 'wx', 0o600);
@@ -34,8 +34,8 @@ export function identity(cwd, root, config, script) {
   return { target_hash: hash(JSON.stringify({ cwd, root, head })), config_hash: hash(JSON.stringify({ config, files, worker: hash(readFileSync(script)) })) };
 }
 export function acquireLease(path, owner, resumeId) {
-  mkdirSync(dirname(path), { recursive: true });
-  try { mkdirSync(path); }
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+  try { mkdirSync(path, { mode: 0o700 }); }
   catch (e) {
     if (e.code !== 'EEXIST') throw e;
     let previous;
@@ -44,11 +44,11 @@ export function acquireLease(path, owner, resumeId) {
       throw new Error(`workspace already leased by run ${previous.run_id}; resume only after its owner and worker have stopped`);
     }
     const recovery = `${path}.recover`;
-    mkdirSync(recovery); // concurrent recovery is rejected, never raced
+    mkdirSync(recovery, { mode: 0o700 }); // concurrent recovery is rejected, never raced
     try {
       if (readJson(join(path, 'owner.json')).token !== previous.token) throw new Error('lease changed during recovery');
       rmSync(path, { recursive: true });
-      mkdirSync(path);
+      mkdirSync(path, { mode: 0o700 });
     } finally { rmSync(recovery, { recursive: true, force: true }); }
   }
   atomicJson(join(path, 'owner.json'), owner);

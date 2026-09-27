@@ -30,7 +30,7 @@ function snapshots(cwd, loopDir, patterns, backup) {
   const files = protectedFiles(cwd, loopDir, patterns, { requireEach: true });
   return files.map((file, index) => {
     const bytes = readFileSync(join(cwd, file));
-    const path = join(backup, String(index)); mkdirSync(backup, { recursive: true });
+    const path = join(backup, String(index)); mkdirSync(backup, { recursive: true, mode: 0o700 });
     writeFileSync(path, bytes, { mode: 0o400 });
     return { file, hash: hash(bytes), mode: lstatSync(join(cwd, file)).mode & 0o777, backup: path };
   });
@@ -52,7 +52,7 @@ function restore(cwd, loopDir, patterns, baseline) {
       if (!baseline.some((entry) => entry.file === file)) rmSync(join(cwd, file));
     }
   } catch (e) { failures.push(e.message); }
-  if (failures.length) appendFileSync(join(loopDir, 'protect-compromised'), `${failures.join('\n')}\n`);
+  if (failures.length) appendFileSync(join(loopDir, 'protect-compromised'), `${failures.join('\n')}\n`, { mode: 0o600 });
 }
 
 export async function supervise(script, argv) {
@@ -79,7 +79,7 @@ export async function supervise(script, argv) {
     assertProtectedPath(cwd, entry.file);
     if (!existsSync(join(cwd, entry.file)) || lstatSync(join(cwd, entry.file)).isSymbolicLink() || hash(readFileSync(join(cwd, entry.file))) !== entry.hash) throw new Error(`resume protected baseline mismatch: ${entry.file}`);
   }
-  mkdirSync(loopDir, { recursive: true }); mkdirSync(stateDir, { recursive: true });
+  mkdirSync(loopDir, { recursive: true, mode: 0o700 }); mkdirSync(stateDir, { recursive: true, mode: 0o700 });
   const runId = prior?.run_id || randomUUID(); const stateFile = join(stateDir, `${runId}.json`);
   const owner = { pid: process.pid, worker_pid: null, token: randomUUID(), run_id: runId };
   const leases = [...new Set([join(stateDir, 'lease'), join(loopDir, '.execution-lease')])];
@@ -106,7 +106,7 @@ export async function supervise(script, argv) {
     state.owner = owner; state.status = 'running'; state.phase = 'starting';
     atomicJson(stateFile, state);
     for (const file of new Set([join(root, '.loop', 'looping'), join(loopDir, 'looping')])) {
-      if (!existsSync(file)) { writeFileSync(file, `${runId}\n`, { flag: 'wx' }); sentinels.push(file); }
+      if (!existsSync(file)) { writeFileSync(file, `${runId}\n`, { flag: 'wx', mode: 0o600 }); sentinels.push(file); }
       else if (resume && prior.owned_sentinels?.includes(file) && readFileSync(file, 'utf8').trim() === runId) sentinels.push(file);
     }
     state.owned_sentinels = [...sentinels]; atomicJson(stateFile, state);
@@ -163,7 +163,7 @@ export async function supervise(script, argv) {
     } catch (e) {
       code = 3;
       const line = `PROTECTED FILE MODIFIED before supervisor handoff: ${e.message}`;
-      console.error(line); appendFileSync(join(loopDir, 'history.log'), `${line}\n=== loop-fix done: PROTECTED-VIOLATION ===\n`);
+      console.error(line); appendFileSync(join(loopDir, 'history.log'), `${line}\n=== loop-fix done: PROTECTED-VIOLATION ===\n`, { mode: 0o600 });
     }
     let incomplete = code === 2 && state.phase === 'verify';
     if (code === 0) try {
@@ -173,7 +173,7 @@ export async function supervise(script, argv) {
     state.status = stopping === 'CANCELLED' ? 'cancelled' : stopping === 'BUDGET' ? 'exhausted' : result.signal ? 'interrupted' : incomplete ? 'incomplete' : code === 0 ? 'succeeded' : code === 3 ? 'protected_violation' : 'failed';
     if (incomplete) {
       state.error ||= 'verification did not complete its evidence checkpoint';
-      appendFileSync(join(loopDir, 'history.log'), `=== loop-fix done: INCOMPLETE — ${state.error} ===\n`);
+      appendFileSync(join(loopDir, 'history.log'), `=== loop-fix done: INCOMPLETE — ${state.error} ===\n`, { mode: 0o600 });
     }
     state.finished_at = new Date().toISOString(); state.exit = code;
     if (code !== 0) {
@@ -193,7 +193,7 @@ export async function supervise(script, argv) {
     if (stopping && config.lessons && existsSync(join(loopDir, 'first-verdict.txt'))) {
       spawnSync(join(dirname(script), 'lessons.sh'), ['record', '--signature-file', join(loopDir, 'first-verdict.txt'), '--source', 'loop-fix-fail', '--iterations', String(state.iteration), '--lessons', config.lessons], { cwd, stdio: 'ignore', timeout: 5000 });
     }
-    if (stopping) { const line = `=== loop-fix done: ${stopping} ===`; console.error(line); appendFileSync(join(loopDir, 'history.log'), `${line}\n`); }
+    if (stopping) { const line = `=== loop-fix done: ${stopping} ===`; console.error(line); appendFileSync(join(loopDir, 'history.log'), `${line}\n`, { mode: 0o600 }); }
     return code;
   } catch (e) {
     try { await fenceGroup(); } catch {}

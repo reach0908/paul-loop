@@ -194,6 +194,10 @@ exec 3<&-
 # Consume the marker: a nested loop-fix invocation must acquire its OWN lease, never bypass it.
 unset LOOP_LIFECYCLE_WORKER start_token
 
+# Restrict worker-owned artifacts. Restore the caller's mask only for user commands/restore dirs.
+CALLER_UMASK="$(umask)"
+umask 077
+
 VERIFY=""; FIX=""; MAX_ITER=10; BUDGET=0; STALL=3; LOOP_DIR=".loop"
 PROTECT_LIST=""   # newline-separated globs
 LESSONS=""        # optional verified-lessons memory dir (Phase 3)
@@ -298,7 +302,11 @@ rm -f "$WATCHDOG_FIRED" 2>/dev/null  # reset per run: a stale fired flag must no
 WATCHDOG_PID=""
 
 sha_of() { shasum -a 256 "$1" 2>/dev/null || sha256sum "$1" 2>/dev/null; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1" 2>/dev/null; }   # BSD vs GNU stat
+mode_of() {
+  local _mode
+  # GNU stat -f can emit filesystem details before failing: discard a failed BSD probe's stdout.
+  _mode="$(stat -f '%Lp' "$1" 2>/dev/null)" && printf '%s\n' "$_mode" || stat -c '%a' "$1" 2>/dev/null
+}
 
 # Normalized form of $LOOP_DIR used to exclude the guard's own backup tree from '**' protect scans
 # (issue #34 round-2 finding 2): snapshot_protected() writes byte-backups under
@@ -358,9 +366,9 @@ snapshot_protected() {
     # chmod its own file back to writable given enough determination. The actual guarantee against
     # backup-poisoning is the post-restore integrity check in restore_protected() below, plus the
     # fail-closed marker it leaves for a future run to see. Note this chmod means `cp -p` back OUT
-    # of the backup during restore would otherwise propagate 0444 onto the live file too — restore
+    # of the backup during restore would otherwise propagate 0400 onto the live file too — restore
     # explicitly re-chmods to the mode captured in PROTECT_MODES_DATA above to undo that side effect.
-    chmod 0444 "$PROTECT_BACKUP/$f" 2>/dev/null
+    chmod 0400 "$PROTECT_BACKUP/$f" 2>/dev/null
   done < <(protect_files | sort -u)
 }
 
@@ -487,9 +495,9 @@ restore_protected() {
       continue
     fi
     _dir="$(dirname "$f")"
-    [ "$_dir" = "." ] || [ -d "$_dir" ] || mkdir -p "$_dir" 2>/dev/null
+    [ "$_dir" = "." ] || [ -d "$_dir" ] || (umask "$CALLER_UMASK"; mkdir -p "$_dir") 2>/dev/null
     if cp -p "$_b" "$f" 2>/dev/null; then
-      # cp -p just carried the backup's mode (0444, from snapshot_protected()'s step-5 chmod) onto
+      # cp -p just carried the backup's mode (0400, from snapshot_protected()'s step-5 chmod) onto
       # $f — restore it to the mode the live file actually had at snapshot time instead.
       [ -n "$_origmode" ] && chmod "$_origmode" "$f" 2>/dev/null
       _restored=$(( _restored + 1 ))
@@ -770,7 +778,7 @@ while [ "$iter" -lt "$MAX_ITER" ]; do
   # stderr는 버리지 않고 파일로 보존한다 — --guard-mutation의 fail-closed 거부(exit 2)가 무음으로
   # 사라지면 운영자가 원인을 알 단서가 없다(3축 리뷰).
   # shellcheck disable=SC2086 — $GUARD_MUT는 빈 값(off) 또는 단일 플래그라 무인용 확장이 의도.
-  "$VERDICT_RUN" $GUARD_MUT --log "$LOG_FILE" -- sh -c "$VERIFY" > "$VERDICT_FILE" 2>"$LOOP_DIR/verdict-run.err"
+  (umask "$CALLER_UMASK"; exec "$VERDICT_RUN" $GUARD_MUT --log "$LOG_FILE" -- sh -c "$VERIFY") > "$VERDICT_FILE" 2>"$LOOP_DIR/verdict-run.err"
   vcode=$?
   if [ "$vcode" -eq 0 ] || [ "$vcode" -eq 1 ]; then
     checkpoint_loop verified
@@ -946,13 +954,14 @@ while [ "$iter" -lt "$MAX_ITER" ]; do
   # 돌리므로 게이트가 보탤 것이 없는데, 켜두면 수정자 종료 시점의 verdict가 구조적으로 FAIL이라
   # (수정자는 FAIL 뒤에만 호출된다) 매 회차 3연속 차단+탈출을 반복하며 red-events를 오염시킨다
   # (BAC-564 리뷰 I2).
+  (umask "$CALLER_UMASK"
   LOOP_ITER="$iter" \
   LOOP_PROMPT_FILE="$PROMPT_FILE" \
   LOOP_VERDICT_FILE="$VERDICT_FILE" \
   LOOP_LOG_FILE="$LOG_FILE" \
   LOOP_DIR="$LOOP_DIR" \
   LOOP_STOP_GATE_OFF=1 \
-    sh -c "$FIX"
+    exec sh -c "$FIX")
   fcode=$?
   log "iter $iter: fixer exited $fcode"
 

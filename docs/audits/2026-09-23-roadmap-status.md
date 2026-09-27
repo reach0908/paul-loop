@@ -2,6 +2,13 @@
 
 ## 최신 후속 상태
 
+2026-09-27 loop-fix 권한 후속: #133이 `1ce83f65853edd5929952fe3fb17032f4e6095f0`로 머지됐고
+작업용 체크아웃을 동기화했다. engine **0.15.16**·memory **0.8.1** 원격 태그가 해당 머지와 일치하고
+[배포 검증](https://github.com/reach0908/paul-loop/actions/runs/36302509014)도 성공했다.
+[loop-fix 전달 파일·이력·보호 백업](2026-09-27-private-loop-fix-artifacts.md)의
+생성 권한을 engine **0.15.17** 후보로 보완한다. #86은 ancillary hook 등 나머지 생성 경로 때문에
+계속 열어 둔다. 소비 설치·기존 파일 권한의 일괄 마이그레이션은 포함하지 않는다.
+
 2026-09-27 권한 후속: #132가 `ac6a27bf9d23cc4b9052fa2c29fe314032b23763`로 머지됐고,
 engine **0.15.15** 원격 태그와 [배포 검증](https://github.com/reach0908/paul-loop/actions/runs/36297360198)이
 확인됐다. 현재 [실행 원장·검증 로그 생성 권한](2026-09-27-private-run-artifacts.md)을 engine **0.15.16** /
