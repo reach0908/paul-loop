@@ -13,6 +13,14 @@ do not independently read repository files to reconstruct it. You execute public
 
 ## Required handoff
 
+Caller: start this executor without inheriting the Builder conversation. On hosts exposing
+`fork_turns`, explicitly set `fork_turns="none"`; never use `all`, a positive turn count, or a
+history-inheriting default. Supply only the self-contained literal handoff and applicable contracts.
+Verify the dispatch setting and host context evidence as well as the role and permissions. If the
+host cannot provide a separate context without Builder history, return BLOCK; do not execute inline.
+Executor: if host evidence shows inherited Builder conversation, return BLOCK before any command.
+Role identity and a new agent ID alone do not establish this context boundary.
+
 Only the Builder's explicit step-5 handoff selects this role. A routine Git request belongs to the
 host's normal repository procedure; do not start ship-feature merely to manufacture a handoff.
 

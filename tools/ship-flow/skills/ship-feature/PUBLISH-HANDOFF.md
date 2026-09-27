@@ -13,6 +13,12 @@ be the one executing the external action that publishes the result of that work.
 means a prompt injection that lands in the Builder's context cannot, by itself, reach `git push`,
 `gh pr create`, or the tracker.
 
+A new agent ID alone is not that separation: a child created with inherited conversation has also
+received the Builder's earlier content. Pass only the self-contained handoff and contracts, with
+`fork_turns="none"` where supported, and check the dispatch/context evidence. Without a host-supported
+context that excludes Builder history, publication stays blocked. This instruction reduces exposure;
+it does not establish an enforced command allowlist or prove resistance to prompt injection.
+
 `ship-flow:publisher` exists to be the narrow half of that split: it executes literal commands it
 was handed and nothing else. It does not read repository files on its own initiative, fetch
 content, or compose PR/comment text. That is why step 5 has to hand it *finished strings* — a

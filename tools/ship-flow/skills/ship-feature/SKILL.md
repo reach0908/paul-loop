@@ -277,6 +277,9 @@ comment and identifiers, authorization record, exact repository/worktree/head/ba
 gate evidence, ordered commands and their dependencies. Use `--body-file`; never compose payloads
 with a Bash heredoc. The publisher executes only the supplied authorized actions and returns the
 PR URL plus each command's exit code; it does not fetch context or compose content.
+Start it without Builder history: explicitly use `fork_turns="none"` on hosts with that option,
+pass a self-contained handoff, and verify the dispatch/context evidence. A fresh agent ID is not
+enough. If the host cannot exclude inherited history, that publication step is BLOCK.
 
 Inspect each required action's result. Repair failures within scope without repeating successful
 posts; a PR URL with a failed required comment is partial. **Hard termination:** report actual outcomes in
