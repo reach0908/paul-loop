@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-28",
+  "source": {
+    "base": "e37a1fa92e51dcf02397ce52c6b5be5a1e2445ab",
+    "broken": "1572d06570af065086b9e8893c1c64150c044f4e",
+    "repaired": "5fdd0d15a7287fa9f5faaecfcb343ee437647b31",
+    "test_sha256": "449fb1606466f2a4d339a68aa7e2997e5aac3a5cc7bba125eed52e93edfff1c4",
+    "broken_implementation_sha256": "2dbf2a605a1653afece303161977d645e5edf75fe3403a8f18cd21b962273508",
+    "repaired_implementation_sha256": "f7780fcaf33817766fe483b0b2a196622abbe9d9c9a2c6ec3d89c26a155a3183"
+  },
+  "runtime": {
+    "node": "v22.19.0",
+    "platform": "macOS arm64",
+    "stat": "stat (GNU coreutils) 9.10"
+  },
+  "cases": [
+    {
+      "case": "initial-failure",
+      "exit": 1,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "7ccac3c1c649b45294fd39c87746514b4e7771cfd5aecc7006af9b7239e367d9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "verified-repair",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "8509fe12cd5ba6ff3cea97335645cb1de526385e78558e8a7d6904838b64731f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "raw-log-rejected",
+      "exit": 2,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4fe5198724330c5f831ac720f4f86e1b8402233d7b8f7c5611f3d63686b4d77e"
+    },
+    {
+      "case": "record",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "67e0ed906a635a063e02647e9d33b1b7f28e74b2f14d12ffce0cbdadb73b70eb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "duplicate",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "9df5d2376c4940020317017f658df9f18d01423c9ae73e114f769fd6f2c05056",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "recall-original",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "a1a528712bd0f07f01fc99d401a530001bbe6b4a177aaa79232d6dc820a33928",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "replayed-failure",
+      "exit": 1,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "9e0283b7929359048c11d8fe3b4534589c8d1e1afeabb6d262c749e7f38373e2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "recall-before-repair",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "a1a528712bd0f07f01fc99d401a530001bbe6b4a177aaa79232d6dc820a33928",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "unrelated-control",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "48fd2ed02e526eaf3566827908b77368ff0b0268e102f43198d99126317ed3a4"
+    },
+    {
+      "case": "replayed-repair",
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "stdout_sha256": "921a074c2af8bcf05071b925fa05b600248fb6f3ef17a8b5767d3fb8f5f7092f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "results": {
+    "initial_failure": 1,
+    "verified_repair": 0,
+    "raw_log_rejected": 2,
+    "duplicate_ignored": true,
+    "replayed_failure": 1,
+    "recall_before_repair": "verified lesson hit; verdict remains FAIL",
+    "unrelated_control": "no match",
+    "replayed_repair": 0,
+    "recorded_count": 1,
+    "verified_pairs": 1
+  },
+  "lesson_id": "354830060d560192",
+  "prospective_usefulness_samples": 0,
+  "initial_preparation": "Child temporary fixtures were under a Git root; preserved failed setup; full frozen three-case command rerun with test temp root outside Git.",
+  "evidence_sha256": {
+    "replay.mjs": "090b733ddbe41e73c18df63d8f5acfa9fc6d6025526c5ce64e79f6071e334c9e",
+    "replay.log": "f6bdc9278d53f94f0dcec0ef32f2a918776dac7f1d25d4a93ce6883b8029aafb",
+    "commands.json": "ad7a380c454824858fca037ce4e34500306b533eadba37c7cb02640b955f6f2d",
+    "complete/result.json": "4cab5513c10947f0ba66ed158ae4e9eb42a0428558d1bbed6821f45c2dba7392",
+    "complete/commands.json": "4d6433a28639f3bc565fd84451dcf5a7987ce851084f376ee50b23b5c84077ad",
+    "complete/workspace/.loop/initial-failure.verdict": "7ccac3c1c649b45294fd39c87746514b4e7771cfd5aecc7006af9b7239e367d9",
+    "complete/workspace/.loop/evidence/a46b8030-3f97-4b9f-94c3-a5abd8dd4a4a.json": "f8a6751a4212872c9044f80b85ddd62e0ffb20d05770a48294bcaa21e00f4c40",
+    "complete/workspace/.loop/verified-repair.verdict": "8509fe12cd5ba6ff3cea97335645cb1de526385e78558e8a7d6904838b64731f",
+    "complete/workspace/.loop/evidence/7c4b4774-9eee-4bf9-8504-d3d3a8fb7c23.json": "4b2c71e80f4eef61e86ad861f14caf662980ac1815559458e2b1f2c681d402fb",
+    "complete/workspace/.loop/replayed-failure.verdict": "9e0283b7929359048c11d8fe3b4534589c8d1e1afeabb6d262c749e7f38373e2",
+    "complete/workspace/.loop/evidence/962dce9f-6ff6-47f2-b8ef-210f8bac5f0f.json": "d550d72fc65026526b027b896781d1e884ba874886a988e3f3a2527efa9607df",
+    "complete/workspace/.loop/replayed-repair.verdict": "921a074c2af8bcf05071b925fa05b600248fb6f3ef17a8b5767d3fb8f5f7092f",
+    "complete/workspace/.loop/evidence/3dc2494c-3ffd-4afa-ab8f-92ab6241ce7e.json": "48dc8bc3edd1ebeea5b1b16c5176b4483ebfa3b6d17463de94e14187462b8de9",
+    "complete/workspace/.loop/lessons/354830060d560192.json": "6b66fe1db300eefd981ae79a45e9fd32f37c8bc4c239c44e5366a546e8017a4a"
+  },
+  "limitations": [
+    "Historical defect replay with known repair, not prospective use or an independent fixer",
+    "No native-memory comparison, productivity result, semantic DB retrieval or consumer activation",
+    "GNU stat compatibility on macOS; not a full Linux runtime test"
+  ],
+  "source_changes": "README and root docs only; no runtime code/test/manifest or version change",
+  "issues_remain_open": [
+    35,
+    87
+  ]
+}

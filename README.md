@@ -141,7 +141,7 @@ loop-fix.sh --verify "pnpm typecheck" --stall 3 --infra-retries 2 --budget-sec 9
 ### `lessons.mjs` — record only what a verifier actually confirmed, recall it next time
 
 ```bash
-lessons.mjs record --signature-file <failure.log> --verified --receipt <passing-receipt.json> \
+lessons.mjs record --signature-file <first-verdict.txt> --verified --receipt <passing-receipt.json> \
   --failure-receipt <failing-receipt.json> --fix "..." --title "..." --lessons .loop/lessons
 lessons.mjs recall  --signature "FAIL: ..." --lessons .loop/lessons
 lessons.mjs promote --min-count 3 --lessons .loop/lessons          # recurring candidates
@@ -153,7 +153,10 @@ lessons.mjs retire --id <key> --ref "docs/where-this-got-codified.md"
 - A lesson is written only when a **verifier**, not the fixer's own claim, confirmed the fix worked.
   Unverified self-reports are never treated as authoritative on recall.
 - Verified recording requires the actual matching failure and success receipts; a handwritten
-  signature or a passing command alone is insufficient. See [retrospect](tools/ship-flow/skills/retrospect/SKILL.md).
+  signature or a passing command alone is insufficient. Save the failed `verdict-run.sh` stdout
+  exactly; its raw `LOG:` file is not the receipt-bound signature artifact. For manual runs, retain
+  one `LOOP_RUN_ID` and the same verifier command across FAIL/fix/PASS. See the
+  [file-lesson workflow](docs/verified-lesson-workflow.md) and [retrospect](tools/ship-flow/skills/retrospect/SKILL.md).
 - `recall` matches on failure signature first, with room for semantic recall on top (see
   [`docs/lessons.md`](tools/loop-engine/docs/lessons.md)).
 - Promotion is a two-step, two-party protocol: `promote` surfaces *candidates* (recurring ≥ N
