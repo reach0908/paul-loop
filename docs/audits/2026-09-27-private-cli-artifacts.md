@@ -5,8 +5,9 @@ Scope: another bounded part of [#86](https://github.com/reach0908/paul-loop/issu
 Candidate: loop-engine **0.15.19**; ship-flow **0.11.7** and loop-memory **0.8.1** unchanged.
 
 #135's reviewed head `4ff56515e3fe239c8e6e670ece1d232533dbd594` has the same tree as this base.
-The working checkout is synchronized. Its 0.15.18 post-merge release check is initially pending;
-source merge alone is not tag publication or consumer installation evidence.
+The working checkout is synchronized. The remote `loop-engine--v0.15.18` tag matches this merge
+and [post-merge validation 36307114286](https://github.com/reach0908/paul-loop/actions/runs/36307114286)
+completed successfully. This confirms source publication, not consumer installation.
 
 ## Problem and contract
 
@@ -41,10 +42,16 @@ silently rebaseline: explicitly record the new baseline (still not PASS), then v
   artifact-only logs, failure exit 7, aggregate FAIL and existing user modes are exercised.
 - Other cases cover RECORD/comparison separation, default/explicit local context paths,
   failed agent reports and exclusive-write refusal, all three telemetry kinds and append history.
-- Complete engine verification, independent review and packaging are pending at this initial record.
+- All **97 existing engine test files** are byte-identical to base (private SHA-256 receipt).
+  Complete engine verification (`/bin/bash tools/loop-engine/test/run.sh`, Node 22.19.0,
+  Bash 3.2.57, Python 3.13.12) passes **85/85**, exit 0.
+- Vendor lock, Claude/Codex package generation/reproducibility and strict generated
+  marketplace/plugin validation pass. Memory and ship-flow source trees are unchanged.
+- Independent `code-review` skill review at `c0b60b7df89105b590c7ee049fdfe04e3635047e`:
+  **Standards 0 findings; Spec 0 findings**. This is static review, not security qualification.
 - Private evidence is under `.loop/private-cli-artifacts/`. Preserve the original red log and the
   existing engine tests; this is additional failure coverage, not changed verifier expectations.
-- The implementation gate returned REQUIRE (12 paths, high blast radius, other dimensions
+- Implementation and publication gates returned REQUIRE (12 paths, high blast radius, other dimensions
   unresolved by the structural rule). It is retained unchanged; the existing user authorization
   for provider implementation/review/PR work is reused. No execution denial or bypass occurred.
 
@@ -55,4 +62,5 @@ imports, `mattpocock-skills-sync-check.mjs` state and `deps-audit.mjs` timestamp
 plugin-data debug logs, existing artifacts and user-owned inputs are unchanged. This inventory
 is a follow-up aid, not a complete permission/security audit or consumer-efficacy claim.
 
-Hosted CI, human merge and the candidate's release tag are separate from local verification.
+Local verification is complete. Hosted CI, human merge and the 0.15.19 release tag are separate;
+the verified 0.15.18 tag is the previous release, not this candidate's deployment.
