@@ -54,7 +54,15 @@ mode record. Restoration left the backup's 0400 mode instead of the original 075
 `regression-gnu-stat-red.log` retains the failure. The helper now captures and discards failed probe
 output; only a successful probe's permissions reach the existing restoration logic. The regression
 assertions and verifier are unchanged. After the correction, native and GNU focused runs both
-pass **3/3**. The complete rerun and follow-up reviews will be recorded after execution.
+pass **3/3**. The complete native rerun at `5fdd0d15a7287fa9f5faaecfcb343ee437647b31` passed
+**83/83**, exit 0; both follow-up review axes reported **0 actionable findings**.
+
+The [initial Linux CI](https://github.com/reach0908/paul-loop/actions/runs/36303443558) at
+`1572d06570af065086b9e8893c1c64150c044f4e` independently failed **82/83** in both engine jobs
+on the same 0400-versus-0751 assertion. Those logs are retained as `ci-initial-failures.log`;
+the complete native rerun is `engine-full-portability-rerun.log`. A GNU-stat shim checks that
+utility's behavior, not an entire Linux runtime. Final hosted qualification is recorded separately
+on the updated PR head; the earlier CI failures are not treated as passes or discarded.
 
 ## Authorization and prior release
 
