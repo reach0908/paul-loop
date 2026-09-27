@@ -4,6 +4,11 @@ Date: 2026-09-27. Base: `d86f020a045c611e8b4933dd774774d9864bb379` (#134).
 Scope: the next bounded part of [#86](https://github.com/reach0908/paul-loop/issues/86).
 Source candidate: loop-engine **0.15.18**; ship-flow **0.11.7** and loop-memory **0.8.1** unchanged.
 
+#134's reviewed head `96ae65b2a4400306e53cb06d7fc0348c090e0c6a` has the same tree as the base.
+The remote `loop-engine--v0.15.17` tag points to that merge commit and
+[post-merge validation 36305151340](https://github.com/reach0908/paul-loop/actions/runs/36305151340)
+completed successfully. The working checkout is synchronized; consumer installations are not changed.
+
 ## Problem and contract
 
 The registered engine hooks have independent writers that can run before a ledger creates a
@@ -31,8 +36,17 @@ recursive chmod or runtime gate is introduced. All logger callers share the same
   user-file modes, counter/escape behavior, shared append and logger failure behavior.
 - Before implementation: **0/3 PASS**, all three fail on the actual permissive creation modes.
   After implementation: **3/3 PASS**, with the same assertions.
-- Existing test files and gate decisions are unchanged. Complete engine verification, packaging
-  and independent review are pending at the time of this initial record.
+- All **96 existing engine test files** are byte-identical to base (private SHA-256 receipt).
+  Complete engine verification (`/bin/bash tools/loop-engine/test/run.sh`, Node 22,
+  Python 3.13) passes **84/84**, exit 0, including the new regression.
+- Vendor lock check, Claude/Codex package generation and reproducibility, and strict generated
+  marketplace/plugin validation pass. No memory or ship-flow source was changed.
+- Independent `code-review` skill review at `91b1b48306f1c0e04658310f58f304eec084cc35`:
+  **Standards 0 findings; Spec 0 findings**. This static review is not a security qualification.
+- Implementation gate: AUTO (10 planned paths). Publication classification: REQUIRE, retained
+  because the actual push/PR commands have no matching rule. Existing user authorization for
+  continued provider improvements and PR publication is reused; merge remains a separate human
+  decision. No rule/output change, bypass or command-execution denial occurred.
 - Private raw evidence: `.loop/private-hook-artifacts/`; no consumer credentials or logs are
   included in this document.
 
@@ -45,4 +59,5 @@ reports/baselines and `otel-receiver.mjs` output. Memory's optional plugin-data 
 also unchanged. These are follow-up candidates, not evidence of a complete permissions audit.
 
 Provider unit/CI success does not establish consumer activation, memory usefulness or native-host
-isolation. Publication, merge and the release tag must be verified separately.
+isolation. Local evidence above is complete; hosted CI, merge and the 0.15.18 release tag must
+be verified separately. The previously verified 0.15.17 release is not this candidate's deployment.
