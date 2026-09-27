@@ -48,13 +48,18 @@ inherited inline snapshot enough for the nested Node-entry TOCTOU fixture to exc
 limit. `engine-full.log` and `engine-initial-result.json` retain that failure. The same three
 regressions now live inline in their shell test, following the existing shell snapshot pattern;
 their assertions remain frozen before execution. The runner, size limit and existing tests are
-unchanged. The inline regression passes **3/3**; the complete suite is being rerun without narrowing.
+unchanged. The inline regression passes **3/3**. The complete, unnarrowed rerun at
+`ca30984a929736ee7cda3efa4d2b67c39f48c357` passed **82/82**, exit 0; retained as
+`engine-full-rerun.log` and `engine-rerun-result.json`. All 94 existing engine test files remain
+byte-identical to the base, with hashes saved in `all-existing-test-hashes.json`.
 
 Private evidence is retained under `.loop/private-run-artifacts/`. Runtime generation/check,
-vendor lock and strict marketplace/engine/memory manifests passed. Both independent review axes
-reported no actionable findings before the test-layout correction; follow-up review and the
-complete rerun will be recorded after execution. Local tests, hosted CI, merge and release remain
-separate claims. No real memory DB, provider API or consumer installation is used.
+vendor lock and strict marketplace/engine/memory manifests passed. Both independent code-review
+axes, Standards and Spec, reported **0 actionable findings**, including follow-up review of the
+test-layout correction: all three test bodies and 27 assertions are byte-identical. Local tests,
+hosted CI, merge and release remain separate claims. No real memory DB, provider API or consumer
+installation is used. Hosted CI and final-head package provenance are retained privately after
+publication; this record does not claim those future results.
 
 ## Risk and previous release
 
@@ -63,6 +68,11 @@ the planned change spans 15 paths (the generic threshold is 10). This classifica
 it is not converted to AUTO. Under the existing user-authorized provider work and shared
 authorization contract, continue reversible implementation and independent review toward a PR.
 No command-execution denial is bypassed and no merge approval is inferred.
+
+The final publication preflight again returned **DENY_AND_LOG**, high/full/low. Its workspace
+classification includes 18 paths: the 14 committed paths and four pre-existing untracked audit
+files left untouched and excluded from this PR. The original and final classifier outputs are
+both retained; the test-layout correction did not lower the risk classification.
 
 PR #132 merged at the base above. Its tree matches reviewed head
 `3d08a447096f970b985ab2c61d149206ede6e647`; remote `loop-engine--v0.15.15` matches that merge.
