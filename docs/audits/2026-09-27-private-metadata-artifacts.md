@@ -66,12 +66,32 @@ other security issues or prove consumer activation, recall usefulness or native 
   No live model, database, consumer installation or settings were used.
 - All **98 existing engine test files** remain byte-identical to base (private SHA-256 receipt).
 - Memory `npm ci`, typecheck, tests and build pass: **175 passed, 2 skipped** across 17 test files;
-  rebuilt `dist/cli.js` is byte-identical. Skipped tests are not counted as passed.
-- Full engine, package/vendor checks and independent Standards/Spec review are pending.
+  rebuilt `dist/cli.js` is byte-identical. The two opt-in live embedding API checks are skipped,
+  not counted as passed.
+- Complete engine verification (`/bin/bash tools/loop-engine/test/run.sh`, Node 22.19.0,
+  Bash 3.2.57, Python 3.13.12) passes **86/86**, exit 0. Vendor lock, generated Claude/Codex
+  package reproducibility and strict generated marketplace/plugin validation pass.
 - Private evidence is retained under `.loop/private-metadata-artifacts/`, including the original
   red log. Existing tests, verifiers, thresholds and risk rules are unchanged.
-- The implementation verdict gate returned **DENY_AND_LOG (11)** for 13 paths/high blast radius,
+- Implementation and publication verdict gates returned **DENY_AND_LOG (11)** for 13 paths/high blast radius,
   with full reversibility and low cost. The unchanged result is retained; existing authorization
   permits reversible provider work toward review. No command-execution denial was bypassed.
 
-Hosted CI, human merge and candidate release tags remain separate from local verification.
+## Standards
+
+Independent `code-review` skill review of `a002dd07...02351d940d9306e46a88f10ee10b656f04d22939`:
+**0 findings**. The writers preserve behavior while adding explicit creation modes; the exclusive
+import temporary deliberately fails on collision. Existing tests/verifiers remain unchanged, and
+the documentation does not overclaim existing permission repair or broader security.
+
+## Spec
+
+Independent review of the same commit: **0 findings**. No overlooked persistent writer was found
+within the declared scope. The consolidated inventory supports bounded #86 closeout after checks
+and merge; creation modes, existing-file preservation, trust mapping, read-only checks and fail-open
+behavior match the contract. This is static review, not consumer or native security qualification.
+
+Review totals: Standards 0; Spec 0. No worst finding in either axis.
+
+Local verification and review are complete. Hosted CI, human merge and candidate release tags
+remain separate; the verified 0.15.19 tag belongs to the previous release.
