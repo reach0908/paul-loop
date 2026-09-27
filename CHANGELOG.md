@@ -5,6 +5,17 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.20
+
+- Restrict new imported lessons, vendor-sync state and project dependency-audit stamps to 0600,
+  with 0700 parent creation. Lesson imports refuse an existing temporary file before publishing.
+  Preserve read-only checks, deduplication, existing in-place modes and best-effort audit behavior.
+
+## loop-memory 0.8.2
+
+- Create optional recall/graduation debug logs with 0600. Preserve existing append-target modes,
+  disabled/debug-off behavior and fail-open hooks; no debug directory or memory service is enabled.
+
 ## loop-engine 0.15.19
 
 - Restrict newly created AC aggregate/artifact-only logs, eval logs/baselines, context baselines

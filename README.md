@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.19**, ship-flow **0.11.7**, loop-memory **0.8.1**.
+> **Source versions:** loop-engine **0.15.20**, ship-flow **0.11.7**, loop-memory **0.8.2**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -65,8 +65,11 @@ directories and worktree-session state directories use 0700 (state files already
 Existing directories, append targets and in-place counters are not migrated; user-owned `.loop/.env`
 is not modified. AC aggregate/artifact-only logs, eval logs/baselines, context baselines and OTel
 records also create files with 0600 and directories with 0700; agent-eval report directories now
-use 0700 alongside the existing exclusive 0600 report file. Other producers remain outside this
-creation-mode guarantee. See the [CLI scope and remaining work](docs/audits/2026-09-27-private-cli-artifacts.md).
+use 0700 alongside the existing exclusive 0600 report file. Imported lessons, vendor-sync state,
+dependency-audit stamps and optional memory debug logs also create files with 0600; new import/state
+directories use 0700. Lesson imports refuse an existing temporary file. These are creation limits,
+not a permission migration or an ACL/same-user isolation guarantee. See the
+[persistent-writer inventory and exclusions](docs/audits/2026-09-27-private-metadata-artifacts.md).
 
 For a local context-size estimate, use `context-budget.mjs --root <project>` (`--local` is optional).
 Since 0.15.15, the default skips personal inputs, API requests and recall execution, even with a

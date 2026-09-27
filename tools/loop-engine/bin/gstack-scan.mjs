@@ -75,9 +75,9 @@ const raw = readFileSync(gstackFile, 'utf8')
 
 function lessonPath(id) { return join(opt.lessons, `${id}.json`) }
 function writeLessonFile(l) {
-  mkdirSync(opt.lessons, { recursive: true })
+  mkdirSync(opt.lessons, { recursive: true, mode: 0o700 })
   const p = lessonPath(l.id), tmp = `${p}.${process.pid}.tmp`
-  writeFileSync(tmp, JSON.stringify(l, null, 2) + '\n')
+  writeFileSync(tmp, JSON.stringify(l, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
   renameSync(tmp, p)
 }
 

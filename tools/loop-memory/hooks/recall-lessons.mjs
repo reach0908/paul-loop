@@ -37,7 +37,7 @@ function dbg(msg) {
   if (env.LOOP_LEARNING_OFF === '1' || env.LOOP_MEMORY_RECALL_ONLY === '1' || env.LOOP_MEMORY_OFF === '1') return;
   if (env.LOOP_RECALL_DEBUG !== '1') return;
   try {
-    appendFileSync(join(dataDir, 'recall-debug.log'), `${new Date().toISOString()} ${msg}\n`);
+    appendFileSync(join(dataDir, 'recall-debug.log'), `${new Date().toISOString()} ${msg}\n`, { mode: 0o600 });
   } catch {
     /* logging failure is ignored */
   }

@@ -24,8 +24,8 @@ function readState() {
 }
 
 function writeState(next) {
-  mkdirSync(dirname(stateFile), { recursive: true });
-  writeFileSync(stateFile, JSON.stringify(next, null, 2));
+  mkdirSync(dirname(stateFile), { recursive: true, mode: 0o700 });
+  writeFileSync(stateFile, JSON.stringify(next, null, 2), { mode: 0o600 });
 }
 
 function gh(args) {
