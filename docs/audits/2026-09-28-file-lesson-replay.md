@@ -70,4 +70,17 @@ qualification is separate and remains open.
 #138's merge tree equals the reviewed PR head. Its post-merge validation completed successfully;
 existing release tags remain unchanged because the merged change only updates documentation.
 Current edits are also limited to README and root `docs/`; runtime source/tests/manifests are
-unchanged. Independent review and the new PR's hosted CI are separate pending checks.
+unchanged. The new PR's hosted CI and human merge remain separate publication states.
+
+## Standards
+
+Independent review of `e37a1fa..c1aa47a`: **0 findings**. The manual guide matches the receipt
+contract; hashes, two distinct FAIL/PASS run pairs and one stored lesson match retained evidence.
+Historical replay remains separate from consumer efficacy under AGENTS.md and ADR-0004.
+
+## Spec
+
+Independent review of the same diff: **0 findings**. Complete frozen regression results, raw-log
+rejection, deduplication and pre-repair recall are supported. Both reviewers inspected source and
+stored evidence without rerunning the replay. Independent fixing, native-memory comparison and
+prospective usefulness remain unqualified. The final documentation delta only records these reviews.
