@@ -278,8 +278,8 @@ function annotateFreshness(skillsSh, plugins, gstack) {
 function writeStamp() {
   try {
     const loopDir = join(PROJECT_DIR, '.loop');
-    mkdirSync(loopDir, { recursive: true });
-    writeFileSync(join(loopDir, 'deps-audit.last'), String(NOW));
+    mkdirSync(loopDir, { recursive: true, mode: 0o700 });
+    writeFileSync(join(loopDir, 'deps-audit.last'), String(NOW), { mode: 0o600 });
   } catch { /* fail-open */ }
 }
 
