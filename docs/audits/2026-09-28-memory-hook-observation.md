@@ -23,8 +23,9 @@ explicitly empty and the dotenv path pointed to a nonexistent fixture file.
 Existing `safeEnv`, `bounded`, JSONL parsing and hashing helpers were reused. The generic adapter
 keeps memory/learning/recall-only switches off and therefore cannot observe memory bookkeeping.
 Only the active fixture invocations removed those three switches. A shared **180,000 ms** ledger
-covered all probes and setup, with **21,189 ms** consumed. Every model invocation had a 60-second
-deadline and a $1 command cap. Raw model labels were `claude-opus-4-8[1m]` in initialization and
+covered all six model invocations and their bounded wrapper setup, with **21,189 ms** consumed.
+Preliminary read-only CLI inspection was outside this model-execution allowance. Every model
+invocation had a 60-second deadline and a $1 command cap. Raw model labels were `claude-opus-4-8[1m]` in initialization and
 `claude-opus-4-8` in assistant events; the evidence retains both, rather than inventing one exact ID.
 
 | Fixture setup | Native result | Interpretation |
@@ -50,8 +51,9 @@ No source manifest, hook, gate or permission boundary was weakened to obtain the
 
 A read-only refresh used the released provider's filesystem-only liveness reader, inspecting at
 most 100 newest default run files per existing registered worktree. It counted file lessons and
-shared Git lesson history without reading note content. No consumer command/configuration was
-executed or changed; no database or embedding API was contacted.
+shared Git lesson history without reading note content. No consumer project scripts or installed
+plugin binaries were executed, and no project settings were modified; no database or embedding API
+was contacted.
 
 | Project | Registered worktrees | Existing/read | Missing | Run files read | Memory events | File lessons / shared history |
 |---|---:|---:|---:|---:|---:|---:|
@@ -85,4 +87,21 @@ README now states the dependency/loading requirement, corrects the unconditional
 and makes the default-path and `--assert` limitations explicit. Runtime source, tests, versions and
 consumer installs are unchanged. Validation checks the retained native event/ledger pairs, source
 hashes, aggregate counts, documentation links and unchanged runtime trees; no redundant full unit
-suite is needed for these documentation-only edits. Independent review and publication are pending.
+suite is needed for these documentation-only edits. Generated runtime package consistency and vendor
+lock checks passed. Independent filesystem reads also confirmed all 186 run files were accessible;
+this supplements the liveness reader's fail-open handling of I/O errors.
+
+## Standards
+
+Independent review of `ec54a022..088c602` found **0 actionable findings**. Provider observations remain
+separate from real-use efficacy; retained hashes, event outcomes and README qualifications match the
+source. No verifier weakening or actionable heuristic smell was found.
+
+## Spec
+
+Independent review of the same diff found **0 findings**. Native execution, skipped retrieval and
+useful reuse remain distinct; inventory aggregates and release receipts match the retained evidence.
+#35 remains open. Neither review reran native sessions or established efficacy/security.
+
+The final documentation delta clarifies the budget and consumer-execution wording above and records
+these reviews. Hosted CI, merge and any later release remain separate publication states.
