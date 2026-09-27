@@ -2,6 +2,12 @@
 
 ## 최신 후속 상태
 
+2026-09-27 권한 후속: #132가 `ac6a27bf9d23cc4b9052fa2c29fe314032b23763`로 머지됐고,
+engine **0.15.15** 원격 태그와 [배포 검증](https://github.com/reach0908/paul-loop/actions/runs/36297360198)이
+확인됐다. 현재 [실행 원장·검증 로그 생성 권한](2026-09-27-private-run-artifacts.md)을 engine **0.15.16** /
+memory **0.8.1** 후보로 검증한다. 기존 소비 데이터의 권한을 일괄 변경하지 않는다.
+#86의 별도 loop-fix handoff/history 등 다른 생성 경로는 남아 있으며 이 이슈를 닫지 않는다.
+
 2026-09-27 추가 후속: #131이 `10516c77ea9e40c92285bc309f184be307044104`로 머지됐다.
 engine **0.15.14**의 원격 태그가 이 머지와 일치하고
 [배포 검증](https://github.com/reach0908/paul-loop/actions/runs/36295729670)도 성공했다.

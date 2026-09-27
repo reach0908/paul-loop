@@ -72,8 +72,9 @@ fi
 # Ensure the log's parent dir exists for EVERY log path (not just the default), and that we can
 # actually write it. Otherwise the redirection below fails before the command runs and we'd
 # fabricate a bogus FAIL from the redirection's exit code instead of the command's.
-mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
-if ! : > "$LOG" 2>/dev/null; then
+# Restrict only our new artifacts; the verified command inherits the caller's original umask.
+(umask 077; mkdir -p "$(dirname "$LOG")") 2>/dev/null || true
+if ! (umask 077; : > "$LOG") 2>/dev/null; then
   echo "verdict-run.sh: cannot write log file '$LOG'" >&2
   exit 2
 fi

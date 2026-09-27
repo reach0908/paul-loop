@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.15**, ship-flow **0.11.7**, loop-memory **0.8.0**.
+> **Source versions:** loop-engine **0.15.16**, ship-flow **0.11.7**, loop-memory **0.8.1**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -53,6 +53,13 @@ summarizes existing engine telemetry. `node <memory-artifact>/dist/cli.js livene
 timestamps, skipped/error reasons and missing data: a liveness exit 0 or an installed plugin does
 not prove useful recall. Even an `injected` event proves delivery of context, not that it helped.
 Use the project's configured launcher/installed artifact; do not borrow another project's setup.
+
+Engine and memory run-ledger writers create new files with mode 0600 and directories with 0700.
+`verdict-run.sh` also creates private logs before capturing output; redaction retains the input
+file's permission limits, and new state/evidence directories are private. The verified command's
+umask is unchanged. Existing paths keep their permissions; user-owned `.loop/.env` is not modified.
+Other producers, including loop-fix's separate handoff/history files, are outside this creation-mode
+guarantee. See the [scope and remaining permissions work](docs/audits/2026-09-27-private-run-artifacts.md).
 
 For a local context-size estimate, use `context-budget.mjs --root <project>` (`--local` is optional).
 Since 0.15.15, the default skips personal inputs, API requests and recall execution, even with a

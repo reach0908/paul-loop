@@ -55,7 +55,7 @@ export function readCurrentRunId(root) {
 
 export function appendRunEvent(root, { type, sessionId, runId, payload, writeCurrentPointer, clearCurrentPointer }) {
   const dir = runsDir(root)
-  mkdirSync(dir, { recursive: true })
+  mkdirSync(dir, { recursive: true, mode: 0o700 })
   const rid = runId ?? runIdFrom(sessionId)
   const event = {
     id: randomUUID(),
@@ -65,11 +65,11 @@ export function appendRunEvent(root, { type, sessionId, runId, payload, writeCur
     payload: sanitizeRecord(payload ?? {}),
     version: 1,
   }
-  appendFileSync(join(dir, `${rid}.jsonl`), `${JSON.stringify(event)}\n`)
+  appendFileSync(join(dir, `${rid}.jsonl`), `${JSON.stringify(event)}\n`, { mode: 0o600 })
   // current 포인터는 확장자 없음 — run-metrics의 *.jsonl 글롭에 걸리면 파싱이 오염된다.
   // 갱신은 run.started(SessionStart)만. 같은 워크트리 동시 세션이면 last-writer-wins로 verdict
   // 귀속이 섞일 수 있다 — 워크트리당 1작업 규약(CLAUDE.md §8) 전제로 수용.
-  if (writeCurrentPointer) writeFileSync(join(dir, 'current'), `${rid}\n`)
+  if (writeCurrentPointer) writeFileSync(join(dir, 'current'), `${rid}\n`, { mode: 0o600 })
   // run.ended 후 잔존 포인터는 이후 터미널 verdict를 이미 끝난 런에 계속 귀속시킨다(리뷰) —
   // 자기 run-id일 때만 제거(동시 세션이 새로 쓴 포인터는 보존). 이후 verdict는 unknown 버킷으로
   // 남는다(의미상 정직 — 세션 밖 검증은 귀속 불가가 맞다).
