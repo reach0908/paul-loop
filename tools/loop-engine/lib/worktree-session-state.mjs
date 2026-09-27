@@ -82,7 +82,7 @@ export function unseenRequests(state, requests) {
 export function saveSession(file, state) {
   const temp = `${file}.${randomUUID()}.tmp`;
   try {
-    mkdirSync(dirname(file), { recursive: true });
+    mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
     state.branches = [...new Set(state.confirmed.map((r) => r.branch))]; // compatibility view, confirmed only
     writeFileSync(temp, JSON.stringify(state) + '\n', { flag: 'wx', mode: 0o600 });
     renameSync(temp, file);

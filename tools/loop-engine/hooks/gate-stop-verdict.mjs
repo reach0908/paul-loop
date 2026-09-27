@@ -183,10 +183,11 @@ function block(failure) {
   denies += 1;
   let counterPersisted = true;
   try {
-    mkdirSync(dirname(COUNTER), { recursive: true });
+    mkdirSync(dirname(COUNTER), { recursive: true, mode: 0o700 });
     writeFileSync(
       COUNTER,
       JSON.stringify({ sessionId, denies, updatedAt: new Date().toISOString() }),
+      { mode: 0o600 },
     );
   } catch {
     counterPersisted = false;

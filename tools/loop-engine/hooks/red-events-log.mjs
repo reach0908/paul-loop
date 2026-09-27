@@ -38,9 +38,9 @@ export function logRedEvent(root, event) {
     const sha = git(['rev-parse', 'HEAD']);
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
     const markerDir = resolve(root, git(['rev-parse', '--git-common-dir']), 'loop-markers');
-    mkdirSync(markerDir, { recursive: true });
+    mkdirSync(markerDir, { recursive: true, mode: 0o700 });
     const line = JSON.stringify({ ts: new Date().toISOString(), sha, branch, ...event });
-    appendFileSync(join(markerDir, 'red-events.log'), `${line}\n`);
+    appendFileSync(join(markerDir, 'red-events.log'), `${line}\n`, { mode: 0o600 });
   } catch {
     /* best-effort — 계측 실패가 게이트 판정에 영향을 주면 안 된다(BAC-366) */
   }
