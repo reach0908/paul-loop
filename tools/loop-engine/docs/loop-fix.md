@@ -108,6 +108,20 @@ verification receipt는 특정 명령의 관측 결과이고, lifecycle은 한 i
 
 요구사항·AC·검토·승인·배포를 잇는 outer-loop progression은 이 worker의 책임이 아니다. [retired orchestrator](orchestrate.md)를 다시 실행기로 사용하지 않는다. 원장 행이나 receipt를 기록하는 행위는 사람의 승인·게시·원격 변경 권한을 생성하지 않는다.
 
+## 로컬 산출물 권한
+
+새 handoff·lifecycle·lease·backup 디렉터리는 0700, 전달 파일·이력·오류·sentinel은 0600으로
+만든다. 보호 백업은 비공개 디렉터리 안에 복사한 뒤 0400으로 보관한다. worker가 끝난 뒤
+supervisor가 만드는 취소 이력이나 `protect-compromised`도 같은 생성 정책을 따른다.
+
+검증·수정 명령은 호출자의 원래 `umask`로 실행한다. 보호 파일 복구는 저장해 둔 원래 모드를
+복원하며, 작업 디렉터리를 복구할 때도 호출자의 `umask`를 사용한다. 기존 디렉터리와 append
+대상의 권한을 일괄 변경하지 않으며, 사용자 `.loop/.env`나 기존 수동 sentinel은 건드리지 않는다.
+이 모드 정책은 같은 UID의 명령을 격리하는 sandbox나 기존 ACL·소유권의 마이그레이션이 아니다.
+
 ## 집중 회귀 검증
+
+`test/private-loop-fix-artifacts.test.sh`는 permissive/custom umask, 기본·사용자 handoff 경로,
+기존 권한 보존, 원래 실행 모드 복구와 supervisor 취소 시 생성 권한을 실제 loop-fix 실행으로 확인한다.
 
 `test/loop-lifecycle.test.sh`는 임시 로컬 fixture만 사용하여 glob, 연결 worktree Stop, 승인 재시도, 독점 lease, descendant 취소, 절대 마감, 재개 시 budget 보존, 원장 resolver, receipt 연결을 검증한다. `loop-fix-protect.test.sh`, `loop-fix-infra-exempt.test.sh`, `loop-fix-progress-clock.test.sh`, `loop-fix-fail-channel.test.sh`, `auto-arm.test.sh`가 기존 동작과의 회귀 경계를 보완한다. 실제 모델 API나 원격 저장소 변경 없이 실행할 수 있다.

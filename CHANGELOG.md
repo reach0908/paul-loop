@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## loop-engine 0.15.17
+
+- Make newly created loop-fix handoffs, history/error files and lifecycle sentinels private, with
+  0700 lifecycle/lease/backup directories and 0400 backup snapshots. Preserve verifier/fixer
+  umasks, restored protected-file modes, existing directory modes and append targets. Apply the
+  same creation policy when the supervisor records cancellation or an incomplete/protected run.
+
 ## loop-engine 0.15.16
 
 - Create new run-ledger files and verifier logs with owner-only permissions, including the raw
