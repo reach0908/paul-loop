@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // context-budget.mjs — O1(상시 컨텍스트 예산) 3층 분리 계측 (BAC-582). 레포/설정 상태는 안 바꾼다
-// (--write-baseline의 baseline 파일 기록만 예외). 단 부수 I/O는 있다: O1b 계측이 실 recall 훅을 1회
-// spawn(임베딩 API 호출·pgvector 질의 발생 가능)하고, api 모드는 계측 대상 텍스트를 count_tokens로 전송.
+// (--write-baseline의 baseline 파일 기록만 예외). --local은 개인 레이어 읽기·API·훅 실행 없이 계측한다.
+// --api / --include-personal / --run-hook 중 하나라도 지정하면 선택한 기능만 허용한다.
+// 호환성 전환 단계: 위 옵션이 모두 없으면 기존 전체 계측을 유지한다. 다음 기본값 전환과 별개다.
+// --run-hook은 실 recall 훅을 spawn(임베딩 API·DB 접근 가능), --api는 선택한 텍스트를 전송한다.
 //
 // 3층 정의(총합 보고식과 함께 이 헤더가 정의 문서다):
 //   O1a(세션 1회 상주) = 세션 시작 시 한 번 주입되어 상주하는 텍스트.
@@ -12,7 +14,7 @@
 //       레포 자산과 개인 레이어 자산은 절대 섞지 않는다(clone 재현성 분리 — 부재 시 null=N/A, 날조 금지).
 //       플러그인 수치는 상한 참고치(디스크 합 ≠ 실주입량 — 주입 캡 존재 가능, caveat 필드로 명시).
 //   O1b(턴당 반복) = recall-lessons.mjs가 UserPromptSubmit마다 stdout으로 주입하는 텍스트 — 코드 복제
-//     없이 훅을 실제 spawn해 계측(실주입 로직 재사용). 훅은 fail-open 계약(항상 exit 0)이라 빈 출력과
+//     없이 허용된 경우 훅을 실제 spawn해 계측(실주입 로직 재사용). 훅은 fail-open 계약(항상 exit 0)이라 빈 출력과
 //     고장이 겉으로 같다 → 무출력/비0종료/spawn실패 전부 INSUFFICIENT_DATA로 정직 보고.
 //   O1c(온디맨드) = 스킬 본문·.loop/lessons·docs/adr·docs/agents — 바이트만 참고 표기, 총합 미포함
 //     (docs/agents "상시 read" 통념은 코드로 반증됨 — 훅 grep 0. O1에 넣으면 과대계상).
@@ -20,12 +22,17 @@
 //   보인다(BAC-567 전후 비교가 성립하려면 turns 파라미터까지 동일 조건으로 재실행).
 //
 // 토큰 실측 = Anthropic POST /v1/messages/count_tokens(모델별 카운트 — tiktoken 금지). ANTHROPIC_API_KEY
-// 부재/호출 실패 시 bytes/3 근사로 폴백하되 버킷별 method:"api"|"approx"를 명시 — 근사를 실측으로
+// 부재/호출 실패 또는 API 미선택 시 bytes/3 근사로 폴백하되 method:"api"|"approx"를 명시 — 근사를 실측으로
 // 위장하지 않는다. 키 값은 로그·출력·baseline 어디에도 남기지 않는다. 콜 수는 버킷당 1(총 ≤6).
 //
 // Usage: node context-budget.mjs [--root <dir>] [--project-dir <dir>] [--model <id>] [--turns <n>]
 //        [--o1b-prompt <text>] [--hook <path>] [--plugins-file <path>] [--json]
-//        [--write-baseline [<path>]]
+//        [--local | --api --include-personal --run-hook] [--write-baseline [<path>]]
+//   --local      : 로컬 레포 입력만 bytes/3 근사. API 키가 있어도 전송·개인 파일 읽기·훅 실행 없음.
+//   --api        : 선택한 버킷의 내용을 count_tokens API로 보낼 수 있도록 허용(키 부재 시 approx).
+//   --include-personal : 글로벌 CLAUDE.md, 프로젝트 MEMORY.md, 설치 플러그인 입력을 포함.
+//   --run-hook   : 지정한 recall 훅 실행을 허용. 훅 자체의 외부 I/O도 발생할 수 있다.
+//   세 기능은 각각 선택한다. 경로/모델/프롬프트 지정만으로 명시적 기능 선택이 되지는 않는다.
 //   --project-dir : MEMORY.md 키 도출용(경로의 '/'→'-') — 워크트리에서 돌릴 땐 메인 레포 경로를 넘긴다.
 //   --turns       : 기본 30(세션당 턴수 실측이 아직 없어 default-assumption으로 기록 — 출력에 명시).
 //   --write-baseline : 기본 <root>/.loop/context-budget/baseline.json (BAC-567 전후 비교 기준점, 커밋 대상).
@@ -39,7 +46,7 @@ import { dirname, join, resolve } from 'node:path'
 function usage(msg) {
   if (msg) process.stderr.write(`context-budget: ${msg}\n`)
   process.stderr.write(
-    'Usage: context-budget.mjs [--root <dir>] [--project-dir <dir>] [--model <id>] [--turns <n>] [--o1b-prompt <text>] [--hook <path>] [--plugins-file <path>] [--json] [--write-baseline [<path>]]  (see header)\n',
+    'Usage: context-budget.mjs [--root <dir>] [--project-dir <dir>] [--model <id>] [--turns <n>] [--o1b-prompt <text>] [--hook <path>] [--plugins-file <path>] [--local | --api --include-personal --run-hook] [--json] [--write-baseline [<path>]]  (see header)\n',
   )
   process.exit(2)
 }
@@ -57,6 +64,10 @@ const opt = {
   json: false,
   writeBaseline: false,
   baselinePath: '',
+  local: false,
+  api: false,
+  includePersonal: false,
+  runHook: false,
 }
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -78,6 +89,10 @@ for (let i = 0; i < argv.length; i++) {
     case '--o1b-prompt': opt.o1bPrompt = val(); break
     case '--hook': opt.hook = val(); break
     case '--plugins-file': opt.pluginsFile = val(); break
+    case '--local': opt.local = true; break
+    case '--api': opt.api = true; break
+    case '--include-personal': opt.includePersonal = true; break
+    case '--run-hook': opt.runHook = true; break
     case '--json': opt.json = true; break
     case '--write-baseline': {
       opt.writeBaseline = true
@@ -86,6 +101,13 @@ for (let i = 0; i < argv.length; i++) {
     }
     default: usage(`unknown arg ${a}`)
   }
+}
+if (opt.local && (opt.api || opt.includePersonal || opt.runHook)) usage('--local cannot be combined with capability flags')
+// Staged compatibility: old callers keep their behavior until explicit callers/tests are adopted.
+const legacyDefaults = !opt.local && !opt.api && !opt.includePersonal && !opt.runHook
+if (legacyDefaults) {
+  opt.api = opt.includePersonal = opt.runHook = true
+  process.stderr.write('context-budget: legacy defaults include personal inputs, API counting and recall execution; use --local or explicit capability flags.\n')
 }
 opt.root = resolve(opt.root)
 if (!opt.projectDir) opt.projectDir = opt.root
@@ -98,7 +120,7 @@ const approx = (text) => ({ tokens: Math.round(Buffer.byteLength(text, 'utf8') /
 async function countTokens(text, model) {
   if (!text) return { tokens: 0, method: 'none' }
   const key = process.env.ANTHROPIC_API_KEY
-  if (!key) return approx(text) // 키 없으면 fetch 자체를 안 한다
+  if (!opt.api || !key) return approx(text) // API 미선택 또는 키 부재 시 fetch 자체를 안 한다
   try {
     const base = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com' // 테스트 모의 서버 seam
     const res = await fetch(`${base}/v1/messages/count_tokens`, {
@@ -272,12 +294,13 @@ for (const f of skillFiles) {
 }
 
 const claudeMdText = readTextOrNull(join(opt.root, 'CLAUDE.md'))
-const globalClaudeMdText = readTextOrNull(join(homedir(), '.claude', 'CLAUDE.md'))
+const globalClaudeMdText = opt.includePersonal ? readTextOrNull(join(homedir(), '.claude', 'CLAUDE.md')) : null
 // MEMORY.md 키 = project-dir 경로의 '/'→'-' (실측: /Users/…/glucofit-partners → '-Users-…-glucofit-partners')
 const memoryKey = opt.projectDir.replaceAll('/', '-')
-const memoryText = readTextOrNull(join(homedir(), '.claude', 'projects', memoryKey, 'memory', 'MEMORY.md'))
-const plugin = pluginSkillScan(opt.pluginsFile)
-const o1b = measureO1b(opt.hook, opt.o1bPrompt, opt.root)
+const memoryText = opt.includePersonal ? readTextOrNull(join(homedir(), '.claude', 'projects', memoryKey, 'memory', 'MEMORY.md')) : null
+const plugin = opt.includePersonal ? pluginSkillScan(opt.pluginsFile) : null
+const o1b = opt.runHook ? measureO1b(opt.hook, opt.o1bPrompt, opt.root)
+  : { text: '', status: 'NOT_REQUESTED', reason: 'recall execution not selected (--run-hook)' }
 
 // 버킷당 1콜(총 ≤6) — 파일당 호출 금지(rate limit·속도). 부재(null 텍스트)는 버킷 자체가 null(N/A).
 async function bucket(text) {
@@ -335,7 +358,10 @@ const report = {
   method,
   turns: opt.turns,
   turns_source: opt.turnsSource,
+  capabilities: { api: opt.api, personal: opt.includePersonal, hook: opt.runHook },
+  legacy_defaults: legacyDefaults,
   o1a: {
+    includes_personal: opt.includePersonal,
     repo: { claude_md: claudeMd, skill_frontmatter: skillFm },
     personal: { global_claude_md: globalClaudeMd, memory_md: memoryMd, plugin_skill_frontmatter: pluginFm },
     repo_tokens: repoTokens,
@@ -369,7 +395,7 @@ const report = {
 if (opt.writeBaseline) {
   if (method !== 'api')
     process.stderr.write(
-      `context-budget: baseline method=${method} — 비교 기준점으로는 ANTHROPIC_API_KEY 셸에서의 api 실측을 권장. 전후 비교는 반드시 같은 method·model·turns·o1b.status로.\n`,
+      `context-budget: baseline method=${method} — API 실측은 --api와 키가 필요. 전후 비교는 반드시 같은 capabilities·method·model·turns·o1b.status로.\n`,
     )
   mkdirSync(dirname(opt.baselinePath), { recursive: true })
   writeFileSync(opt.baselinePath, `${JSON.stringify(report, null, 2)}\n`)
@@ -386,24 +412,22 @@ if (opt.json) {
   const lines = []
   lines.push('=== CONTEXT BUDGET (O1) ===')
   lines.push(`model: ${opt.model}  method: ${method}  turns: ${opt.turns} (${opt.turnsSource})`)
+  lines.push(`capabilities: api=${opt.api} personal=${opt.includePersonal} hook=${opt.runHook} legacy_defaults=${legacyDefaults}`)
   lines.push('O1a repo (세션 1회 상주 — 레포 자산):')
   lines.push(fmtB('CLAUDE.md', claudeMd))
   lines.push(fmtB('skill frontmatter', skillFm, `, ${skillFm.files} files`))
   lines.push('O1a personal (세션 1회 상주 — 개인 레이어, 상한 참고치):')
-  lines.push(fmtB('~/.claude/CLAUDE.md', globalClaudeMd))
-  lines.push(fmtB('MEMORY.md', memoryMd))
-  lines.push(
-    fmtB(
-      'plugin skill frontmatter',
-      pluginFm,
-      pluginFm ? `, ${pluginFm.plugins} plugins/${pluginFm.skills} skills` : '',
-    ),
-  )
+  if (opt.includePersonal) {
+    lines.push(fmtB('~/.claude/CLAUDE.md', globalClaudeMd))
+    lines.push(fmtB('MEMORY.md', memoryMd))
+    lines.push(fmtB('plugin skill frontmatter', pluginFm,
+      pluginFm ? `, ${pluginFm.plugins} plugins/${pluginFm.skills} skills` : ''))
+  } else lines.push('  NOT_REQUESTED — 개인 레이어 미포함 (--include-personal)')
   lines.push(`O1a subtotal: repo=${repoTokens} personal=${personalTokens} total=${o1aTotal} tokens`)
   lines.push(
     o1b.status === 'OK'
       ? `O1b (recall 주입/턴): ${o1bTokens} tokens (${o1bMethod})`
-      : `O1b (recall 주입/턴): INSUFFICIENT_DATA — ${o1b.reason}`,
+      : `O1b (recall 주입/턴): ${o1b.status} — ${o1b.reason}`,
   )
   lines.push(
     `O1c (온디맨드, 참고 바이트): skill bodies=${report.o1c.skill_bodies_bytes}B lessons=${report.o1c.lessons_bytes}B docs/adr=${report.o1c.docs_adr_bytes}B docs/agents=${report.o1c.docs_agents_bytes}B`,
@@ -411,7 +435,7 @@ if (opt.json) {
   lines.push(
     report.total.includes_o1b
       ? `TOTAL = o1a + o1b×turns = ${report.total.tokens} tokens`
-      : `TOTAL = o1a only (O1b 결손 — INSUFFICIENT_DATA, o1b항 미포함) = ${report.total.tokens} tokens`,
+      : `TOTAL = o1a only (O1b ${o1b.status}, o1b항 미포함) = ${report.total.tokens} tokens`,
   )
   lines.push('=== END CONTEXT BUDGET ===')
   process.stdout.write(`${lines.join('\n')}\n`)

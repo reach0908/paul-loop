@@ -21,7 +21,7 @@ the ceiling invariant (`loop-engine`) without also adopting an opinionated deliv
 (`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
 `claude plugin details <name>` shows the projected per-plugin token cost before you decide.
 
-> **Source versions:** loop-engine **0.15.13**, ship-flow **0.11.7**, loop-memory **0.8.0**.
+> **Source versions:** loop-engine **0.15.14**, ship-flow **0.11.7**, loop-memory **0.8.0**.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -53,6 +53,13 @@ summarizes existing engine telemetry. `node <memory-artifact>/dist/cli.js livene
 timestamps, skipped/error reasons and missing data: a liveness exit 0 or an installed plugin does
 not prove useful recall. Even an `injected` event proves delivery of context, not that it helped.
 Use the project's configured launcher/installed artifact; do not borrow another project's setup.
+
+For a local context-size estimate, use `context-budget.mjs --local --root <project>`. This skips
+personal inputs, API requests and recall execution. Select `--include-personal`, `--api` and
+`--run-hook` separately when needed; `--api` sends the selected text, while the hook may perform
+its own external I/O. During the compatibility rollout, omitting all four flags retains the old
+full-measurement behavior and prints a notice. Compare reports only with matching capabilities,
+model, method, turns and recall status; excluded inputs are not a measured saving.
 
 ## What's in `loop-engine`
 
