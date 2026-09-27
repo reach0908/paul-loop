@@ -277,6 +277,10 @@ comment and identifiers, authorization record, exact repository/worktree/head/ba
 gate evidence, ordered commands and their dependencies. Use `--body-file`; never compose payloads
 with a Bash heredoc. The publisher executes only the supplied authorized actions and returns the
 PR URL plus each command's exit code; it does not fetch context or compose content.
+Resolve the requested publisher from exposed agent types or the active host registry, using
+at most one host-native capability lookup scoped to that role if needed and available. If it remains
+unavailable or unknown, return BLOCK. Do not search other worktrees or plugin caches for a role,
+try speculative spawns, or change configuration/installations; template files are not registration.
 Start it without Builder history: explicitly use `fork_turns="none"` on hosts with that option,
 pass a self-contained handoff, and verify the dispatch/context evidence. A fresh agent ID is not
 enough. If the host cannot exclude inherited history, that publication step is BLOCK.

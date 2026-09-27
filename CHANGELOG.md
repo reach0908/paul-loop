@@ -5,6 +5,13 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## ship-flow 0.11.7
+
+- Bound publisher availability checks to exposed host roles or one scoped host-native lookup.
+  Block an unavailable or unknown role without searching other worktrees or plugin caches,
+  speculative spawns, or configuration changes. Registered roles still require the existing
+  permission, authorization and fresh-context checks.
+
 ## ship-flow 0.11.6
 
 - Require publisher handoffs to exclude inherited Builder conversation, explicitly using
