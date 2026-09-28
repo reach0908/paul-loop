@@ -15,7 +15,9 @@ to this runner; `node scripts/check-evals.mjs` enforces the mechanical ones.
    skill under test or the criterion (a one-question case never says "one question").
 3. **Grade traces and artifacts, not claims.** Never ask the target to list the skills or steps it
    used. Prefer deterministic graders: `file_exists`, `regex` on files, `tool_used`, `tool_order`.
-   Every case needs one besides the peek guard; a reply-only case is tagged `dialogue` instead.
+   Every case needs one besides the peek guard; a reply-only case is tagged `dialogue` instead. An
+   `llm` grader with `focus: trace` sees only the first and last messages of a long run, so check run
+   order (red before green, green after the last edit) with a `regex` on the trace, which reads it all.
 4. **Anchor edit scope on the path.** Edit/Write inputs carry file contents, so an Edit/Write
    `input_match` starts with `"file_path"\s*:\s*"[^"]*` and ends at the file name.
 5. **Keep the oracle out of reach.** Every case has `graders/no-oracle-peek.md` (a trace regex,
