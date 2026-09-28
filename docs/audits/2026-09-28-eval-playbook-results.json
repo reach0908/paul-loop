@@ -2,12 +2,13 @@
   "note": "Raw results stay in git-ignored .loop/plugin-eval/ of the eval-playbook worktree. Cost is list-price estimate, not subscription billing.",
   "claudeCode": "2.1.283",
   "totalsUsd": {
-    "all": 76.72,
+    "all": 84.73,
     "smoke": 6.23,
-    "withWithout": 28.3,
-    "model": 12.14,
+    "withWithout": 28.35,
+    "model": 12.19,
     "effort": 24.09,
-    "superseded": 5.96
+    "git": 5.62,
+    "superseded": 8.25
   },
   "results": [
     {
@@ -180,8 +181,8 @@
     },
     {
       "path": "2026-09-28-batch1/ship-feature-pr-ready/result.json",
-      "kind": "with-without",
-      "note": "Opus with/without; used except the four reran cases",
+      "kind": "superseded",
+      "note": "planner/review graders used tool: Task, which matches nothing; replaced by the shipfeature reruns",
       "model": "claude-opus-5-5",
       "judge": "claude-sonnet-5",
       "cases": [
@@ -361,6 +362,34 @@
       "sha256": "d0599b040cd2beff32be0e861ce4ed1e451f3136ab01b2b1b0234cb7499b25b8"
     },
     {
+      "path": "2026-09-28-shipfeature-rerun/ship-feature-pr-ready/result.json",
+      "kind": "with-without",
+      "note": "ship-feature rerun after the Agent grader fix; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "ship-feature-pr-ready"
+      ],
+      "casesCommit": "6a1972f",
+      "costUsd": 1.55,
+      "durationSeconds": 108,
+      "sha256": "f30e969dc9127e246a182037e53521aa5895f6b76c270cb03ba6a5a33cae562f"
+    },
+    {
+      "path": "2026-09-28-shipfeature-sonnet/ship-feature-pr-ready/result.json",
+      "kind": "model",
+      "note": "ship-feature Sonnet rerun after the Agent grader fix; used",
+      "model": "claude-sonnet-5",
+      "judge": "claude-opus-5-5",
+      "cases": [
+        "ship-feature-pr-ready"
+      ],
+      "casesCommit": "6a1972f",
+      "costUsd": 0.84,
+      "durationSeconds": 99,
+      "sha256": "3f421b284b355bc7e343f9b95087c6021e072143710602526ed80b7c88c586f8"
+    },
+    {
       "path": "2026-09-28-sonnet-default/diagnose-failing-test/result.json",
       "kind": "model",
       "note": "Sonnet default effort, --ablation none; used",
@@ -474,8 +503,8 @@
     },
     {
       "path": "2026-09-28-sonnet-default/ship-feature-pr-ready/result.json",
-      "kind": "model",
-      "note": "Sonnet default effort, --ablation none; used",
+      "kind": "superseded",
+      "note": "planner/review graders used tool: Task, which matches nothing; replaced by the shipfeature reruns",
       "model": "claude-sonnet-5",
       "judge": "claude-opus-5-5",
       "cases": [
@@ -611,6 +640,62 @@
       "costUsd": 1.33,
       "durationSeconds": 136,
       "sha256": "9edba11f3f52813cbbbad679e4418c8ec6ae021692051951348bbd9938e57705"
+    },
+    {
+      "path": "2026-09-29-git-cases/hotfix-from-wip-branch/result.json",
+      "kind": "git",
+      "note": "git-tagged cases with the sandbox git function; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "hotfix-from-wip-branch"
+      ],
+      "casesCommit": "961a7ef",
+      "costUsd": 2.21,
+      "durationSeconds": 101,
+      "sha256": "7e3f9ad1ca4d7ee64232766172f03d866a161df51c659069cd467b20d04df291"
+    },
+    {
+      "path": "2026-09-29-git-cases/merge-rename-vs-param/result.json",
+      "kind": "git",
+      "note": "git-tagged cases with the sandbox git function; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "merge-rename-vs-param"
+      ],
+      "casesCommit": "961a7ef",
+      "costUsd": 1.48,
+      "durationSeconds": 85,
+      "sha256": "07ab481fd1a4978f12a2f711c9b7edd7b051dec6cd09b401b22743f9d3cafabb"
+    },
+    {
+      "path": "2026-09-29-git-cases/review-planted-bug/result.json",
+      "kind": "git",
+      "note": "git-tagged cases with the sandbox git function; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "review-planted-bug"
+      ],
+      "casesCommit": "961a7ef",
+      "costUsd": 0.92,
+      "durationSeconds": 49,
+      "sha256": "d54e80216bec7652c8471431e0f3c83e1541de21d41cbcd178a54b8b07954413"
+    },
+    {
+      "path": "2026-09-29-git-cases/review-subtle-bug/result.json",
+      "kind": "git",
+      "note": "git-tagged cases with the sandbox git function; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "review-subtle-bug"
+      ],
+      "casesCommit": "961a7ef",
+      "costUsd": 1.01,
+      "durationSeconds": 58,
+      "sha256": "f906c1e7252e64b697bf328946640cc646d9e154b11ec708fd77f9a72ac4af70"
     },
     {
       "path": "smoke-diagnose-misleading-symptom/result.json",

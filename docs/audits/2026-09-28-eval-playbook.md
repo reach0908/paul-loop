@@ -69,7 +69,7 @@ smoke는 사례 검증용 1회 실행이라 점수로 쓰지 않는다. 결과 S
 - setup은 `.claude/ship-flow.config.json`을 쓰는데 host가 막으므로 스킬의 "초안만" 경로를 채점한다.
 - to-prd·to-issues는 `backlog-file` tracker 설정으로 게시 대상을 로컬 파일로 한정했다.
 
-## 4. with/without 측정 (git 없이 가능한 12개)
+## 4. with/without 측정 (git이 필요 없는 12개, git 사례는 §4d)
 
 Claude Code 2.1.283, 대상 `claude-opus-5-5`(eval 자식의 기본 effort는 `medium`), 판정자 `claude-sonnet-5`,
 조건별 3회, `--allow-tools Bash Write Edit`. `~/.claude/plugins/cache/`를 뺀 PATH와 `env -u CLAUDE_EFFORT`로
@@ -89,13 +89,18 @@ Claude Code 2.1.283, 대상 `claude-opus-5-5`(eval 자식의 기본 effort는 `m
 | handoff-mid-task* | 3/3 | 3/3 | 0/3 | 9.0 / 7.7 | $0.23 / $0.20 | |
 | write-skill-release | 3/3 | 3/3 | 3/3 | 11.3 / 9.0 | $0.48 / $0.36 | |
 | setup-draft-config | 3/3 | 0/3 | 3/3 | 10.0 / 5.7 | $0.37 / $0.13 | verifyCommand, outputLanguage |
-| ship-feature-pr-ready | 0/3 | 0/3 | 0/3 | 11.3 / 10.3 | $0.28 / $0.22 | (양쪽 모두 planner·리뷰 없음) |
+| ship-feature-pr-ready* | 0/3 | 0/3 | 0/3 | 12.7 / 8.0 | $0.29 / $0.22 | (양쪽 모두 planner·리뷰 없음) |
 
 \* 사례나 인프라 문제로 다시 실행한 결과다(규칙 8). 첫 실행에서 tdd는 `red-then-green` 판정자가 긴 기록의
 잘린 중간을 보지 못했다. handoff는 부를 수 없는 스킬의 형식을 요구하는 grader 때문에 양쪽 0/3이었다.
 retrospect는 1회가 eval 도구의 ENOENT 오류였다. diagnose는 판정 API가 529 과부하였다. tdd의 통과 판정은
 기록 정규식(`# fail [1-9]` 뒤 `# fail 0`, 구현 전 실패)으로 바꿨고, handoff의 `suggests-skills`는
-`with-only` 표시기로 바꿨다.
+`with-only` 표시기로 바꿨다. ship-feature의 planner·리뷰·publisher grader는 `tool: Task`를 찾았다. Claude
+Code의 subagent 도구 이름은 `Agent`라서, 첫 실행에서는 스킬이 발동했더라도 이 grader를 통과할 수 없었다.
+`Agent`로 고치고(`6a1972f`) 다시 돌렸다. 결론(양쪽 0/3, 미발동)은 같다.
+
+retrospect 행은 판정 rubric을 두 번 바꾸기 전 결과다(`14acbb7`, `245c72a`). 바꾼 이유와 바꾼 뒤 결과는
+retrospect 변경 audit에 있고, 이 표와 직접 비교할 수 없다.
 
 읽은 결과:
 
@@ -128,10 +133,12 @@ Sonnet은 `--ablation none`에 판정자 `claude-opus-5-5`로 실행했다. 판�
 | handoff-mid-task | 3/3 | 3/3 | 9.0 / 14.3 | $0.23 / $0.29 | |
 | write-skill-release | 3/3 | 2/3 | 11.3 / 13.7 | $0.48 / $0.47 | 참조 경로 확인(판정자) |
 | setup-draft-config | 3/3 | 2/3 | 10.0 / 10.0 | $0.37 / $0.20 | verifyCommand·outputLanguage(결정적) |
-| ship-feature-pr-ready | 0/3 | 0/3 | 11.3 / 14.3 | $0.28 / $0.26 | (양쪽 모두 planner·리뷰 없음) |
-| 합계·평균 | 31/36 | 25/36 | 8.6 / 11.6 | $0.34 / $0.34 | |
+| ship-feature-pr-ready | 0/3 | 0/3 | 12.7 / 17.3 | $0.29 / $0.28 | (양쪽 모두 스킬 미발동, planner·리뷰 없음) |
+| 합계·평균 | 31/36 | 25/36 | 8.7 / 11.8 | $0.34 / $0.34 | |
 
-- run당 비용은 거의 같다. Sonnet은 단가가 낮지만 턴이 평균 35% 많다.
+ship-feature 행은 양쪽 모두 `Agent` grader로 다시 돌린 결과다(§4 주석).
+
+- run당 비용은 거의 같다. Sonnet은 단가가 낮지만 턴이 평균 36% 많다.
 - 절차가 분명한 과제(diagnose-misleading, tdd, small-fix, prd, issues, handoff)는 두 모델 모두 3/3이다.
 - 판단이 필요한 과제(grilling의 질문 하나씩, retrospect의 기록 판단, setup의 검증 명령 추론)에서 Sonnet이
   낮았다. 사례별 3회라 어느 차이도 유의하지 않다(grilling 3/3 대 1/3도 Fisher p = 0.4).
@@ -165,6 +172,26 @@ diagnose / tdd / prd다.
   기록 정규식(`green-after-last-edit`)과 마지막 메시지 판정(`cause-reported`)으로 나누고 이 칸만 다시
   돌렸다. 다른 칸은 이전 판정자 grader로 채점했고 모두 통과했다.
 
+## 4d. git이 필요한 4개 사례 (with/without)
+
+§5의 git 함수를 fixture에 넣은 뒤(`961a7ef`) §4와 같은 조건으로 측정했다.
+
+| 사례 | plugin 있음 | 없음 | 스킬 발동 | 턴 | 비용 |
+|---|---|---|---|---|---|
+| hotfix-from-wip-branch | 3/3 | 3/3 | 0/3 | 8.3 / 5.7 | $0.39 / $0.35 |
+| merge-rename-vs-param | 3/3 | 3/3 | 3/3 | 3.0 / 5.7 | $0.34 / $0.15 |
+| review-planted-bug | 3/3 | 3/3 | 0/3 | 3.3 / 3.3 | $0.16 / $0.15 |
+| review-subtle-bug | 3/3 | 3/3 | 0/3 | 4.0 / 4.3 | $0.18 / $0.15 |
+
+- 네 사례 모두 plugin 유무로 결과가 갈리지 않았다.
+- review 두 사례의 12회는 모두 실제 `git diff` 출력을 읽고 심은 버그를 찾았다. #144 audit의
+  review-planted-bug 3/3 대 3/3은 git이 막혀 diff를 읽지 못한 결과라 쓸 수 없다고 적었는데, 이번 결과로 대신한다.
+- hotfix는 12회 모두 `main`에서 분기하고 수정과 회귀 테스트만 커밋했다. WIP를 보존했고 push·deploy는 없었다.
+  `git worktree add`처럼 git이 git을 부르는 명령에서는 실행마다 6~28줄의 shim 오류가 찍혔지만 결과에는
+  영향이 없었다.
+- code-review 스킬은 "머지해도 괜찮을지 main 대비로 봐 줘"(브랜치 리뷰)에서 6회 모두 발동하지 않았다.
+  hotfix도 발동하지 않았다. 이 측정의 skill 본문은 라우팅 변경 전이다(§6).
+
 ## 4c. 이번 결과로 본 선택
 
 사례별 3회라 권고가 아니라 관찰이다.
@@ -176,13 +203,20 @@ diagnose / tdd / prd다.
 
 ## 5. 측정 환경에서 확인한 것
 
-- **git.** 이 macOS host의 eval sandbox 안에서는 대상이 git을 실행할 수 없다. `/usr/bin/git`(xcrun shim)은
-  `/var/folders/.../xcrun_db` cache를 만들지 못하고 Xcode도 찾지 못해 실패한다(exit 72). 실제 git
-  바이너리는 sandbox가 파일 정보 조회를 막는다. 같은 Homebrew 폴더의 `scalar`는 보이는데 `git`만
-  `Operation not permitted`라, shell이 PATH에서 찾지 못한다(`env git`처럼 execvp로 직접 실행하면 된다).
-  PATH 순서를 바꾸는 방법은 통하지 않았다. 의도된 정책으로 보고 우회하지 않았다. git이 필요한 사례 4개
-  (review 2, merge, hotfix)에 `git` 태그를 붙였고, 이 host에서는 측정하지 않는다. 확인을 위해 설치했던
-  Homebrew git은 삭제했다. 그때 올라간 pcre2 10.48은 그대로 두었다.
+- **git.** 이 macOS host의 eval sandbox 안에서는 대상이 `git`을 그냥 실행하지 못한다. `/usr/bin/git`(xcrun
+  shim)은 `/var/folders/.../xcrun_db` cache를 만들지 못하고 git도 찾지 못해 실패한다(exit 72).
+  - 실제 git 바이너리는 sandbox가 파일 정보 조회를 막는다. 같은 Homebrew 폴더의 `scalar`는 보이는데 `git`만
+    `Operation not permitted`라, shell이 PATH에서 찾지 못한다. PATH 순서를 바꾸는 방법은 통하지 않았다.
+  - 처음에는 여기서 멈추고 git이 필요한 사례 4개(review 2, merge, hotfix)를 측정하지 않았다. 확인을 위해
+    설치했던 Homebrew git은 삭제했다. 그때 올라간 pcre2 10.48은 그대로 두었다.
+  - 뒤에 ship-feature 실행 하나가 `/Library/Developer/CommandLineTools/usr/bin/git`을 전체 경로로 불러 git을
+    썼다. 탐침 사례로 확인했다.
+    - eval home의 `.zshenv`에 `DEVELOPER_DIR`만 넣으면 여전히 실패한다(2/2).
+    - `git() { "<xcrun -f git 결과>" "$@"; }` 함수를 넣으면 `git --version`, `git status`, `git log`가 된다
+      (CommandLineTools 경로 2/2, Xcode 경로 2/2).
+  - sandbox의 쓰기 제한은 그대로이고, shim의 cache 쓰기만 피한다. git 사례 4개의 fixture가 끝에서 이 함수를
+    eval home에만 쓰게 했다(`961a7ef`). bash 스크립트, node 자식 프로세스, hook이 부르는 git은 여전히 shim을
+    거쳐 실패한다. 측정은 §4d.
 - **PATH 누출.** Claude Code 세션 안에서 eval을 실행하면 설치된 plugin의 `bin/`이 자식 PATH에 들어간다.
   이 host에는 이전 loop-engine 0.2.0이 있어 plugin 없는 조건에서도 `lessons.sh` 등을 부를 수 있었다.
   retrospect smoke 1회차는 그 오래된 `lessons.sh`가 sandbox에서 실패해 아무것도 기록하지 못했다.
@@ -197,41 +231,75 @@ diagnose / tdd / prd다.
 - **판정자 발췌.** `llm` grader는 기록의 앞뒤 일부만 본다. merge 사례의 `green-before-commit`은 중간이
   잘려 통과 실행을 보지 못하고 떨어졌다. 테스트 통과 확인을 `# fail 0` 기록 정규식으로 옮기고,
   판정자에게는 마지막 메시지만 보게 했다.
+- **판정 rubric의 빈틈.** retrospect의 판정자는 "저절로 떠오른다고 주장하지 않을 것"이라는 rubric으로는
+  "같은 실패가 나면 이 교훈이 떠오릅니다"를 통과시켰다. 판정자가 알아야 할 사실(recall과 `loop-fix`는 미검증
+  교훈을 건너뜀)을 rubric에 넣자 따로 다시 판정한 12표가 모두 일치했다(`245c72a`). 판정자가 모르는 제품
+  동작에 기대는 rubric은 그 사실을 적는다.
+- **엔진 명령.** 사례 설정에는 `pluginBinPrefix`가 없고, 통합 plugin(0.3.0)은 루트에 `bin/`이 없다. 그래서
+  대상은 `classify-risk.sh`, `verdict-run.sh`, `ac-verify.sh`, `lessons.sh`를 PATH에서 찾지 못한다.
+  - 분리 설치 때는 `loop-engine` plugin의 `bin/`이 PATH에 들어갔다.
+  - ship-feature 대상은 3회 모두 게이트를 못 돌렸다고 밝히고 `npm test`와 CLI 직접 실행으로 대신했다.
+  - retrospect 대상은 스킬 기본 디렉터리에서 거슬러 올라가 `tools/loop-engine/bin/lessons.sh`를 찾아 썼다.
+  - 그래서 ship-feature와 hotfix 사례는 게이트 결과가 아니라 순서와 라우팅을 잰다. 이미 측정한 이 두 사례의
+    결과에도 같은 한계가 있다.
 
 ## 6. 스킬에서 드러난 문제 (별도 변경)
 
 - **ship-feature·hotfix 미발동.** "PR 올릴 수 있게 준비해 줘, push는 내가 할게"에서 두 스킬 모두 2회 중
   0회 발동했다. ship-feature 설명은 "open PR까지"를 말하고, 본문과 `paul-loop` 라우터는 "로컬 수정은
   전체 루프를 시작하지 않는다"고 말한다. 사용자 결정: PR-ready 요청에서도 발동하도록 별도 PR로 고친다.
+  그 변경(`feature/pr-ready-routing`) 뒤 ship-feature 발동은 Opus 0/3 → 3/3이었다.
 - **retrospect.** 영수증이 없으면 교훈이 미검증으로 기록되는데 `--fix` 내용이 빠지고, 기본 `recall`은
   미검증 교훈을 건너뛴다. 대상이 "다음에 참고로 뜬다"고 안내한 것은 사실과 다르다(판정자도 놓쳤다).
-  사용자 결정: 이 작업 뒤 별도 PR로 고친다.
-- **outputLanguage.** `ko` 설정에서도 PRD·이슈 템플릿 제목은 영어로 남았다(본문은 한국어).
+  사용자 결정: 이 작업 뒤 별도 PR로 고친다(`fix/retrospect-unverified`).
+- **outputLanguage.** `ko` 설정에서도 PRD·이슈 템플릿 제목은 영어로 남았다(본문은 한국어). 라우팅 변경 뒤
+  ship-feature의 첫 측정에서도 1회가 마지막 보고를 영어로 했다.
+- **code-review 미발동.** 설명은 "Use when the user wants to review a branch"인데, 브랜치를 main 대비로 봐
+  달라는 요청 6회에서 한 번도 발동하지 않았다. 대상은 스킬 없이도 버그를 찾았다(§4d). 후속 과제다.
+- **ship-feature planner 생략.** 본문은 "compact plan still gets the planner"라고 planner 검사를 필수로 둔다.
+  그런데 라우팅 변경 뒤 발동한 6회 중 3회만 planner를 불렀다. 부르지 않은 실행은 보고에도 생략을 적지
+  않았다. 후속 과제다.
+- **`bin/`이 PATH에 있다는 설명.** hotfix, retrospect, deps-audit는 "`pluginBinPrefix` 기본값 `""`: live
+  session에서는 plugin의 `bin/`이 이미 PATH에 있다"고 말한다. 통합 plugin(0.3.0)에는 루트 `bin/`이 없어 이
+  말이 맞지 않는다. 통합 설치 문서(`docs/project-installations.md`)는
+  `node tools/paul-loop.mjs exec bin/`를 쓰라고 한다. 설정하지 않은 소비 저장소에서는 이 스킬들의 명령이
+  실행되지 않는다. 후속 과제다.
 
 ## 7. 기록
 
 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. 비용은 정가 추정이며 구독 과금과 다르다.
 
-[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 70개의 경로,
-모델, 판정자, 사례, 비용, SHA-256, 쓰임새와 채점한 사례 버전(`casesCommit`)을 적었다. 사례 버전은 세 가지다.
-§4의 첫 실행은 `61fb2ef`, tdd·retrospect·diagnose 재실행은 `d74913a`, 나머지는 `fe53c65`로 채점했다.
-Sonnet max diagnose 재실행만 `a6af62d`다. 정가 추정 비용은 모두 $76.72다.
+[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 76개를 적었다.
+파일마다 경로, 모델, 판정자, 사례, 비용, SHA-256, 쓰임새와 채점한 사례 버전(`casesCommit`)이 있다. 사례 버전은
+다음과 같다.
+
+- §4의 첫 실행은 `61fb2ef`, tdd·retrospect·diagnose 재실행은 `d74913a`로 채점했다.
+- Sonnet max diagnose 재실행은 `a6af62d`, ship-feature 재실행 둘은 `6a1972f`, git 사례는 `961a7ef`다.
+- 나머지는 `fe53c65`다.
+
+정가 추정 비용은 모두 $84.73다.
 
 | 묶음 | 파일 | 비용 | 쓰임 |
 |---|---|---|---|
 | smoke | 18 | $6.23 | 사례 확인용, 점수 아님 |
-| with/without(재실행 포함) | 16 | $28.30 | §4. 재실행한 4개 사례는 재실행 결과를 씀 |
-| 모델(Sonnet) | 12 | $12.14 | §4a |
+| with/without(재실행 포함) | 16 | $28.35 | §4. 재실행한 사례는 재실행 결과를 씀 |
+| 모델(Sonnet) | 12 | $12.19 | §4a |
 | effort | 15 | $24.09 | §4b |
-| 대체됨 | 9 | $5.96 | 사용량 한도로 즉시 실패, 판정자 발췌 잘림. 점수 아님 |
+| git 사례 | 4 | $5.62 | §4d |
+| 대체됨 | 11 | $8.25 | 사용량 한도로 즉시 실패, 판정자 발췌 잘림, `tool: Task` grader. 점수 아님 |
 
-환경 확인용 진단 실행(git·effort 확인, Haiku·Sonnet·Opus로 13번)은 점수가 아니어서 목록에 넣지 않았다.
+환경 확인용 진단 실행은 점수가 아니어서 목록에 넣지 않았다. git·effort 확인에 Haiku·Sonnet·Opus로 13번,
+git 함수 탐침에 Sonnet으로 3번(각 2회)을 돌렸다. retrospect 판정 rubric 재측정과 라우팅 변경 측정은 각 변경의
+audit에 해시와 함께 적었다.
 
 ## 한계
 
 - 조건별 3회라 차이는 우연과 구분되지 않는다. 고장을 찾는 용도다.
 - 판정자는 대상과 같은 Claude 계열이다. 결정적 grader를 우선 본다.
-- git이 필요한 4개 사례는 이 host에서 측정하지 못했다. ship-feature 사례도 대상이 git을 쓰지 못한
-  상태에서 측정했으므로, git을 많이 쓰는 plugin 쪽 흐름이 불리할 수 있다.
+- git이 필요한 4개 사례는 fixture의 git 함수로 측정했다. 대상의 zsh에서 부르는 `git`만 되고, git이 부르는 git이나
+  스크립트·hook 안의 git은 여전히 실패한다. ship-feature 사례에는 이 함수를 넣지 않았다(대상이 스스로 전체
+  경로를 찾은 실행도 있다). git을 많이 쓰는 plugin 쪽 흐름이 불리할 수 있다.
+- 사례 설정에 `pluginBinPrefix`가 없어 엔진 게이트(`classify-risk`, `verdict-run`, `ac-verify`)는 측정하지
+  않았다(§5).
 - 포크된 스킬 subagent 안의 도구 호출이 `tool_used`에 세어지는지 확인하지 못했다. 금지 grader가
   아무것도 확인하지 않고 통과할 수 있다.
