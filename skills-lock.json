@@ -35,7 +35,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/diagnosing-bugs/SKILL.md",
       "localPath": "tools/ship-flow/skills/diagnosing-bugs/SKILL.md",
-      "computedHash": "5c3bfb1218cb1a3465e70dfa7ef2349bc44c40e761bcc4bfcb2db718d774f2ad"
+      "computedHash": "be399c959001e332e6ace1276628b4e53f37fd6653edf2c8f46d36caa369e10c"
     },
     "domain-modeling": {
       "source": "mattpocock/skills",
@@ -120,7 +120,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/tdd/SKILL.md",
       "localPath": "tools/ship-flow/skills/tdd/SKILL.md",
-      "computedHash": "df393597f4de8bbf0c326923da1e5b77aa3b622cf02b3a17cbd92072da898540"
+      "computedHash": "b5852ab30973ce658f68856d4c7f2d9bd3fa6e82f61cb55011514cd61bf2d717"
     },
     "teach": {
       "source": "mattpocock/skills",

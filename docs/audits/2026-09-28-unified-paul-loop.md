@@ -88,3 +88,46 @@ The existing pinned-base gate still compares old test expectations with this del
 package/namespace change. Preserve its actual outcome; never suppress failures or make old-shape
 checks pass by shipping duplicate install units. Document any incompatible expectations in the PR
 for human review, as the unchanged verifier-pinned-review contract requires.
+
+## Final local outcome
+
+- Complete engine suite: **86/86 passed** after the two fixes. The initial **84/86** result is retained.
+- Complete installation/project/native-helper/unified set: **137 passed, 1 skipped**. The skipped
+  official Codex ingestion test was separately opted into and passed with the real CLI.
+- Complete portability command (resolver, apply-patch adapter, package contracts): **37 passed**.
+- Runtime regeneration/check, skill lock, native plugin/marketplace schema validation and skill
+  validation passed. Final wording-only edits replace the remaining active split-install names;
+  their vendor hashes and generated packages are refreshed.
+- Credential-open regression: observing `openSync()` passes with memory off on this candidate;
+  replacing only the disposable fixture heartbeat with its prior ungated implementation produces
+  the forbidden credential-open event. The enabled positive control also observes that event.
+
+### Standards
+
+0 remaining actionable findings after the implementation and regression-test rechecks.
+
+### Spec
+
+0 remaining actionable findings after recheck. Independent reviews did not execute native model
+sessions or attest host sandbox enforcement.
+
+### Pinned-base contract change: FAIL retained
+
+`verifier-pinned-review.sh --base faaed5711f864555a32181011840dea244c9e964` finished **83/86**, exit 1.
+Three shell suites retain incompatible pre-unification expectations:
+
+| Frozen suite | Old expectation | Candidate behavior / preserved coverage |
+|---|---|---|
+| `check-skill-refs.test.sh` | Fixture copies only default `skills/`, `agents/`, `workflows/` | Manifest-declared resource paths; real-source copied closure still fails on a missing handoff and recovers without touching source |
+| `runtime-packages.test.sh` | Split plugin output paths and `sourceVersions` for modules | One public package/version plus internal component versions; full package/source pin, mode, hook deny, role isolation and embedded-contract assertions remain |
+| `ship-flow-executable-contract.test.sh` | Public review agents must use `ship-flow:` | User-requested `paul-loop:` namespace; shipped/invoked roles and all remaining executable/language/publication assertions retained |
+
+The unchanged gate says: “If this failure is an intended behaviour change, say so explicitly in the
+PR description — a human must sign off on it.” These are deliberate public installation/namespace
+contract changes. They are documented in **PR #140**, which remains Draft for that review. The gate
+is not weakened, rerouted or relabeled PASS. No merge, new release tag or consumer migration occurred.
+
+Hosted CI at implementation commit `8be3b6043ba6a075971f6b3e31b044af20fbd343` confirmed all four
+Linux/macOS Node 22/24 portability jobs, Claude 2.1.261 schema, memory, gitleaks and GitGuardian.
+Engine/pinned-base hosted jobs were still running at this snapshot; their eventual result is not
+inferred from local evidence. Final documentation commit CI must be checked separately.

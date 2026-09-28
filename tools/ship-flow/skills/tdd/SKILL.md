@@ -42,7 +42,7 @@ When the shape of that boundary is itself in question — how deep the module sh
 If this repo has a reward-hack guard armed on working branches (a hook that blocks Edit/Write/Bash
 mutation of test/config/snapshot files while a loop is in progress, so "fix the code under test, not
 the test" is mechanical instead of a promise) — respect its window-opening convention rather than
-working around it. The `loop-engine@paul-loop` plugin's own guard, where installed, arms by branch
+working around it. The Paul Loop engine module's own guard, where installed, arms by branch
 condition (any branch outside the repo's integration/release branches) with no manual arm/disarm step:
 
 - **RED (writing the failing test)** *is* a legitimate protected-file edit: open a reasoned window

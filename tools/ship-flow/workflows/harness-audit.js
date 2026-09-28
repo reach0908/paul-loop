@@ -72,7 +72,7 @@ state, and any drift between what a record says and what the code actually does.
     title: 'loop-engine code',
     prompt: `${METHOD}
 
-Dimension: loop-engine code. Actually run the loop-engine@paul-loop plugin's bin/* scripts
+Dimension: loop-engine code. Actually run the Paul Loop engine module's bin/* scripts
 (verdict-run, loop-fix, gate, eval-gate, lessons, etc.) — invoke them however this repo actually
 resolves and calls the installed plugin's bin scripts (look for a local resolver/wrapper script
 first; if there isn't one, invoke the plugin cache path directly), plus any wrapper script this

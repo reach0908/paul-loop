@@ -73,7 +73,7 @@ Phase 1 is done when the loop is **tight** and **red-capable**: you can name **o
 
 If you catch yourself reading code to build a theory before this command exists, **stop: jumping straight to a hypothesis is the exact failure this skill prevents.** No red-capable command, no Phase 2.
 
-If this repo ships `loop-engine@paul-loop`, this red-capable command is exactly what `loop-fix.sh --verify` (or `verdict-run.sh` directly) wants — the feedback loop you build here is the same loop that closes automatically once you're past Phase 5.
+If this repo uses Paul Loop's engine module, this red-capable command is exactly what `loop-fix.sh --verify` (or `verdict-run.sh` directly) wants — the feedback loop you build here is the same loop that closes automatically once you're past Phase 5.
 
 ## Phase 2: Reproduce + minimise
 

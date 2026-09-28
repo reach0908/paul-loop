@@ -15,7 +15,7 @@ Follow the [shared authorization and completion contract](../AUTHORIZATION.md) b
 > absent or unreadable → fall back to the language the user is writing in; never error on this.
 
 Make runs get smarter over time. A failure becomes a lesson (Reflexion); a *recurring, verified*
-lesson becomes a skill/guideline candidate (Voyager). Full reference: loop-engine@paul-loop's
+lesson becomes a skill/guideline candidate (Voyager). Full reference: the Paul Loop engine module's
 docs/lessons.md (in the plugin, not this repo).
 
 > Commands below are written as **substitutable literals** beginning with `{{pluginBinPrefix}}`
