@@ -143,3 +143,20 @@ test('Raman F1: grader preparation exception retains completed target trace and 
   const report=JSON.parse(readFileSync(join(out,'report.json'))),row=report.results[0],tracePath=join(out,'reuse-test-approval/.eval-state/native/stdout.jsonl'),meta=JSON.parse(readFileSync(join(out,'reuse-test-approval/.eval-state/native/target.json')));
   assert.equal(row.target.completed,true);assert.equal(row.target.trial_id,meta.trial_id);assert.equal(row.metrics,null);assert.equal(row.status,'incomplete');assert.match(row.reason,/grad/i);assert.ok(row.grader_failure);assert.equal(meta.evidence.find(e=>e.path==='stdout.jsonl').sha256,sha(readFileSync(tracePath)));assert.deepEqual(JSON.parse(readFileSync(join(out,'validation.json'))).errors,[]);
 });
+test('the target cannot read case data or the before-snapshot during its run',t=>{
+  const {root,cli}=mockTransport(t,`
+    const fs=require('node:fs');
+    if(process.argv.includes('--version')){console.log('mock-native 1');process.exit(0);}
+    if(process.argv.includes('auth')){console.log(JSON.stringify({loggedIn:true}));process.exit(0);}
+    if(fs.existsSync('.eval-state/case.json')||fs.existsSync('.eval-state/before.json'))process.exit(3);
+    console.log(JSON.stringify({type:'system',subtype:'init',model:'mock-model'}));
+    console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,result:'done'}));
+  `);
+  mkdirSync(join(root,'paul-loop/.claude-plugin'),{recursive:true});writeFileSync(join(root,'paul-loop/.claude-plugin/plugin.json'),JSON.stringify({name:'paul-loop'}));
+  const c={id:'reuse-test-approval',prompt:'synthetic fixture',files:{'sum.cjs':'module.exports=(a,b)=>a-b;'},required_events:['authorized-implementation']};
+  const dataset=join(root,'cases.jsonl'),budget=join(root,'budget.json'),out=join(root,'report');writeFileSync(dataset,JSON.stringify(c)+'\n');writeFileSync(budget,JSON.stringify({limit_ms:10000,used_ms:0}));
+  spawnSync(process.execPath,[fileURLToPath(new URL('./run.mjs',import.meta.url)),'--runtime','claude','--variant','current','--dataset',dataset,'--output',out,'--budget',budget,'--cli',cli,'--plugins',root,'--model','mock-model','--case-ms','2000','--grader-ms','2000'],{encoding:'utf8',env:safeEnv(),timeout:10000});
+  const row=JSON.parse(readFileSync(join(out,'report.json'))).results[0],state=join(out,'reuse-test-approval/.eval-state');
+  assert.equal(row.target.exit,0,'case data or the before-snapshot was visible to the target');
+  assert.equal(JSON.parse(readFileSync(join(state,'case.json'))).id,c.id);assert.deepEqual(JSON.parse(readFileSync(join(state,'before.json'))),{'sum.cjs':sha(c.files['sum.cjs'])});
+});

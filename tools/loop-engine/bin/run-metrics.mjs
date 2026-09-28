@@ -217,6 +217,21 @@ for (const f of files) {
   // 고유 id 중 started가 있는 건 0개 / 타입 있는 405개는 405개 전부 started가 있다). 그래서
   // "stopped 수 = 서브에이전트 수"는 뒷받침되지 않는 숫자다 — 짝이 맞은 것과 귀속 불가를 분리해
   // 보고하고, 지속시간/성공률 같은 파생은 짝 맞은 모집단에서만 도출하게 한다.
+  // 변경 없는 재실행: 같은 명령의 직전 verdict와 시작 시점 작업 트리 digest가 같다 — 사이에 수정이
+  // 없었다. digest 없는 verdict(구 원장·git 밖)는 판정할 수 없으니 분모에서 뺀다.
+  const lastDigest = new Map()
+  let noChange = 0
+  let comparable = 0
+  for (const v of verdicts) {
+    const cmd = v.payload?.cmd
+    const digest = v.payload?.digest
+    if (typeof cmd !== 'string' || typeof digest !== 'string' || !digest) continue
+    if (lastDigest.has(cmd)) {
+      comparable++
+      if (lastDigest.get(cmd) === digest) noChange++
+    }
+    lastDigest.set(cmd, digest)
+  }
   const stoppedPaired = stoppedAgentIds.filter((id) => id && startedAgentIds.has(id)).length
   const recall = foldRecall(recallEvents)
   runs.push({
@@ -225,6 +240,7 @@ for (const f of files) {
     h1: instrumented ? perm : INSUFFICIENT,
     q2: verdicts.length > 0 ? verdicts.length : INSUFFICIENT,
     first_pass: verdicts.length > 0 ? verdicts[0].type === 'verdict.passed' : null,
+    no_change_reruns: comparable ? { count: noChange, comparable } : INSUFFICIENT,
     excluded,
     compactions: compactions.length,
     post_compaction_red: postCompactionRed,
@@ -255,6 +271,9 @@ const h1Values = instrumentedRuns.map((r) => r.h1)
 const compactionsTotal = attributed.reduce((sum, r) => sum + r.compactions, 0)
 const postCompactionSamples = attributed.flatMap((r) => r.post_compaction_red)
 const postCompactionRedCount = postCompactionSamples.filter(Boolean).length
+const rerunFolds = attributed.map((r) => r.no_change_reruns).filter((f) => f !== INSUFFICIENT)
+const rerunCount = rerunFolds.reduce((s, f) => s + f.count, 0)
+const rerunComparable = rerunFolds.reduce((s, f) => s + f.comparable, 0)
 
 // recall은 **runs 전체**를 접는다 — Q1/Q2/H1과 달리 'unknown' 버킷을 빼지 않는다. 그 제외 근거는
 // "append-only 의사-런이 *런 단위* 분모를 희석한다"인데, recall 지표는 런이 아니라 **이벤트 단위**
@@ -351,6 +370,9 @@ const overall = {
       }
     : INSUFFICIENT,
   q2_mean: verdictRuns.length ? mean(verdictRuns.map((r) => r.q2)) : INSUFFICIENT,
+  no_change_reruns: rerunComparable
+    ? { ratio: rerunCount / rerunComparable, count: rerunCount, comparable: rerunComparable }
+    : INSUFFICIENT,
   subagents: {
     started: attributed.reduce((s, r) => s + r.subagents.started, 0),
     stopped_paired: attributed.reduce((s, r) => s + r.subagents.stopped_paired, 0),
@@ -390,6 +412,11 @@ if (asJson) {
       : `Q1 (first-pass green 비율): ${overall.q1}`,
   )
   lines.push(`Q2 (verdict 호출/런): mean=${fmt(overall.q2_mean)}`)
+  lines.push(
+    typeof overall.no_change_reruns === 'object'
+      ? `no_change_reruns (같은 명령·같은 작업 트리 재실행 비율): ${fmt(overall.no_change_reruns.ratio)} (${overall.no_change_reruns.count}/${overall.no_change_reruns.comparable})`
+      : `no_change_reruns (같은 명령·같은 작업 트리 재실행 비율): ${overall.no_change_reruns}`,
+  )
   const surf = Object.keys(excludedTotal)
     .map((k) => `${k}=${excludedTotal[k]}`)
     .join(' ')

@@ -144,6 +144,8 @@ hook 중심인 paul-loop에서의 제약:
 5. 분할 설치에서 단일 `paul-loop`로의 이전과 provider 저장소의 local loop-engine 0.2.0 정리 여부 결정(사용자 결정 사항).
 6. 검증된 교훈을 조건·버전·검증일과 함께 기록하는 memory 파일럿.
 
+> 이후(같은 날): 2와 3을 진행했고 1은 증거 hash 불일치와 상태 디렉터리 분리까지만 했다. 20개 사례의 event binding 검토는 남아 있어 native 결과는 여전히 INCOMPLETE다. 4는 5개 사례 중 Bash가 필요 없는 2개만 측정했다. 기록: [eval 베이스라인과 타당성 보강](2026-09-28-eval-baseline-and-validity.md).
+
 ## 한계
 
 - Aside 보고서의 오류: 논문 제목 1건(2406.12624), 인용 혼동 1건(Terminal-Bench 4.0), METR 문구의 비축자 인용, `/skill-doctor` 버전 요건 미확인, Phoenix 라이선스 표현. 수치 자체의 오류는 없었다.

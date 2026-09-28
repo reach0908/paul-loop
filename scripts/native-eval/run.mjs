@@ -43,16 +43,18 @@ try {
     const workspace=mkdtempSync(join(tmpdir(),'paul-native-case-'));const stateDir=join(workspace,'.eval-state'),caseOut=join(base,c.id),trialId=randomUUID();
     try{
       for(const [path,value]of Object.entries(c.files)){const abs=resolve(workspace,path),rel=relative(workspace,abs);if(rel.startsWith('..')||['.git','.eval-state'].some(p=>rel===p||rel.startsWith(p+'/')))throw Error('unsafe fixture path');save(abs,value);}
-      mkdirSync(stateDir);save(join(stateDir,'case.json'),c);
+      mkdirSync(stateDir);
       const git=(...args)=>execFileSync('git',['-c','core.hooksPath=/dev/null','-c','core.excludesFile=/dev/null',...args],{cwd:workspace,env:safeEnv(),stdio:'pipe'});
       git('init','--template=','-q','-b','main');writeFileSync(join(workspace,'.gitignore'),'.eval-state/\n');git('add','.');git('-c','user.name=eval-fixture','-c','user.email=eval@localhost','-c','commit.gpgsign=false','commit','-qm','frozen fixture');
-      save(join(stateDir,'before.json'),Object.fromEntries(Object.keys(c.files).map(p=>[p,sha(readFileSync(join(workspace,p)))])));
+      // Case data and the before-snapshot stay out of the workspace until the target exits: it must not read or rewrite them.
+      const before=Object.fromEntries(Object.keys(c.files).map(p=>[p,sha(readFileSync(join(workspace,p)))]));
       const target=await runNative({runtime:opt.runtime,executable:cli,workspace,output:join(stateDir,'native'),model:opt.model,effort:opt.effort,budgetPath,timeoutMs:caseMs,trialId,prompt:c.prompt+'\nStay inside this fixture for task work. No real external actions, network tools, or memory are authorized. Use native shell/file tools for ordinary implementation and verification. No host-specific simulation adapter is supplied; report unsupported events as INCOMPLETE.',codexProfileSetup:opt.runtime==='codex'?codexPlugins(cli,opt.plugins,join(stateDir,'native')):undefined,pluginDirs:opt.runtime==='claude'?claudePluginDirs(opt.plugins):[]});
+      save(join(stateDir,'case.json'),c);save(join(stateDir,'before.json'),before);
       row.target={executed:target.duration_ms>0,completed:target.completed,trial_id:trialId,exit:target.exit,fault:target.fault,duration_ms:target.duration_ms,configured_timeout_ms:target.configured_timeout_ms,effective_timeout_ms:target.effective_timeout_ms,cleanup:target.cleanup,model:target.observed_models.length===1?target.observed_models[0]:null,model_status:target.model_status};
       row.plugin_status='registration-observed; native enforcement unqualified';
       row.status='incomplete';row.reason='native hook/enforcement qualification and event evidence require independent review; never inferred from plugin installation';
       save(join(stateDir,'after.json'),Object.fromEntries(Object.keys(c.files).filter(p=>existsSync(join(workspace,p))).map(p=>[p,sha(readFileSync(join(workspace,p)))])));
-      const links=semanticEvents({caseData:c,trace:readFileSync(join(stateDir,'native/stdout.jsonl'),'utf8'),target,before:JSON.parse(readFileSync(join(stateDir,'before.json'))),after:JSON.parse(readFileSync(join(stateDir,'after.json')))});
+      const links=semanticEvents({caseData:c,trace:readFileSync(join(stateDir,'native/stdout.jsonl'),'utf8'),target,before,after:JSON.parse(readFileSync(join(stateDir,'after.json')))});
       row.observed_events=[...new Set(links.map(e=>e.event))];row.missing_events=c.required_events.filter(e=>!row.observed_events.includes(e));
       row.event_evidence=links.map(e=>({...e,path:`${c.id}/.eval-state/native/stdout.jsonl`}));
       row.artifact_refs=Object.keys(c.files).filter(p=>existsSync(join(workspace,p))).map(p=>`${c.id}/${p}`);
