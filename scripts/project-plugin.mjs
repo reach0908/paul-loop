@@ -59,7 +59,7 @@ export function verifyPluginIntegrity(artifact, runtime, name, version, approval
 }
 // END PLUGIN INTEGRITY
 
-const ENV = { 'loop-engine': 'LOOP_ENGINE_PATH', 'ship-flow': 'SHIP_FLOW_PATH', 'loop-memory': 'LOOP_MEMORY_PATH' };
+const ENV = { 'paul-loop': 'PAUL_LOOP_PATH', 'loop-engine': 'LOOP_ENGINE_PATH', 'ship-flow': 'SHIP_FLOW_PATH', 'loop-memory': 'LOOP_MEMORY_PATH' };
 const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\+[0-9A-Za-z.-]+)?$/;
 const identifier = /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9_-]+$/;
 const canonical = path => { try { return realpathSync(path); } catch { return resolve(path); } };
@@ -81,7 +81,9 @@ export function readLock(project, approvedPath) {
   const bytes = readFileSync(path), lock = JSON.parse(bytes);
   if (lock.schemaVersion !== 1 || !['codex', 'claude'].includes(lock.runtime) || !lock.plugins || Array.isArray(lock.plugins)) throw new Error('invalid lock schema/runtime');
   if (dirname(path) !== join(project, `.${lock.runtime}`)) throw new Error('lock runtime/location mismatch');
-  if (!lock.plugins['loop-engine']) throw new Error('lock must include loop-engine');
+  if (lock.plugins['paul-loop']) {
+    if (Object.keys(lock.plugins).length !== 1) throw new Error('mixed unified and legacy lock; review migration');
+  } else if (!lock.plugins['loop-engine']) throw new Error('lock must include paul-loop or legacy loop-engine');
   for (const [name, entry] of Object.entries(lock.plugins)) {
     if (!Object.hasOwn(ENV, name) || !entry || !stable.test(entry.version)) throw new Error(`invalid plugin/version: ${name}`);
     approvalDescriptor(entry.integrity, name);
@@ -287,14 +289,16 @@ function main() {
   if (command === 'sync') { save(context, registrySnapshot(context), found, found); console.log(JSON.stringify(found, null, 2)); return; }
   if (command === 'update') { console.log(JSON.stringify(update(context, found, approvedPath ? readLock(project, approvedPath) : context), null, 2)); return; }
   if (typeof target !== 'string' || !target.startsWith('bin/') || target.split(/[\\/]/).some(p => p === '..' || !p)) throw new Error('exec target must remain inside plugin bin/');
-  const bin = realpathSync(join(found.plugins['loop-engine'].path, 'bin'));
-  if (!inside(found.plugins['loop-engine'].path, bin)) throw new Error('exec bin directory escapes plugin');
-  const executable = realpathSync(join(found.plugins['loop-engine'].path, target));
+  const engine = found.plugins['paul-loop'] ? join(found.plugins['paul-loop'].path, 'tools/loop-engine') : found.plugins['loop-engine'].path;
+  const bin = realpathSync(join(engine, 'bin'));
+  if (!inside(engine, bin)) throw new Error('exec bin directory escapes plugin');
+  const executable = realpathSync(join(engine, target));
   if (!inside(bin, executable) || !statSync(executable).isFile()) throw new Error('exec target escapes plugin bin/');
   const env = { ...process.env, LOOP_RUNTIME: found.runtime };
   for (const key of Object.values(ENV)) delete env[key];
   delete env.PAUL_LOOP_INSTALLATIONS;
   for (const [name, value] of Object.entries(found.plugins)) env[ENV[name]] = value.path;
+  if (found.plugins['paul-loop']) for (const name of ['loop-engine', 'ship-flow', 'loop-memory']) env[ENV[name]] = join(found.plugins['paul-loop'].path, 'tools', name);
   const interpreter = executable.endsWith('.mjs') ? process.execPath : executable.endsWith('.sh') ? 'bash' : executable;
   const result = spawnSync(interpreter, [...(interpreter === executable ? [] : [executable]), ...childArgs], { cwd: found.project, env, stdio: 'inherit' });
   if (result.error) throw result.error;

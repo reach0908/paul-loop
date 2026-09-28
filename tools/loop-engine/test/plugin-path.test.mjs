@@ -58,6 +58,19 @@ test('exact project, local override, user fallback, no unrelated-project fallbac
   f.set([entries[0], { scope: 'user', installPath: u }]); assert.equal(resolvePluginPath(f.opts), u);
   f.set([entries[0]]); assert.equal(resolvePluginPath(f.opts), null);
 });
+test('an unrelated unified registration does not hide this project’s legacy installation', (t) => {
+  const f = fixture(t), path = f.plugin();
+  approvePluginFixture(f.root, path);
+  f.write(f.registry, { plugins: {
+    'paul-loop@paul-loop': [{ scope: 'project', projectPath: join(f.root, 'other'), installPath: '/unrelated' }],
+    'loop-engine@paul-loop': [{ scope: 'project', projectPath: f.root, installPath: path }],
+  } });
+  assert.equal(resolvePluginPath(f.opts), path);
+  const registry = JSON.parse(readFileSync(f.registry, 'utf8'));
+  registry.plugins['paul-loop@paul-loop'] = [{ scope: 'user', installPath: '/unrelated-user-bundle' }];
+  f.write(f.registry, registry);
+  assert.equal(resolvePluginPath(f.opts), path, 'project legacy must precede user bundle');
+});
 test('validated overrides have priority; names, stable versions, floors and stale paths are enforced', (t) => {
   const f = fixture(t), path = f.plugin();
   approvePluginFixture(f.root, path);

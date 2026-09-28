@@ -15,7 +15,7 @@ Follow the [shared authorization and completion contract](../AUTHORIZATION.md) b
 > absent or unreadable → fall back to the language the user is writing in; never error on this.
 
 Make runs get smarter over time. A failure becomes a lesson (Reflexion); a *recurring, verified*
-lesson becomes a skill/guideline candidate (Voyager). Full reference: loop-engine@paul-loop's
+lesson becomes a skill/guideline candidate (Voyager). Full reference: the Paul Loop engine module's
 docs/lessons.md (in the plugin, not this repo).
 
 > Commands below are written as **substitutable literals** beginning with `{{pluginBinPrefix}}`
@@ -148,7 +148,7 @@ decided by what kind of knowledge it is:
 - **Still ambiguous?** Default to the **more narrowly triggered** option. A CLAUDE.md guideline is read
   on every session (constant context cost); a skill only loads when its trigger fires. When in doubt,
   prefer the one that costs nothing until it's actually needed.
-- **Skill-shaped candidates:** use the bundled `ship-flow:write-a-skill` when callable, or follow its
+- **Skill-shaped candidates:** use the bundled `paul-loop:write-a-skill` when callable, or follow its
   source procedure directly within the authorized edit scope. An unavailable runtime invocation does
   not mean the source skill is absent. Do not force a procedure into CLAUDE.md or install tooling just
   to satisfy a stale reference.

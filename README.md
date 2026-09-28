@@ -1,6 +1,44 @@
 # paul-loop
 
-A verifier-driven development harness: a common shell/Node core, Claude Code plugins, and reproducibly generated Codex adapters.
+A verifier-driven development plugin for Claude Code and Codex. Install **paul-loop** once and ask
+Paul Loop (폴루프) to develop, fix, verify, review or deliver a change.
+
+## Quick start
+
+Follow the [한국어 사용 가이드](https://github.com/reach0908/paul-loop/blob/main/docs/getting-started.md) for installation, project setup, daily requests,
+updates and troubleshooting. For semantic memory, use the [메모리 활성화 가이드](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md).
+
+1. **Install one plugin.** Choose [Claude Code](#install-claude-code) or the
+   [generated Codex marketplace](docs/codex-installation.md). Existing split installations follow
+   [the migration guide](docs/unified-installation.md) first to avoid duplicate hooks.
+2. **Open a new project session.** Invoke `/paul-loop:paul-loop` in Claude or `$paul-loop` in Codex,
+   then describe the intended result, such as “fix this failure and verify it” or “implement this
+   issue through an open PR.” Small edits do not require a full delivery loop.
+3. **Connect the project's verifier when needed.** Preserve existing settings and use the
+   [reviewed project launcher and lock](docs/project-installations.md) for shell commands.
+4. **Choose memory deliberately.** [File lessons](docs/verified-lesson-workflow.md) need no DB or
+   API key but require recorded verification evidence. Optional semantic memory additionally needs
+   a dedicated migrated DB, project-specific DB authorization, embedding/signing keys, initial
+   synchronization, then host opt-in. The [activation guide](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md) covers that order,
+   desktop environment inheritance, observation and how to turn it off.
+
+The unified instructions apply to the `paul-loop` 0.1.0 package. Check
+[PR #140 and its release state](https://github.com/reach0908/paul-loop/pull/140) before using public
+installation commands: a prepared package or merged PR alone is not a published release or an
+updated consumer installation.
+
+## Guides
+
+| Task | Guide |
+|---|---|
+| First installation and everyday use | [처음 사용하기](https://github.com/reach0908/paul-loop/blob/main/docs/getting-started.md) |
+| Enable, observe or disable semantic memory | [메모리 활성화와 운영](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md) |
+| Reuse a verified fix without a DB | [File-lesson workflow](docs/verified-lesson-workflow.md) |
+| Move from three plugins to one | [Unified installation](docs/unified-installation.md) |
+| Review/update a project's approved installation | [Project launcher and lock](docs/project-installations.md) |
+| Host support and remaining limitations | [Runtime compatibility](docs/runtime-compatibility.md) |
+
+The sections below are the module and command reference.
 
 ## Why
 
@@ -16,12 +54,11 @@ tiebreaker. Everything else this repo ships (verified-fix memory, deterministic 
 closed verify → fix loop with hard stopping criteria) is built as a consequence of that one rule,
 not as a separate feature list.
 
-This is also why the repo ships as **several small plugins instead of one monolith**: you can adopt
-the ceiling invariant (`loop-engine`) without also adopting an opinionated delivery workflow
-(`ship-flow`) or a semantic-memory database (`loop-memory`). Install only what you're going to use —
-`claude plugin details <name>` shows the projected per-plugin token cost before you decide.
+The engine, delivery workflow and memory remain separate **internal modules**. They no longer need
+separate installations or public names. Small changes take a direct path; a full delivery loop runs
+only when the requested endpoint needs it. Semantic memory stays off until explicitly enabled.
 
-> **Source versions:** loop-engine **0.15.20**, ship-flow **0.11.7**, loop-memory **0.8.2**.
+> **Plugin version:** paul-loop **0.1.0**. Earlier engine/ship-flow/memory versions are legacy module releases.
 > These are source versions, not an assertion about installed caches or published tags. Pre-1.0
 > minor versions can change contracts. See [runtime compatibility and migration](docs/runtime-compatibility.md).
 
@@ -44,7 +81,8 @@ For the September research, shipped improvements and remaining effectiveness che
 | Fix a recurring failure within a budget | `loop-fix.sh` with a real verifier, stopping limits and the applicable guards |
 | Reuse a verified fix | File lessons via `lessons.mjs`; no embedding service or database needed |
 | Keep lesson history after worktree cleanup | `lessons preserve --id <key>`, then `lessons history --id <key>`; historical hints only |
-| Deliver a feature through the full review/PR workflow | `ship-flow:ship-feature`; its required gates still apply |
+| Choose a procedure | Ask “폴루프로 이 작업 진행해줘”, use `$paul-loop` in Codex or `/paul-loop:paul-loop` in Claude Code |
+| Deliver a feature through the full review/PR workflow | `paul-loop:ship-feature`; its required gates still apply |
 | Semantic recall beyond file lessons | Optional `loop-memory`, after measuring a retrieval need |
 
 Check usage before adding infrastructure. `run-metrics.mjs --runs-dir <project>/.loop/runs --json`
@@ -82,9 +120,9 @@ capabilities, model, method, turns and recall status; excluded inputs are not a 
 
 The common execution core. It has no opinions about *how* you deliver work — no issue tracker
 integration, no delivery skill, no memory database — only the verify/fix/remember mechanics
-underneath one. All commands below live in `tools/loop-engine/bin/` and are automatically added to
-`PATH` by Claude Code when the plugin loads. Codex and plain shell consumers use an explicit
-`pluginBinPrefix` or absolute paths; do not assume native PATH registration there.
+underneath one. All commands below live in `tools/loop-engine/bin/`. Use the reviewed project
+launcher (`node tools/paul-loop.mjs exec bin/`) or an explicit absolute module path; the unified
+package does not register the nested directory on PATH. The examples below abbreviate that prefix.
 
 ### `verdict-run.sh` — wrap any verify command in a machine-readable contract
 
@@ -225,15 +263,17 @@ happily exit `0` over nothing — this guard turns that into an explicit `FAILED
 
 ## What's in `loop-memory`
 
-**Opt-in** (`defaultEnabled: false` — install it, then `claude plugin enable loop-memory@paul-loop`).
-Its declared `loop-engine` dependency must also be available. A completed Claude turn does not
-prove plugin loading: inspect the actual loaded plugins and hook events. For a session-only
-`--plugin-dir` check, load both generated plugin directories and explicitly enable
-`loop-memory@inline` in that invocation's `--settings`; this does not install or enable it for
-other projects. See the [bounded native observation](docs/audits/2026-09-28-memory-hook-observation.md).
-It's a database dependency (pgvector-enabled Postgres), not core loop mechanics, so it doesn't ride
-along with `loop-engine`/`ship-flow`. It gives verified lessons semantic recall — instead of a
-grep-shaped `.loop/lessons` directory, a `UserPromptSubmit` hook embeds the current prompt and
+For the complete setup sequence, use the [memory activation and operations guide](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md).
+The fields below are a reference, not an automatic provisioning procedure.
+
+**Opt-in inside Paul Loop.** The payload is included, but hooks return before reading prompts,
+loading credentials or writing memory telemetry unless `memory_enabled=true` is configured in
+Claude Code or `PAUL_LOOP_MEMORY=1` is explicitly supplied in the session environment. Existing
+`LOOP_MEMORY_OFF=1` still wins. Installing Paul Loop never starts a database or configures a key.
+All required module code is in the same package. A completed Claude turn does not prove plugin
+loading: inspect the actual loaded plugins and hook events in a fresh session. The optional
+pgvector-enabled Postgres service remains separately configured. Semantic recall augments the
+local `.loop/lessons` files: a `UserPromptSubmit` hook embeds the current prompt and
 injects the lessons (and, if configured, ADR/glossary/research knowledge) that are semantically
 closest to it.
 
@@ -247,11 +287,11 @@ liveness records distinguish missing configuration, empty results, and failed wo
   untrusted="true">` / `<knowledge untrusted="true">` context blocks — explicitly framed as
   reference data, not instructions, as defense in depth against prompt injection via stored notes.
 
-Configure it with `claude plugin install loop-memory@paul-loop --config KEY=value` (repeatable) or
-interactively via `/plugin configure loop-memory@paul-loop`:
+Configure the installed plugin with `/plugin configure paul-loop@paul-loop`:
 
 | Key | Required | Notes |
 |---|---|---|
+| `memory_enabled` | no | Defaults to false. Enable after DB/schema, project authorization, keys and initial sync are ready. `PAUL_LOOP_MEMORY` in the session overrides this option; `LOOP_MEMORY_OFF=1` always wins. |
 | `openai_api_key` / `gemini_api_key` | no (but you need at least one) | `sensitive: true` — stored in the OS keychain / `~/.claude/.credentials.json`, never in `settings.json`. Without either key both hooks no-op. |
 | `loop_memory_signing_key` | no | HMAC-SHA256 key required for store writes and recall, including knowledge. Missing configuration fails closed — see "Threat model" below. `sensitive: true`. |
 | `loop_dotenv_path` | no | Repo-relative (or absolute) dotenv-shaped file the hooks read **before** their key gate. Default `.loop/.env`. See "Keys that live in a `.env`" below. |
@@ -412,12 +452,12 @@ live end-to-end behavior. See [the detailed matrix and test boundaries](docs/run
 
 ```bash
 claude plugin marketplace add reach0908/paul-loop
-claude plugin install loop-engine@paul-loop
-# loop-memory installs disabled (defaultEnabled:false) — install, configure, then enable:
-claude plugin install loop-memory@paul-loop --config openai_api_key=sk-...
-# (or configure interactively later, inside a session: /plugin configure loop-memory@paul-loop)
-claude plugin enable loop-memory@paul-loop
+claude plugin install paul-loop@paul-loop
 ```
+
+Start a new session, then invoke `/paul-loop:paul-loop` or ask for Paul Loop in natural language.
+Existing three-plugin installations require [an explicit migration](docs/unified-installation.md)
+to avoid duplicate hooks. Keep the established `.claude/ship-flow.config.json` and `.loop/` data.
 
 ## Generate reviewable runtime packages
 
@@ -440,25 +480,26 @@ trying it against a clone, or for developing this repo itself:
 
 ```bash
 git clone https://github.com/reach0908/paul-loop
-claude --plugin-dir paul-loop/tools/loop-engine
-# inside the session, bin/ is already on PATH:
-#   verdict-run.sh -- echo hi
+claude --plugin-dir paul-loop
+# inside the session: /paul-loop:paul-loop
 ```
 
 ## Repo layout
 
 ```
-.claude-plugin/marketplace.json   # marketplace manifest — lists every plugin this repo ships
+.claude-plugin/marketplace.json   # one marketplace entry: paul-loop
+.claude-plugin/plugin.json        # unified plugin identity, skills, agents and optional memory config
+hooks/                           # module dispatch; memory off until explicit opt-in
 tools/loop-engine/
-  .claude-plugin/plugin.json      # this plugin's manifest
-  bin/                            # commands, auto-registered on PATH when the plugin loads
+  .claude-plugin/plugin.json      # legacy module identity, not a separate install
+  bin/                            # commands, invoked through the project launcher
   lib/                            # shared helpers bin/ scripts import
   eval/tier0/                     # golden dataset for the tier0 harness-self smoke gate (#7)
   test/                           # self-test suite (bash + node, no docker) — test/run.sh runs all of it
   docs/                           # verdict contract, lessons model, eval-gate, otel notes
 tools/ship-flow/                  # delivery-loop skills — see the plugin's own skills/ for docs
 tools/loop-memory/
-  .claude-plugin/plugin.json      # this plugin's manifest — defaultEnabled:false, userConfig schema
+  .claude-plugin/plugin.json      # legacy module identity and shared userConfig schema
   hooks/                          # SessionStart/SessionEnd (graduate), UserPromptSubmit (recall)
   hooks/lib/                      # helpers the hooks import (dotenv loader) — plain JS, no deps
   src/                            # TypeScript source (drizzle schema, CLI, embedder seam)
@@ -511,8 +552,8 @@ path stayed.
 - **M2 (done)** — `ship-flow` (the delivery-loop skill stack) + `templates/` (constitution-layer
   templates a setup skill wires into a consuming repo — a plugin's root `CLAUDE.md` is not loaded as
   project context by Claude Code, so this can't just be a file sitting in the plugin).
-- **M3 (in progress, optional)** — `loop-memory` (pgvector semantic lesson recall, opt-in /
-  `defaultEnabled: false` — scaffold done, this section documents it) and a submission to
+- **M3 (in progress, optional)** — `loop-memory` (pgvector semantic lesson recall, opt-in within
+  Paul Loop — scaffold done, this section documents it) and a submission to
   `anthropics/claude-plugins-community` (still open — a human decision, not made in this repo).
 
 ## License

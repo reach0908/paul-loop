@@ -54,20 +54,20 @@ grep -q 'verdict-run\.sh -- <verifyCommand>' "$SHIP" \
   || fail "ship-feature lost verdict-run.sh's REQUIRED '--' separator — the one script here that needs it"
 echo "PASS: argument forms intact (no spurious '--'; verdict-run.sh keeps its required one)"
 
-# ── F2: review agents named with the ship-flow: namespace ────────────────────────────────────────
+# ── F2: review agents named with the public paul-loop: namespace ────────────────────────────────
 for a in code-reviewer test-hunter verifier-integrity-hunter; do
-  grep -q "ship-flow:$a" "$SHIP" || fail "ship-feature must name the review agent as ship-flow:$a"
+  grep -q "paul-loop:$a" "$SHIP" || fail "ship-feature must name the review agent as paul-loop:$a"
 done
 if grep -nE '(^|[^:a-z-])`code-reviewer`' "$SHIP" | grep -vi 'collides\|pr-review-toolkit' >/dev/null 2>&1; then
   fail "ship-feature names a bare \`code-reviewer\` outside the collision note — it resolves ambiguously against pr-review-toolkit:code-reviewer"
 fi
-echo "PASS: review agents are ship-flow:-namespaced in ship-feature"
+echo "PASS: review agents are paul-loop:-namespaced in ship-feature"
 
 # ── F3: planner is wired in (a dead agent no caller invokes is the alternative this rejected) ────
-grep -q 'ship-flow:planner' "$SHIP" \
+grep -q 'paul-loop:planner' "$SHIP" \
   || fail "agents/planner.md exists but ship-feature never invokes it — either wire it into step 1 or delete the agent"
-[ -f "$SF/agents/planner.md" ] || fail "ship-feature invokes ship-flow:planner but agents/planner.md is gone"
-echo "PASS: ship-flow:planner is both shipped and invoked"
+[ -f "$SF/agents/planner.md" ] || fail "ship-feature invokes paul-loop:planner but agents/planner.md is gone"
+echo "PASS: paul-loop:planner is both shipped and invoked"
 
 # ── F4: review subagents must not run deep gates; a stalled review is a BLOCK ─────────────────────
 for a in code-reviewer test-hunter verifier-integrity-hunter; do

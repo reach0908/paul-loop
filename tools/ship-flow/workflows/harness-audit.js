@@ -2,7 +2,7 @@
 // Kept as a named workflow (rather than an inline script pasted into a skill) so a run that
 // finishes the investigate phase but gets interrupted before synthesis can be resumed instead
 // of re-run from scratch. The wrapping skill (harness-maturity-audit) is a thin caller: it
-// invokes Workflow({ name: 'ship-flow:harness-audit' }) and owns saving the report and any
+// invokes Workflow({ name: 'paul-loop:harness-audit' }) and owns saving the report and any
 // follow-up hand-off (e.g. to an issue-creation skill) once this workflow returns.
 //
 // On the name: `meta.name` below is the BARE name; the INVOCATION name is plugin-namespaced.
@@ -12,7 +12,7 @@
 // `meta.name: "scan"` in workflows/scan.js and its skill invokes `Workflow({ name:
 // "claude-security:scan" })`. So the two are SUPPOSED to differ — do not "fix" this by
 // prefixing `meta.name`. (An alternative invocation form exists, `Workflow({ scriptPath:
-// "${CLAUDE_PLUGIN_ROOT}/workflows/<file>.js" })`, used by the official code-modernization
+// "${SHIP_FLOW_PATH}/workflows/<file>.js" })`, used by the official code-modernization
 // plugin; it bypasses name resolution entirely and is not what this plugin uses.)
 //
 // Named workflows are surfaced in the harness's own "available skills" listing and are directly
@@ -72,7 +72,7 @@ state, and any drift between what a record says and what the code actually does.
     title: 'loop-engine code',
     prompt: `${METHOD}
 
-Dimension: loop-engine code. Actually run the loop-engine@paul-loop plugin's bin/* scripts
+Dimension: loop-engine code. Actually run the Paul Loop engine module's bin/* scripts
 (verdict-run, loop-fix, gate, eval-gate, lessons, etc.) — invoke them however this repo actually
 resolves and calls the installed plugin's bin scripts (look for a local resolver/wrapper script
 first; if there isn't one, invoke the plugin cache path directly), plus any wrapper script this

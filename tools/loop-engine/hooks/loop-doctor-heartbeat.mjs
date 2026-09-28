@@ -30,7 +30,7 @@ const EVERY_DAYS = 7;
 // Bridges Claude Code's userConfig injection (CLAUDE_PLUGIN_OPTION_<KEY>) — as declared by the
 // loop-memory plugin's own userConfig schema — into the plain env var names this check reads, the
 // same way loop-memory's own hooks do. A plain shell-exported value always wins if already set.
-for (const [pluginOpt, plain] of [
+if (env.LOOP_RECALL_OFF !== '1' && env.LOOP_MEMORY_OFF !== '1') for (const [pluginOpt, plain] of [
   ['CLAUDE_PLUGIN_OPTION_OPENAI_API_KEY', 'OPENAI_API_KEY'],
   ['CLAUDE_PLUGIN_OPTION_GEMINI_API_KEY', 'GEMINI_API_KEY'],
   // Without this one the dotenv load below silently falls back to the default `.loop/.env`, so a repo
@@ -50,7 +50,7 @@ try {
   // "no embedding key" on every single session — a false CRIT that trains the reader to ignore the
   // nudge, which is worse than staying quiet. Same precedence as everywhere else: an already-set
   // value wins, and any failure leaves env untouched.
-  loadDotenv(root, env.LOOP_DOTENV_PATH, env);
+  if (env.LOOP_RECALL_OFF !== '1' && env.LOOP_MEMORY_OFF !== '1') loadDotenv(root, env.LOOP_DOTENV_PATH, env);
 
   const nudges = [];
 
@@ -88,7 +88,7 @@ try {
   //   - no key at all -> **still nudge** (a worktree-isolated setup can be silently dead, and "no key =
   //     intentional off" is not something this heartbeat can safely assume without evidence).
   try {
-    if (env.LOOP_RECALL_OFF !== '1') {
+    if (env.LOOP_RECALL_OFF !== '1' && env.LOOP_MEMORY_OFF !== '1') {
       const hasKey = !!(env.OPENAI_API_KEY || env.GEMINI_API_KEY);
       if (!hasKey) {
         nudges.push(

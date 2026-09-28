@@ -73,7 +73,7 @@ Phase 1 is done when the loop is **tight** and **red-capable**: you can name **o
 
 If you catch yourself reading code to build a theory before this command exists, **stop: jumping straight to a hypothesis is the exact failure this skill prevents.** No red-capable command, no Phase 2.
 
-If this repo ships `loop-engine@paul-loop`, this red-capable command is exactly what `loop-fix.sh --verify` (or `verdict-run.sh` directly) wants — the feedback loop you build here is the same loop that closes automatically once you're past Phase 5.
+If this repo uses Paul Loop's engine module, this red-capable command is exactly what `loop-fix.sh --verify` (or `verdict-run.sh` directly) wants — the feedback loop you build here is the same loop that closes automatically once you're past Phase 5.
 
 ## Phase 2: Reproduce + minimise
 
@@ -147,4 +147,4 @@ Required before declaring done:
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
 
-**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling), hand off by calling the Skill tool with `ship-flow:improve-codebase-architecture` and the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling), hand off by calling the Skill tool with `paul-loop:improve-codebase-architecture` and the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.

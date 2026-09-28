@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname, relative } from 'node:path';
 import { runNative, safeEnv, save, sha } from './adapter.mjs';
 import { gradeTrial } from './grader.mjs';
-import { codexPlugins } from './plugins.mjs';
+import { codexPlugins, claudePluginDirs } from './plugins.mjs';
 import { validateReport } from './validate.mjs';
 import { caseBound, DEFAULT_CASE_MS } from './process.mjs';
 import { randomUUID } from 'node:crypto';
@@ -47,7 +47,7 @@ try {
       const git=(...args)=>execFileSync('git',['-c','core.hooksPath=/dev/null','-c','core.excludesFile=/dev/null',...args],{cwd:workspace,env:safeEnv(),stdio:'pipe'});
       git('init','--template=','-q','-b','main');writeFileSync(join(workspace,'.gitignore'),'.eval-state/\n');git('add','.');git('-c','user.name=eval-fixture','-c','user.email=eval@localhost','-c','commit.gpgsign=false','commit','-qm','frozen fixture');
       save(join(stateDir,'before.json'),Object.fromEntries(Object.keys(c.files).map(p=>[p,sha(readFileSync(join(workspace,p)))])));
-      const target=await runNative({runtime:opt.runtime,executable:cli,workspace,output:join(stateDir,'native'),model:opt.model,effort:opt.effort,budgetPath,timeoutMs:caseMs,trialId,prompt:c.prompt+'\nStay inside this fixture for task work. No real external actions, network tools, or memory are authorized. Use native shell/file tools for ordinary implementation and verification. No host-specific simulation adapter is supplied; report unsupported events as INCOMPLETE.',codexProfileSetup:opt.runtime==='codex'?codexPlugins(cli,opt.plugins,join(stateDir,'native')):undefined,pluginDirs:opt.runtime==='claude'?['loop-engine','ship-flow'].map(n=>join(resolve(opt.plugins),n)):[]});
+      const target=await runNative({runtime:opt.runtime,executable:cli,workspace,output:join(stateDir,'native'),model:opt.model,effort:opt.effort,budgetPath,timeoutMs:caseMs,trialId,prompt:c.prompt+'\nStay inside this fixture for task work. No real external actions, network tools, or memory are authorized. Use native shell/file tools for ordinary implementation and verification. No host-specific simulation adapter is supplied; report unsupported events as INCOMPLETE.',codexProfileSetup:opt.runtime==='codex'?codexPlugins(cli,opt.plugins,join(stateDir,'native')):undefined,pluginDirs:opt.runtime==='claude'?claudePluginDirs(opt.plugins):[]});
       row.target={executed:target.duration_ms>0,completed:target.completed,trial_id:trialId,exit:target.exit,fault:target.fault,duration_ms:target.duration_ms,configured_timeout_ms:target.configured_timeout_ms,effective_timeout_ms:target.effective_timeout_ms,cleanup:target.cleanup,model:target.observed_models.length===1?target.observed_models[0]:null,model_status:target.model_status};
       row.plugin_status='registration-observed; native enforcement unqualified';
       row.status='incomplete';row.reason='native hook/enforcement qualification and event evidence require independent review; never inferred from plugin installation';

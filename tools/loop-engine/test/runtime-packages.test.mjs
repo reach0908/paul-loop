@@ -23,6 +23,7 @@ test('external trust paths trigger the unchanged pinned runner from base CODEOWN
   const covers = path => entries.some(([prefix, owner]) => owner === '@paulkim-lansik' && (prefix.endsWith('/') ? ('/' + path).startsWith(prefix) : '/' + path === prefix));
   for (const path of ['tools/loop-engine/runtime/new-adapter.mjs', 'tools/loop-engine/eval/new-grader.mjs',
     'scripts/generate-runtime-packages.mjs', 'scripts/runtime-docs.mjs', 'scripts/refresh-skill-lock.mjs',
+    'hooks/run.mjs', '.claude-plugin/plugin.json',
     'tools/ship-flow/workflows/harness-audit.js', 'tools/ship-flow/templates/branch-protect.sh',
     'tools/ship-flow/templates/branch-protect.mjs', 'tools/ship-flow/templates/setup-loop-engine.action.yml.template',
     ...['provenance.ts', 'store.ts', 'lessons.ts', 'knowledge.ts', 'ops.ts', 'cli.ts', 'schema/memory.ts'].map(p => 'tools/loop-memory/src/' + p),
@@ -53,7 +54,7 @@ test('both generated runtimes are deterministic, internally versioned and packag
   writePackages(files, join(dir, 'one')); writePackages(again, join(dir, 'two'));
   writePackages(files, join(dir, 'one'), true);
   const provenance = json(join(dir, 'one/provenance.json'));
-  assert.equal(provenance.sourceVersions['loop-engine'], json(join(root, 'tools/loop-engine/.claude-plugin/plugin.json')).version);
+  assert.equal(provenance.componentVersions['loop-engine'], json(join(root, 'tools/loop-engine/.claude-plugin/plugin.json')).version);
   assert.ok(provenance.sourceHashes['skills-lock.json']);
   assert.equal(provenance.limitations.liveEndToEnd, 'not-verified');
   for (const runtime of ['claude', 'codex']) {
@@ -67,30 +68,38 @@ test('both generated runtimes are deterministic, internally versioned and packag
       if (runtime === 'codex') assert.equal(existsSync(join(plugin, '.claude-plugin/plugin.json')), false);
     }
   }
+  // Source-root Claude pins cover the tracked provider export, without Git metadata or local files.
+  const exported = join(dir, 'source-export');
+  for (const [path, { mode }] of Object.entries(provenance.sourceHashes)) {
+    const dest = join(exported, path); mkdirSync(dirname(dest), { recursive: true });
+    cpSync(join(root, path), dest); chmodSync(dest, mode);
+  }
+  const sourceApproval = json(join(dir, 'one/claude/source-integrity.json')).plugins['paul-loop'];
+  assert.deepEqual(verifyPluginIntegrity(exported, 'claude', 'paul-loop', sourceApproval.version, sourceApproval.integrity), sourceApproval.integrity);
+  writeFileSync(join(exported, 'hooks/run.mjs'), 'tampered');
+  assert.throws(() => verifyPluginIntegrity(exported, 'claude', 'paul-loop', sourceApproval.version, sourceApproval.integrity), /integrity mismatch/);
   const catalog = json(join(dir, 'one/codex/.agents/plugins/marketplace.json'));
-  const sourceApproval = json(join(dir, 'one/claude/source-integrity.json')).plugins['loop-engine'];
-  assert.deepEqual(verifyPluginIntegrity(join(root, 'tools/loop-engine'), 'claude', 'loop-engine', sourceApproval.version, sourceApproval.integrity), sourceApproval.integrity);
   assert.equal(catalog.name, 'paul-loop-codex');
-  assert.equal(catalog.plugins.length, 3);
+  assert.equal(catalog.plugins.length, 1);
   for (const plugin of catalog.plugins) {
     assert.ok(existsSync(join(dir, 'one/codex', plugin.source.path, '.codex-plugin/plugin.json')));
     assert.equal(plugin.policy.installation, 'AVAILABLE'); // never auto-enables optional memory
   }
-  const hooks = json(join(dir, 'one/codex/plugins/loop-engine/hooks/hooks.json')).hooks;
+  const hooks = json(join(dir, 'one/codex/plugins/paul-loop/tools/loop-engine/hooks/hooks.json')).hooks;
   for (const event of ['PermissionDenied', 'InstructionsLoaded', 'PostToolUseFailure']) assert.equal(hooks[event], undefined);
   for (const groups of Object.values(hooks)) for (const group of groups) for (const hook of group.hooks) {
     assert.match(hook.command, /\$\{PLUGIN_ROOT\}\/runtime\/hook-adapter\.mjs/);
     assert.equal(hook.command.includes('CLAUDE_PLUGIN_ROOT'), false);
     const target = / (hooks\/[^ ]+)/.exec(hook.command)[1];
-    assert.ok(existsSync(join(dir, 'one/codex/plugins/loop-engine', target)));
+    assert.ok(existsSync(join(dir, 'one/codex/plugins/paul-loop/tools/loop-engine', target)));
   }
   const role = source('tools/ship-flow/agents/code-reviewer.md');
-  const skill = readFileSync(join(dir, 'one/codex/plugins/ship-flow/skills/code-reviewer/SKILL.md'), 'utf8');
+  const skill = readFileSync(join(dir, 'one/codex/plugins/paul-loop/tools/ship-flow/skills/code-reviewer/SKILL.md'), 'utf8');
   assert.match(skill, /fresh subagent/); assert.match(skill, /does not constrain tools/);
-  const template = readFileSync(join(dir, 'one/codex/plugins/ship-flow/agent-templates/code-reviewer.toml'), 'utf8');
+  const template = readFileSync(join(dir, 'one/codex/plugins/paul-loop/tools/ship-flow/agent-templates/code-reviewer.toml'), 'utf8');
   assert.match(template, /sandbox_mode = "read-only"/); assert.ok(role.length > 100);
-  assert.equal(existsSync(join(dir, 'one/codex/plugins/ship-flow/.codex/agents')), false);
-  assert.match(readFileSync(join(dir, 'one/codex/plugins/ship-flow/skills/ship-feature/SKILL.md'), 'utf8'), /Native Claude Workflow JS is unsupported/);
+  assert.equal(existsSync(join(dir, 'one/codex/plugins/paul-loop/tools/ship-flow/.codex/agents')), false);
+  assert.match(readFileSync(join(dir, 'one/codex/plugins/paul-loop/tools/ship-flow/skills/ship-feature/SKILL.md'), 'utf8'), /Native Claude Workflow JS is unsupported/);
 });
 
 test('generated inventory detects missing, altered, extra files and executable mode drift', (t) => {
@@ -276,7 +285,7 @@ test('moved role references rebase from agents to skills and generated doc valid
   const moved = rebaseDocLinks(input, 'agents/publisher.md', 'skills/publisher/SKILL.md');
   assert.equal(moved, '[authorization](../AUTHORIZATION.md) and [handoff](../ship-feature/PUBLISH-HANDOFF.md#safe-pattern)');
   const file = content => ({content:Buffer.from(content),mode:0o644});
-  const prefix = 'codex/plugins/ship-flow/';
+  const prefix = 'codex/plugins/paul-loop/tools/ship-flow/';
   const files = new Map([[prefix+'skills/publisher/SKILL.md', file(moved)], [prefix+'skills/AUTHORIZATION.md',file('contract')], [prefix+'skills/ship-feature/PUBLISH-HANDOFF.md',file('handoff')]]);
   assert.equal(validateGeneratedDocRefs(files).references, 2);
   files.set(prefix+'skills/publisher/SKILL.md',file(input));
@@ -287,7 +296,7 @@ test('moved role references rebase from agents to skills and generated doc valid
 });
 
 test('relocated native role templates embed required contracts and keep scratch access conditional', (t) => {
-  const files = buildPackages(root), dir = temp(t), prefix = 'codex/plugins/ship-flow/';
+  const files = buildPackages(root), dir = temp(t), prefix = 'codex/plugins/paul-loop/tools/ship-flow/';
   const contract = source('tools/ship-flow/skills/AUTHORIZATION.md').replaceAll('CLAUDE.md','AGENTS.md');
   const handoff = source('tools/ship-flow/skills/ship-feature/PUBLISH-HANDOFF.md').replaceAll('CLAUDE.md','AGENTS.md');
   for (const role of ['planner','code-reviewer','test-hunter','verifier-integrity-hunter','publisher']) {
@@ -319,7 +328,7 @@ test('relocated native role templates embed required contracts and keep scratch 
 });
 
 test('Codex harness audit retains its authorized direct-lane fallback without blanket task stopping', () => {
-  const files=buildPackages(root), text=files.get('codex/plugins/ship-flow/skills/harness-maturity-audit/SKILL.md').content.toString();
+  const files=buildPackages(root), text=files.get('codex/plugins/paul-loop/tools/ship-flow/skills/harness-maturity-audit/SKILL.md').content.toString();
   assert.match(text,/skill-documented direct-lane or equivalent fallback/);
   assert.match(text,/preserves required independence, gates and current authorization/);
   assert.match(text,/report that blocked step and continue independent authorized work/);

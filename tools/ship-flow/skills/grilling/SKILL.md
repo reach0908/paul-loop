@@ -66,4 +66,4 @@ decision, alternatives, rationale, remaining unknowns, and evidence so the calle
 
 Document confirmed decisions as they land only when documentation is authorized (for example, via
 grill-with-docs). Mark unresolved proposals as drafts. A bare interview does not write files. Use
-`ship-flow:domain-modeling` for authorized glossary/ADR work; it does not add a new approval round.
+`paul-loop:domain-modeling` for authorized glossary/ADR work; it does not add a new approval round.

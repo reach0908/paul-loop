@@ -42,7 +42,7 @@ When the shape of that boundary is itself in question — how deep the module sh
 If this repo has a reward-hack guard armed on working branches (a hook that blocks Edit/Write/Bash
 mutation of test/config/snapshot files while a loop is in progress, so "fix the code under test, not
 the test" is mechanical instead of a promise) — respect its window-opening convention rather than
-working around it. The `loop-engine@paul-loop` plugin's own guard, where installed, arms by branch
+working around it. The Paul Loop engine module's own guard, where installed, arms by branch
 condition (any branch outside the repo's integration/release branches) with no manual arm/disarm step:
 
 - **RED (writing the failing test)** *is* a legitimate protected-file edit: open a reasoned window
@@ -142,7 +142,7 @@ Rules:
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactoring is not part of the loop.** It belongs to the review stage, not the red → green cycle: `ship-feature` step 4 runs `ship-flow:code-reviewer` and `ship-flow:test-hunter` against the finished diff, and structural work beyond that is what the `improve-codebase-architecture` skill is for. Restructuring while you still owe the next test is how a cycle turns into a rewrite.
+- **Refactoring is not part of the loop.** It belongs to the review stage, not the red → green cycle: `ship-feature` step 4 runs `paul-loop:code-reviewer` and `paul-loop:test-hunter` against the finished diff, and structural work beyond that is what the `improve-codebase-architecture` skill is for. Restructuring while you still owe the next test is how a cycle turns into a rewrite.
 
 ## Checklist Per Cycle
 

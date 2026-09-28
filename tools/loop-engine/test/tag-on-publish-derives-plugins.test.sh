@@ -48,18 +48,20 @@ fi
 SANDBOX="$(mktemp -d)" || fail "mktemp -d failed — cannot build the hermetic sandbox"
 trap 'rm -rf "$SANDBOX"' EXIT
 
-# A fake marketplace with FOUR plugins, deliberately none of them named like the real ones. A
+# A fake marketplace with FIVE plugins, including a source-root plugin, deliberately none of them named like the real ones. A
 # workflow carrying a hardcoded list of the real names tags nothing here and fails the count below.
 mkdir -p "$SANDBOX/repo" && cd "$SANDBOX/repo"
 mkdir -p .claude-plugin
 cat > .claude-plugin/marketplace.json <<'JSON'
 { "name": "sandbox", "owner": { "name": "t" }, "plugins": [
+  { "name": "root-package", "source": "./", "description": "d", "version": "1.0.0" },
   { "name": "alpha", "source": "./tools/alpha", "description": "d", "version": "1.0.0" },
   { "name": "beta",  "source": "./tools/beta",  "description": "d", "version": "2.3.4" },
   { "name": "gamma", "source": "./tools/gamma", "description": "d", "version": "0.1.0" },
   { "name": "delta", "source": "./tools/delta", "description": "d", "version": "9.9.9" }
 ] }
 JSON
+printf '{ "name": "root-package", "version": "1.0.0" }\n' > .claude-plugin/plugin.json
 for p in alpha:1.0.0 beta:2.3.4 gamma:0.1.0 delta:9.9.9; do
   n="${p%%:*}"; v="${p##*:}"
   mkdir -p "tools/$n/.claude-plugin"
@@ -81,7 +83,7 @@ SHA="$(git rev-parse HEAD)"
 OUT="$(SHA="$SHA" bash -c "$SCRIPT" 2>&1)" || fail "the workflow's tagging step exited non-zero in the sandbox:
 $OUT"
 
-for expect in 'alpha--v1.0.0' 'gamma--v0.1.0' 'delta--v9.9.9'; do
+for expect in 'root-package--v1.0.0' 'alpha--v1.0.0' 'gamma--v0.1.0' 'delta--v9.9.9'; do
   git -C "$SANDBOX/remote.git" rev-parse -q --verify "refs/tags/$expect" >/dev/null \
     || fail "workflow did not publish $expect — it is not deriving the plugin list from marketplace.json (a hardcoded list would miss exactly these). Output:
 $OUT"

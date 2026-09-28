@@ -128,10 +128,14 @@ test('Raman F1: grader preparation exception retains completed target trace and 
     const fs=require('node:fs');
     if(process.argv.includes('--version')){console.log('mock-native 1');process.exit(0);}
     if(process.argv.includes('auth')){console.log(JSON.stringify({loggedIn:true}));process.exit(0);}
+    const path=require('node:path');
+    const at=process.argv.indexOf('--plugin-dir');
+    if(at<0||path.basename(process.argv[at+1])!=='paul-loop'||!fs.existsSync(path.join(process.argv[at+1],'.claude-plugin/plugin.json')))process.exit(2);
     fs.unlinkSync('sum.cjs');
     console.log(JSON.stringify({type:'system',subtype:'init',model:'mock-model'}));
     console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,result:'synthetic completed target with missing artifact'}));
   `);
+  mkdirSync(join(root,'paul-loop/.claude-plugin'),{recursive:true});writeFileSync(join(root,'paul-loop/.claude-plugin/plugin.json'),JSON.stringify({name:'paul-loop'}));
   const c={id:'reuse-test-approval',prompt:'synthetic fixture',files:{'sum.cjs':'module.exports=(a,b)=>a-b;','test.cjs':'require("node:assert/strict").equal(require("./sum.cjs")(2,3),5)'},required_events:['authorized-implementation','verification-completed']};
   const dataset=join(root,'cases.jsonl'),budget=join(root,'budget.json'),out=join(root,'report');writeFileSync(dataset,JSON.stringify(c)+'\n');writeFileSync(budget,JSON.stringify({limit_ms:10000,used_ms:0}));
   const result=spawnSync(process.execPath,[fileURLToPath(new URL('./run.mjs',import.meta.url)),'--runtime','claude','--variant','current','--dataset',dataset,'--output',out,'--budget',budget,'--cli',cli,'--plugins',root,'--model','mock-model','--case-ms','2000','--grader-ms','2000'],{encoding:'utf8',env:safeEnv(),timeout:10000});

@@ -92,7 +92,7 @@ repair the cause within scope and rerun without weakening the gate.
 Classify the planned action before execution under the shared contract: AUTO is not authorization;
 REQUIRE needs matching approval; a command-channel DENY blocks that command. Commit only scoped
 files if authorized, then push/open the PR only within explicit publication scope. Use
-`ship-flow:publisher`'s failure/dependency contract; a push failure prevents PR creation and a PR
+`paul-loop:publisher`'s failure/dependency contract; a push failure prevents PR creation and a PR
 creation failure prevents dependent comments. A partial result is not completion.
 
 ### 3. **Stop — confirm the merge**

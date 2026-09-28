@@ -79,5 +79,5 @@ machine-checkable contract** (a `verify:` field, and/or `artifacts:`/`expect:`).
 
 Not every AC needs one. But **zero across the whole plan** means step 3's `ac-verify.sh` gate has
 nothing to evaluate, so it would pass vacuously — a green gate proving nothing. That is why the
-`ship-flow:planner` agent fail-closed-checks this before any code exists, and why step 3 fails
+`paul-loop:planner` agent fail-closed-checks this before any code exists, and why step 3 fails
 closed rather than skipping when a `standard`/`risky` plan has no contracted AC.

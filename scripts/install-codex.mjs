@@ -8,8 +8,8 @@ import { pathToFileURL } from 'node:url';
 
 const MARKET = 'paul-loop-codex';
 const REPOSITORY = 'https://github.com/reach0908/paul-loop';
-const CORE = ['loop-engine', 'ship-flow'];
-const PLUGINS = [...CORE, 'loop-memory'];
+const CORE = ['paul-loop'];
+const PLUGINS = CORE;
 const MARKER = '.paul-loop-generated.json';
 const RECEIPT = '.paul-loop-install.json';
 const CATALOG = '.agents/plugins/marketplace.json';
@@ -125,14 +125,14 @@ function validateMetadata(marker, read) {
   }
   const catalog = parse(read(CATALOG), CATALOG);
   if (catalog.name !== MARKET || !Array.isArray(catalog.plugins) || catalog.plugins.length !== PLUGINS.length
-      || !equal(catalog.plugins.map(p => p.name).sort(), [...PLUGINS].sort())) fail(`Expected the generated ${MARKET} catalog with its three source plugins.`);
+      || !equal(catalog.plugins.map(p => p.name).sort(), [...PLUGINS].sort())) fail(`Expected the generated ${MARKET} catalog with one paul-loop plugin. Keep split installations intact and follow the explicit migration guide.`);
   for (const entry of catalog.plugins) {
     const name = entry.name, version = provenance.sourceVersions[name];
     if (entry.source?.source !== 'local' || entry.source.path !== `./plugins/${name}`
         || entry.policy?.installation !== 'AVAILABLE' || entry.policy?.authentication !== 'ON_INSTALL') fail(`Unsafe catalog source/policy: ${name}`);
     if (typeof version !== 'string' || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) fail(`Invalid source version: ${name}`);
     const manifestPath = `plugins/${name}/.codex-plugin/plugin.json`;
-    if (!marker.files[`codex/${manifestPath}`] || !provenance.sourceHashes[`tools/${name}/.claude-plugin/plugin.json`]) fail(`Missing plugin manifest inventory/provenance: ${name}`);
+    if (!marker.files[`codex/${manifestPath}`] || !provenance.sourceHashes['.claude-plugin/plugin.json']) fail(`Missing plugin manifest inventory/provenance: ${name}`);
     const manifest = parse(read(manifestPath), manifestPath);
     if (manifest.name !== name || manifest.version !== version || manifest.repository !== REPOSITORY) fail(`Plugin name/version/source identity mismatch: ${name}`);
   }
@@ -199,6 +199,8 @@ function activationState(target, completed, expectedVersions = null) {
   const result = cli(['plugin', 'list', '--json'], completed);
   if (!object(result) || !Array.isArray(result.installed)
       || result.installed.some(p => !object(p) || typeof p.pluginId !== 'string')) fail('Unsupported Codex plugin list response; existing activation is unknown. Inspect codex plugin list --json before retrying.');
+  const legacy = result.installed.filter(p => ['loop-engine', 'ship-flow', 'loop-memory'].includes(p.name || p.pluginId.split('@')[0]) && p.enabled !== false);
+  if (legacy.length) fail('Enabled or unknown legacy Paul Loop modules remain; explicitly disable them and review the project lock before migrating to one plugin. No activation/config override was attempted.');
   return Object.fromEntries(CORE.map(name => {
     const id = `${name}@${MARKET}`;
     const matches = result.installed.filter(p => p.pluginId === id || (p.name === name && p.marketplaceName === MARKET));

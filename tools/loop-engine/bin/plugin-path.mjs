@@ -60,6 +60,7 @@ export function verifyPluginIntegrity(artifact, runtime, name, version, approval
 // END PLUGIN INTEGRITY
 
 const PLUGINS = {
+  'paul-loop': { env: 'PAUL_LOOP_PATH', minimum: '0.1.0' },
   'loop-engine': { env: 'LOOP_ENGINE_PATH', minimum: '0.15.0' },
   'ship-flow': { env: 'SHIP_FLOW_PATH', minimum: '0.11.0' },
   'loop-memory': { env: 'LOOP_MEMORY_PATH', minimum: '0.7.0' },
@@ -100,6 +101,7 @@ function projectApproval(roots, artifact, runtime, plugin, version) {
     const rel = relative(artifact, realpathSync(file));
     if (rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel)) throw new Error('integrity approval must be outside the plugin artifact');
     const lock = JSON.parse(readFileSync(file, 'utf8')), entry = lock.plugins?.[plugin];
+    if (lock.plugins?.['paul-loop'] && Object.keys(lock.plugins).length !== 1) throw new Error('mixed unified and legacy approval; review migration');
     if (lock.schemaVersion !== 1 || lock.runtime !== runtime || !entry || entry.version !== version) throw new Error(plugin + ': integrity approval schema/runtime/version drift');
     return verifyPluginIntegrity(artifact, runtime, plugin, version, entry.integrity);
   }
@@ -143,8 +145,13 @@ export function validatePluginPath(path, { plugin = 'loop-engine', runtime = 'cl
   versionParts(manifest.version);
   if (version && version !== manifest.version) throw new Error(`${plugin}: registry/manifest version drift`);
   if (minimum && older(manifest.version, minimum)) throw new Error(`${plugin}: requires >=${minimum}; found ${manifest.version}`);
+  const bundle = resolve(root, '../..');
+  const bundleManifest = join(bundle, `.${kind}-plugin/plugin.json`);
+  const bundled = plugin !== 'paul-loop' && root === join(bundle, 'tools', plugin) && existsSync(bundleManifest)
+    && pluginManifest(bundle, kind).name === 'paul-loop';
   const integrity = runtime === 'shell' && sourceCommit !== undefined
     ? verifiedSource(root, plugin, sourceCommit)
+    : bundled ? projectApproval(roots, bundle, kind, 'paul-loop', pluginManifest(bundle, kind).version)
     : projectApproval(roots, root, kind, plugin, manifest.version);
   return { path: root, version: manifest.version, runtime, integrity, activation: 'unknown', hookTrust: 'unknown' };
 }
@@ -155,6 +162,12 @@ export function resolvePluginInstallation({ pluginsFile, root = process.cwd(), p
   if (!['claude', 'codex', 'shell'].includes(runtime)) throw new Error(`unsupported runtime: ${runtime}`);
   const roots = projectRoots(root);
   const checked = (p, source, version) => ({ ...validatePluginPath(p, { plugin, runtime, version, roots, sourceCommit: env[cfg.env.replace('_PATH', '_COMMIT')] }), source });
+  const fromBundle = (p, source, version) => {
+    const bundle = validatePluginPath(p, { plugin: 'paul-loop', runtime, version, roots });
+    return plugin === 'paul-loop' ? { ...bundle, source }
+      : checked(join(bundle.path, 'tools', plugin), source);
+  };
+  if (env.PAUL_LOOP_PATH) return fromBundle(env.PAUL_LOOP_PATH, 'explicit-environment');
   if (env[cfg.env]) return checked(env[cfg.env], 'explicit-environment');
   // This is our documented, explicit artifact registry, not a guessed Codex cache layout.
   // Never scan global Codex settings, credentials, or another marketplace's derivatives.
@@ -163,6 +176,11 @@ export function resolvePluginInstallation({ pluginsFile, root = process.cwd(), p
     const record = JSON.parse(readFileSync(registry, 'utf8'));
     if (record.schemaVersion !== 1 || record.runtime !== runtime) throw new Error('runtime registry schema/runtime mismatch');
     const entry = record.plugins?.[plugin];
+    if (record.plugins?.['paul-loop']) {
+      if (Object.keys(record.plugins).length !== 1) throw new Error('mixed unified and legacy registry; review migration');
+      const entry = record.plugins['paul-loop'];
+      return fromBundle(resolve(dirname(registry), entry.path), 'explicit-registry', entry.version);
+    }
     if (entry) return checked(resolve(dirname(registry), entry.path), 'explicit-registry', entry.version);
   }
   if (runtime !== 'claude') return null;
@@ -170,17 +188,19 @@ export function resolvePluginInstallation({ pluginsFile, root = process.cwd(), p
   if (!existsSync(file)) return null;
   let parsed;
   try { parsed = JSON.parse(readFileSync(file, 'utf8')); } catch { return null; }
-  const entries = parsed?.plugins?.[`${plugin}@paul-loop`];
-  if (!Array.isArray(entries)) return null;
+  const candidates = [...new Set(['paul-loop', plugin])].flatMap(name => {
+    const entries = parsed?.plugins?.[`${name}@paul-loop`];
+    return Array.isArray(entries) ? entries.map(entry => ({ name, entry })) : [];
+  });
   let match;
   for (const r of roots) {
-    // Local wins over project at the same root. Main-root fallback never selects another project.
-    match = entries.find((e) => e.scope === 'local' && e.projectPath && canonical(e.projectPath) === r) ||
-      entries.find((e) => e.scope === 'project' && e.projectPath && canonical(e.projectPath) === r);
+    // Scope wins across identities; the bundle is preferred only within the same scope.
+    match = candidates.find(({ entry: e }) => e.scope === 'local' && e.projectPath && canonical(e.projectPath) === r) ||
+      candidates.find(({ entry: e }) => e.scope === 'project' && e.projectPath && canonical(e.projectPath) === r);
     if (match) break;
   }
-  match ||= entries.find((e) => e.scope === 'user');
-  return match ? checked(match.installPath, 'claude-registry', match.version) : null;
+  match ||= candidates.find(({ entry }) => entry.scope === 'user');
+  return match ? (match.name === 'paul-loop' ? fromBundle : checked)(match.entry.installPath, 'claude-registry', match.entry.version) : null;
 }
 
 export function resolvePluginPath(options = {}) { return resolvePluginInstallation(options)?.path ?? null; }

@@ -73,9 +73,23 @@ export function collect(root) {
   const files = [];
   for (const { dir, name } of providers) {
     if (name) namespaces.add(name);
-    for (const s of dirs(path.join(dir, 'skills'))) known.add(s);
-    for (const a of mdFiles(path.join(dir, 'agents'))) known.add(a.replace(MD, ''));
-    for (const sub of ['skills', 'agents', 'workflows']) files.push(...walkMd(path.join(dir, sub)));
+    const manifestPath = path.join(dir, '.claude-plugin/plugin.json');
+    const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
+    for (const kind of ['skills', 'agents', 'workflows']) {
+      for (const sub of new Set([kind, ...[manifest[kind] || []].flat()])) {
+        const location = path.resolve(dir, sub), rel = path.relative(dir, location);
+        if (path.isAbsolute(rel) || rel === '..' || rel.startsWith('../')) throw new Error('plugin resource escapes package');
+        if (!existsSync(location)) continue;
+        if (statSync(location).isFile()) {
+          if (kind === 'agents') known.add(path.basename(location).replace(MD, ''));
+          if (MD.test(location)) files.push(location);
+        } else {
+          if (kind === 'skills') for (const s of dirs(location)) known.add(s);
+          if (kind === 'agents') for (const a of mdFiles(location)) known.add(a.replace(MD, ''));
+          files.push(...walkMd(location));
+        }
+      }
+    }
   }
   return { known, namespaces, files: [...new Set(files)] };
 }

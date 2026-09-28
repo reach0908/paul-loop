@@ -58,6 +58,7 @@ unpublished=0
 while IFS= read -r src; do
   [ -n "$src" ] || continue
   dir="${src#./}"
+  [ -n "$dir" ] || dir="." # a unified source-root plugin still has a real Git pathspec
   manifest="$ROOT/$dir/.claude-plugin/plugin.json"
   [ -f "$manifest" ] || fail "marketplace.json lists $src but $manifest does not exist"
   # Path as ARGV, never interpolated into the Python source — `plugins[].source` is a data field any

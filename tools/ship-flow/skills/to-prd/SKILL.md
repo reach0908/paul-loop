@@ -39,7 +39,7 @@ unresolved product decisions as proposed. Ask only for a decision needed to comp
    workflow labels belong on later slice issues, not automatically on this document.
 
 6. Confirm each requested external operation. Return the actual project identifier and document
-   reference for `ship-flow:to-issues` if published; otherwise label the PRD draft. If project creation
+   reference for `paul-loop:to-issues` if published; otherwise label the PRD draft. If project creation
    succeeds but the document fails, report partial completion and recover only the missing operation.
 
 <prd-template>

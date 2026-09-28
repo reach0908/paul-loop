@@ -150,7 +150,7 @@ hotfix's cleanup step for the full note.)
 
 ### 1. Implementation plan — `Plan` agent / `grill-with-docs` if there's a design decision
 Plan what to build and how to slice it. Resolve routine reversible choices from requirements and
-code. For a material open decision, call `ship-flow:grill-with-docs` in **caller mode** with that
+code. For a material open decision, call `paul-loop:grill-with-docs` in **caller mode** with that
 bounded question and allowed documentation. Return to this flow when it resolves; no implementation
 before the finished plan is checked. Use an available planning agent or plan here.
 
@@ -183,7 +183,7 @@ or `risky` track (`docs-only` is exempt — step 3 is already skipped for it), *
 express at least one AC with a machine-checkable contract**; zero across the whole plan means step 3
 fails closed.
 
-**Validate the finished plan before any code exists** — hand it to this plugin's `ship-flow:planner`
+**Validate the finished plan before any code exists** — hand it to this plugin's `paul-loop:planner`
 agent (namespaced, same reason as step 4). It fail-closed-checks what goes wrong *before* TDD rather
 than during it: acceptance criteria that are vibes rather than checks, criteria with no test seam, and
 **zero AC contracts on a `standard`/`risky` plan** — the one that makes step 3's `ac-verify.sh` gate
@@ -197,8 +197,8 @@ don't jump to implementation — propose decision tickets first; publish only if
 ticket per open question, dependencies first, sharpest one worked first.
 Each resolved ticket re-enters this skill from step 0 — splitting the plan doesn't bypass the gate.
 
-### 2. Implementation — invoke the `ship-flow:tdd` skill (red → green)
-Implement the plan red→green by **invoking this plugin's `ship-flow:tdd` skill by that exact
+### 2. Implementation — invoke the `paul-loop:tdd` skill (red → green)
+Implement the plan red→green by **invoking this plugin's `paul-loop:tdd` skill by that exact
 namespaced name** — not by writing tests in this session's own style and calling it TDD. Security/
 invariant paths (RLS, authorization, or whatever this repo's equivalent is) need **behavior-proof
 tests**, not just coverage. This repo's verify command is this loop's convergence criterion — run it
@@ -242,8 +242,8 @@ one-line reason.
 > would then reach the user's real accounts, not a sandboxed session.
 
 ### 4. Review and fix
-Run this plugin's review agents — **by their namespaced names, `ship-flow:code-reviewer`,
-`ship-flow:test-hunter`, `ship-flow:verifier-integrity-hunter`** — against the diff. The namespace is
+Run this plugin's review agents — **by their namespaced names, `paul-loop:code-reviewer`,
+`paul-loop:test-hunter`, `paul-loop:verifier-integrity-hunter`** — against the diff. The namespace is
 load-bearing: a bare `code-reviewer` collides with `pr-review-toolkit:code-reviewer`, a different agent
 with a different checklist that many repos also have installed, and the wrong one resolving looks
 identical from the outside. If this repo also runs a separate general-purpose PR-review tool, run
@@ -272,7 +272,7 @@ command names, branch name) stays verbatim — only your own prose is translated
 
 **This session does not run push, PR-open or tracker-comment commands itself** (ADR-0003). Read
 [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md) now and hand the completed material to
-`ship-flow:publisher`: fresh `mktemp -d`, literal files written with the Write tool for title/body/
+`paul-loop:publisher`: fresh `mktemp -d`, literal files written with the Write tool for title/body/
 comment and identifiers, authorization record, exact repository/worktree/head/base/destination,
 gate evidence, ordered commands and their dependencies. Use `--body-file`; never compose payloads
 with a Bash heredoc. The publisher executes only the supplied authorized actions and returns the
@@ -337,7 +337,7 @@ shared branch · all required verification and action approvals intact.
 - Gate red → loop back on that step autonomously. Only call a human if the agent can't resolve it itself.
 - Human-side merge reports out-of-date/CONFLICTING → in the worktree, **standalone** `git fetch origin
   <base>` → **standalone** `git rebase origin/<base>` → re-verify. Then hand the retry push to
-  `ship-flow:publisher` the same way step 5 does (ADR-0003) — still the Builder session, still holding
+  `paul-loop:publisher` the same way step 5 does (ADR-0003) — still the Builder session, still holding
   untrusted-input history from steps 0-4, so it must not run the push itself. Give it the branch name
   as a data file and the exact command: `git push --force-with-lease origin "$BRANCH"`, `$BRANCH`
   read from that file in the same Bash call (never pasted into shell source), never a Bash heredoc.
