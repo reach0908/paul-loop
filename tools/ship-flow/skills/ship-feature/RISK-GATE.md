@@ -53,8 +53,8 @@ Rule sets vary per repo, but the surfaces that normally carry a rule are:
 - row-level security, or whatever this repo's equivalent tenant-isolation schema is
 - auth and guards
 - outbound send/call (anything that reaches a real user or a third party)
-- the harness/constitution layer — `.claude/**`, this repo's CLAUDE.md, `docs/adr/**`, loop-engine
-  tooling
+- the harness/constitution layer — `.claude/**`, this repo's CLAUDE.md or AGENTS.md, `docs/adr/**`,
+  loop-engine tooling
 - CI and deploy configuration
 - workspace-root config
 - 11+ files touched

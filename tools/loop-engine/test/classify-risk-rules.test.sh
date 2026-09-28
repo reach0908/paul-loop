@@ -124,6 +124,20 @@ OUT_CLAUDE="$(node "$CR" --path "CLAUDE.md" --rules "$EXAMPLE_RULES" --no-gate 2
 echo "$OUT_CLAUDE" | grep -q "MATCHED: harness" || fail "the example template's harness rule must also cover CLAUDE.md, got: $OUT_CLAUDE"
 echo "PASS: templates/risk-rules.example.json's harness rule also covers CLAUDE.md"
 
+OUT_AGENTS="$(node "$CR" --path "AGENTS.md" --rules "$EXAMPLE_RULES" --no-gate 2>&1)"
+echo "$OUT_AGENTS" | grep -q "MATCHED: harness" || fail "the example template's harness rule must also cover AGENTS.md, got: $OUT_AGENTS"
+echo "PASS: templates/risk-rules.example.json's harness rule also covers AGENTS.md"
+
+# Claude Code (2.1.277+) and Codex load AGENTS.md as project instructions, so like CLAUDE.md it is
+# never a docs-only change, at any depth; an ordinary Markdown file still is.
+for p in CLAUDE.md AGENTS.md CLAUDE.local.md docs/AGENTS.md pkg/AGENTS.md; do
+  OUT_INSTR="$(node "$CR" --path "$p" --no-gate 2>&1)"
+  echo "$OUT_INSTR" | grep -q "docs-only-baseline" && fail "$p is an instruction file, not a docs-only change, got: $OUT_INSTR"
+done
+OUT_README="$(node "$CR" --path "README.md" --no-gate 2>&1)"
+echo "$OUT_README" | grep -q "docs-only-baseline" || fail "README.md must keep the docs-only baseline, got: $OUT_README"
+echo "PASS: instruction files (CLAUDE.md, CLAUDE.local.md, AGENTS.md) never get the docs-only baseline"
+
 node -e '
   const rules = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
   const byId = Object.fromEntries(rules.pathRules.map((r) => [r.id, r.deep ?? []]));

@@ -28,8 +28,8 @@ the authorized endpoint.
 Bundled references (read at the point each is needed): [RISK-GATE.md](RISK-GATE.md) ·
 [AC-CONTRACTS.md](AC-CONTRACTS.md) · [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md).
 
-> **Git procedure (branch model, worktrees, merge, rebase) lives in this repo's own CLAUDE.md (or
-> equivalent constitution doc), not here.** If this repo was set up via this plugin's `setup` skill,
+> **Git procedure (branch model, worktrees, merge, rebase) lives in this repo's own CLAUDE.md or
+> AGENTS.md (or equivalent constitution doc), not here.** If this repo was set up via this plugin's `setup` skill,
 > that doc came from `templates/CLAUDE.md.template` and already covers it. Duplicating it here would
 > drift the moment the branch model changes.
 

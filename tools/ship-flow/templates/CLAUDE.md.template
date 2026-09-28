@@ -1,4 +1,4 @@
-# CLAUDE.md — {{PROJECT_NAME}} development conventions
+# {{PROJECT_NAME}} development conventions
 
 Project conventions for work within this repository. Follow the host's instruction hierarchy and
 the user's current scope, allowed actions, and approval conditions. This file does not override

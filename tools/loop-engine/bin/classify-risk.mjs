@@ -73,15 +73,17 @@ function usage(msg) {
 // path rule, supplied via --rules).
 const HUMAN_ONLY_STAGES = new Set(['merge', 'deploy', 'release', 'send'])
 
-// Docs that are neither the constitution (CLAUDE.md) nor decisions (docs/adr/**) carry no runtime
+// Docs that are neither the constitution (a CLAUDE.md, CLAUDE.local.md or AGENTS.md at any depth —
+// Claude Code and Codex load them as instructions) nor decisions (docs/adr/**) carry no runtime
 // risk. Giving them a deterministic LOW baseline is what makes the abbreviated track (§3) real —
 // otherwise every doc typo would fail closed to REQUIRE and the gate would be pure noise.
 // `docs/adr/**` is excluded here because it is a structural constant, not a consumer-supplied rule —
 // a repo without ADRs still gets this exemption tightened correctly if it names a different decisions
 // directory in its own path rules (a match there simply out-prioritizes this baseline).
+const INSTRUCTION_FILES = new Set(['CLAUDE.md', 'CLAUDE.local.md', 'AGENTS.md'])
 const isDocPath = (p) =>
-  (p.startsWith('docs/') && !p.startsWith('docs/adr/')) ||
-  (p.endsWith('.md') && !p.includes('/') && p !== 'CLAUDE.md')
+  !INSTRUCTION_FILES.has(p.split('/').pop()) &&
+  ((p.startsWith('docs/') && !p.startsWith('docs/adr/')) || (p.endsWith('.md') && !p.includes('/')))
 
 const MANY_FILES = 10 // gate.mjs guidance: blast `high` ≈ >10 files
 
@@ -304,7 +306,7 @@ if (opt.paths.length > MANY_FILES) {
 const docsOnly = opt.paths.length > 0 && opt.paths.every(isDocPath)
 if (docsOnly && matched.length === 0) {
   applyDims({ blast: 'low', revers: 'full', cost: 'low' })
-  matched.push('docs-only-baseline — no runtime surface (excludes CLAUDE.md · docs/adr/**)')
+  matched.push('docs-only-baseline — no runtime surface (excludes CLAUDE.md · AGENTS.md · docs/adr/**)')
 }
 
 // App-code low-risk baseline (BAC-584 AC1, symmetric with docs-only): a changeset of ≤MANY_FILES

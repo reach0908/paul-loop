@@ -133,6 +133,9 @@ an earlier ADR without being presented as an empirically verified fix.
 
 ### Destination checklist — SKILL.md or CLAUDE.md?
 
+`CLAUDE.md` in this section means the file the project keeps its instructions in: `CLAUDE.md`, or
+`AGENTS.md` when the repository has no `CLAUDE.md` and keeps them there.
+
 Don't leave this to ad hoc judgment call by call — a candidate lands in exactly one of two homes,
 decided by what kind of knowledge it is:
 
