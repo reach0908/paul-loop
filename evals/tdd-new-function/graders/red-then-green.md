@@ -1,7 +1,5 @@
 ---
-type: llm
-focus: trace
+type: regex
+target: trace
+pattern: '^(?:(?!"name":"(?:Edit|Write|MultiEdit)","input":\{[^}]*?"file_path":"[^"]*src/slug\.js")[\s\S])*?[#ℹ] fail [1-9][\s\S]*[#ℹ] fail 0'
 ---
-
-PASS if the trace shows a test run that fails because slugify is missing or wrong before src/slug.js implements it, and a later test run in which all tests pass.
-FAIL if the implementation was written before any failing run for slugify was observed, or no passing final run appears.
