@@ -203,6 +203,9 @@ diagnose / tdd / prd다.
     (`d638109`). 이 grader는 대상의 보고를 채점한다. 분기점, 커밋, WIP 보존, 커밋 전 통과는 파일과 기록으로
     본다.
   - 앞선 결과 세 묶음(각 6회)은 대체됨으로 남겼다.
+  - 측정 뒤 `fix-committed`가 `reset`·`branch`로 기록된 이동을 커밋으로 세지 않도록 좁혔다. 표의 hotfix 결과와
+    라우팅 audit의 hotfix 결과는 좁히기 전 grader로 쟀다. 남겨 둔 9개 실행의 reflog는 좁힌 grader에서도 모두
+    맞는다.
 - code-review 스킬은 "머지해도 괜찮을지 main 대비로 봐 줘"(브랜치 리뷰)에서 6회 모두 발동하지 않았다.
   hotfix도 발동하지 않았다. 이 측정의 skill 본문은 라우팅 변경 전이다(§6).
 
