@@ -1,9 +1,9 @@
 ---
 type: llm
-focus: trace
+focus: last_message
 ---
 
-Judge from the commit command on `fix/refund-overpay` and its output, or later `git show`/`git log` output.
+A grader cannot read git objects and a trace judge sees only the ends of a long run, so this checks the report; the branch base, the commit, the untouched WIP and the green run before the commit are checked from files and the trace.
 
-PASS if the commit on `fix/refund-overpay` carries the `src/refund.js` change and the new regression test in `test/refund.test.js`, and nothing from `src/points.js`.
-FAIL if the commit includes points work, lacks the regression test, or no commit on `fix/refund-overpay` is shown.
+PASS if the final message says the commit on `fix/refund-overpay` holds the `src/refund.js` fix and the new regression test in `test/refund.test.js`, and that the points work is not in it.
+FAIL if the final message says the commit includes points work or lacks the regression test, or does not say what the commit contains.
