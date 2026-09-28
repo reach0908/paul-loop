@@ -6,7 +6,7 @@
 
 - 리서치 문서의 사실 주장은 대부분 원문과 맞는다. 틀린 곳은 두 군데(인용 하나, 사람 검토)이고, eval로 "개선/회귀를 관찰"한다는 서술은 대조군이 없는 pstack 절차에 비해 과장이다.
 - 문서 §8의 권고 7개 중 paul-loop에 없던 것은 **기능 지도(검증 스킬)** 하나다. 검증 계약에는 입증 기준과 정리 규칙이 빠져 있었다. 둘을 이번 변경에 넣었다.
-- 새 eval 사례는 Bash가 필요해 이 머신에서는 **미측정**이다. 점수는 보고하지 않는다.
+- Docker 링크를 정리해 Bash 사례를 처음 측정했다. 검증 스킬 사례는 plugin 있음 3/3, 없음 0/3이다. plugin 없이도 스킬 파일은 만들지만 기능 지도를 만들지 않았다. diagnose·review는 두 조건 모두 3/3, tdd는 2/3 대 3/3이다. 모두 조건별 3회라 효과 주장은 하지 않는다([§4](#4-bash-사례-첫-측정)).
 
 ## 1. 리서치 문서 검증
 
@@ -47,10 +47,28 @@
 - `create-verification-skill`: pstack 원본을 옮기되 세 가지를 바꿨다. 생성 위치를 host의 프로젝트 스킬 디렉터리(`.claude/skills/`, Codex `.agents/skills/`)로, 본문에 이 plugin의 권한·출력 언어 계약을, 지도 유지를 별도 `maintain-verification-skill` 대신 ship-feature 3단계로. `references/feature-map-example/`은 그대로 복사했다. MIT 고지는 `NOTICE`, 출처와 차이는 `skills-lock.json`의 `fork` 항목에 있다. maintain 스킬은 옮기지 않았다. 주기적 감사가 필요해지면 그때 추가한다.
 - ship-feature 3단계: 프로젝트에 `verify-*` 스킬이 있으면 그 Launch/Doctor/Drive/Evidence/Cleanup으로 바뀐 기능의 모든 진입점을 돌리고, 지도의 해당 기능 파일을 같은 변경에서 고친다. 없더라도 입증 기준(실제 사용자 경로, 행동과 결과 상태, 부수효과, dry-run이 실제로 건너뛰는 것의 관찰, 정리 후 증거 존재)을 적용한다.
 - 진입 라우팅(`paul-loop`)과 `ask-paul`에 한 줄씩 추가.
-- `evals/verification-skill-cli`: todo CLI fixture에서 자연어 요청으로 검증 스킬을 만들게 한다. 결과(스킬·지도 파일 생성, 기능 파일 형식)와 과정(실제 실행, 정리 후 증거 존재, 제품 코드 무수정)을 채점한다. prompt와 fixture에는 pstack 금지어가 없다.
+- `evals/verification-skill-cli`: todo CLI fixture에서 자연어 요청으로 검증 스킬을 만들게 한다. 결과(스킬·지도 파일 생성, 기능 파일 형식)와 과정(실제 실행, 정리 후 증거 존재, 제품 코드 무수정)을 채점한다. prompt와 fixture에는 pstack 금지어가 없다. 요청에 저장 위치 `skills/`를 적는다: eval host는 `.claude/`를 쓰기 금지 경로로 막는다(아래 §4).
+
+## 4. Bash 사례 첫 측정
+
+Bash sandbox가 거부하던 원인은 `~/.docker` 안의 심볼릭 링크 31개(CLI plugin 15, Model Runner dylib 16)였다. 사용자가 백업을 남기고 `cliPluginsExtraDirs`로 plugin 경로를 옮긴 뒤 dylib 링크를 사본으로 바꿨다(링크 0개, `docker compose`/`buildx` 정상). 그 뒤 plugin 0.4.0 checkout으로 측정했다. Claude Code 2.1.283, `--model claude-opus-5-5`, `--judge-model claude-sonnet-5`, 조건별 3회, `--allow-tools Bash Write Edit`.
+
+| 사례 | plugin 있음 | 없음 | 스킬 발동 | 평균 턴 | 평균 비용(정가 추정) |
+|---|---|---|---|---|---|
+| diagnose-failing-test | 3/3 | 3/3 | 0/3 | 6.0 / 5.7 | $0.25 / $0.20 |
+| review-planted-bug | 3/3 | 3/3 | 0/3 | 6.3 / 4.0 | $0.20 / $0.22 |
+| tdd-new-function | 2/3 | 3/3 | 3/3 | 19.3 / 8.0 | $0.40 / $0.24 |
+| verification-skill-cli | 3/3 | 0/3 | 3/3 | 18.0 / 12.3 | $0.66 / $0.43 |
+
+- diagnose·review는 이 난이도에서 plugin 없이도 통과하고, 해당 스킬은 발동하지 않았다. 모델 간 차이를 보려면 더 어려운 사례가 필요하다.
+- tdd는 스킬이 매번 발동해 턴이 약 2.4배다. 실패 1건은 "실패 후 통과" 판정 표가 1:2로 갈린 경우이고, 결정적 grader(테스트 먼저 작성, 파일 생성)는 3회 모두 통과했다.
+- verification-skill-cli: plugin 없는 쪽도 스킬 파일은 만들었지만(3/3) 기능 지도는 만들지 않았고(0/3), 1회는 끝까지 실행한 증거가 판정에서 떨어졌다. 기능 지도 grader는 이 스킬이 정한 형식이라 plugin 쪽이 정의상 유리하다. 두 조건 공통 목표(스킬 작성 후 실제 실행 입증)는 3/3 대 2/3이다. 통과율 3/3 대 0/3의 Fisher 정확 검정 p = 0.1.
+- 첫 실행(`2026-09-28-bash-cases`)에서 이 사례는 6회 모두 스킬 파일 grader가 실패했다. 원인은 스킬이 아니라 사례 설계였다. eval host가 `.claude/skills/`를 보호 경로로 막아 모든 실행이 임시 폴더에 만들고 옮겨 달라고 안내했다(우회하지 않았다). 또 제품 파일 수정 grader가 Edit 입력 전체를 검사해, 스킬 문서 안의 `bin/todo.js` 글자에도 걸렸다. 저장 위치를 요청에 적고 grader를 `file_path`로 고정해 다시 실행했다. 첫 실행 결과는 점수로 쓰지 않는다.
+
+원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. `2026-09-28-bash-cases/result.json` SHA-256 `cb1de9b8cf5ce0fe34a201d9e05b0112d46892e1a3e34f7c50cb606cd06ef525`(1,429초, 정가 추정 $8.76), `2026-09-28-verification-rerun/result.json` SHA-256 `1edcaae5ef2cac515ec119e31da2397c40b393e088230d6765a59f0df13ac7e3`(609초, $3.29). 구독 과금과는 다르다.
 
 ## 한계
 
-- 새 eval 사례와 Bash 사례 3개는 이 머신에서 sandbox가 거부해 미측정이다. Docker 설정 정리 뒤 측정해 별도 변경으로 기록한다.
-- 스킬 효과는 아직 측정하지 않았다. 도입 근거는 원문과 강연 자료이며, paul-loop에서의 효과 주장은 eval 결과가 나온 뒤에 한다.
-- `llm` 판정자는 대상과 같은 계열이다. 결정적 grader(파일·도구 사용)를 우선 본다.
+- 조건별 3회라 모든 차이는 우연과 구분되지 않는다. 추세를 볼 첫 점이다.
+- `llm` 판정자(Sonnet 5)는 대상(Opus 5.5)과 같은 계열이다. 결정적 grader(파일·도구 사용)를 우선 본다.
+- plugin hook은 agent sandbox 밖에서 실행되므로 점수는 참고치다.

@@ -14,8 +14,8 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
 - ship-feature step 3 uses a project `verify-*` skill when present, drives every mapped entry point
   of the changed feature and updates its map file in the same change. The proof standards apply
   either way.
-- Add the `verification-skill-cli` eval case. It is unmeasured on hosts where the Bash sandbox
-  refuses to run.
+- Add the `verification-skill-cli` eval case (3/3 with the plugin, 0/3 without, n=3) and record
+  the first measurement of the Bash-granting cases.
 
 ## paul-loop 0.3.1
 
