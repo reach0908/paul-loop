@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 // Summarize `claude plugin eval --json` results the way evals/README.md rule 9 reports them.
-// A run passes when every scored grader passes, not counting `tool_used: Skill` indicators: those are
-// reported as a fire rate, because `--ablation none` would otherwise score them. A Skill guard with
+// A run passes when every scored grader passes, not counting indicators: `tool_used: Skill` graders
+// (reported as a fire rate) and `arm: with-only` graders. `--ablation none` would otherwise score
+// them, so model/effort runs and with/without runs count the same graders. A Skill guard with
 // `arm: both` (e.g. "no delivery loop") stays scored.
 // Usage: node scripts/summarize-evals.mjs <result.json> [more.json ...]
 import { readFileSync } from 'node:fs';
 
 const isSkill = g => g.type === 'tool_used' && g.config?.tool === 'Skill' && g.config?.arm !== 'both';
+const isIndicator = g => isSkill(g) || g.config?.arm === 'with-only';
 
 // Two-sided Fisher exact test for [[a, b], [c, d]].
 export function fisher(a, b, c, d) {
@@ -22,8 +24,9 @@ export function fisher(a, b, c, d) {
 export function summarize(result) {
   return result.cases.map(c => {
     const skill = new Set((c.graders || []).filter(isSkill).map(g => g.name));
+    const indicators = new Set((c.graders || []).filter(isIndicator).map(g => g.name));
     const arms = Object.fromEntries(Object.entries(c.arms || {}).map(([arm, runs]) => {
-      const scored = run => run.graders.filter(g => g.scored !== false && !skill.has(g.name));
+      const scored = run => run.graders.filter(g => g.scored !== false && !indicators.has(g.name));
       const mean = f => runs.length ? runs.reduce((s, r) => s + f(r), 0) / runs.length : 0;
       return [arm, {
         runs: runs.length,

@@ -30,9 +30,9 @@ to this runner; `node scripts/check-evals.mjs` enforces the mechanical ones.
    one passing run per case. A failure caused by the case (a blocked path, a grader matching the
    wrong thing) is fixed and rerun, and the first run is not reported as a score.
 9. **Control arm and sample size.** Plugin effect: the default with/without arms. Model or effort
-   choice: `--ablation none` — which scores the `tool_used: Skill` graders instead of treating them
-   as indicators, so report model/effort pass rates with those graders excluded and the fire rate
-   separately. Three runs per arm find breakage; they do not support an effect claim.
+   choice: `--ablation none` — which scores the `tool_used: Skill` and `arm: with-only` graders
+   instead of treating them as indicators, so report model/effort pass rates with those graders
+   excluded and the fire rate separately (`scripts/summarize-evals.mjs` does both). Three runs per arm find breakage; they do not support an effect claim.
    Report counts, list-price cost, turns and duration, and Fisher's exact p for a with/without
    difference. Record every reported run in `docs/audits/` with the result file's SHA-256; raw
    results stay in git-ignored `.loop/plugin-eval/`.

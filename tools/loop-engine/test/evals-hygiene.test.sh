@@ -57,13 +57,14 @@ node --input-type=module -e '
   const g = (name, passed, scored = true) => ({ name, passed, scored });
   const [row] = summarize({ cases: [{ name: "c",
     graders: [{ name: "fired", type: "tool_used", config: { tool: "Skill" } }, { name: "out", type: "file_exists", config: {} },
-              { name: "guard", type: "tool_used", config: { tool: "Skill", max: 0, arm: "both" } }],
-    arms: { with: [{ graders: [g("fired", false), g("out", true), g("guard", true)], turns: 2, costUsd: 1, durationSeconds: 3 },
+              { name: "guard", type: "tool_used", config: { tool: "Skill", max: 0, arm: "both" } },
+              { name: "format", type: "regex", config: { arm: "with-only" } }],
+    arms: { with: [{ graders: [g("fired", false), g("out", true), g("guard", true), g("format", false)], turns: 2, costUsd: 1, durationSeconds: 3 },
                    { graders: [g("fired", true), g("out", false), g("guard", true)], turns: 4, costUsd: 3, durationSeconds: 5 },
                    { graders: [g("fired", false), g("out", true), g("guard", false)], turns: 6, costUsd: 5, durationSeconds: 7 }] } }] });
   const a = row.arms.with;
   if (a.passed !== 1 || a.fired !== 1 || a.turns !== 4 || a.cost !== 3) throw new Error("summarize " + JSON.stringify(a));
 ' || fail "summarize-evals: pass counting (Skill graders excluded) or Fisher p is wrong"
-echo "PASS: summarize-evals excludes Skill indicators (not arm-both guards) from pass and computes Fisher p"
+echo "PASS: summarize-evals excludes Skill and with-only indicators (not arm-both guards) from pass and computes Fisher p"
 
 echo "PASS: evals-hygiene"
