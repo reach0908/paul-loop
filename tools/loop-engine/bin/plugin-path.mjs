@@ -12,6 +12,7 @@ function pluginInventory(root, gitObjects = false) {
   const files = Object.create(null);
   function visit(dir = '') {
     for (const entry of readdirSync(join(root, dir))) {
+      if (!dir && entry === '.in_use') continue; // Host session marker (<cache>/.in_use/<pid>), not plugin content; exec stays inside bin/.
       const path = dir ? dir + '/' + entry : entry, absolute = join(root, path), info = lstatSync(absolute);
       if (info.isSymbolicLink() || (!info.isDirectory() && !info.isFile()) || (info.mode & 0o7000)) throw new Error('plugin integrity: unsafe file type/mode: ' + path);
       if (info.isDirectory()) visit(path);

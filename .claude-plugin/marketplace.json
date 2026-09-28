@@ -12,7 +12,7 @@
       "name": "paul-loop",
       "source": "./",
       "description": "Paul Loop: develop, verify, review and deliver changes through one entry point, with optional semantic memory.",
-      "version": "0.3.0"
+      "version": "0.3.1"
     }
   ]
 }

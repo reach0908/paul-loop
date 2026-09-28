@@ -187,6 +187,18 @@ test('standalone integrity implementations stay identical and direct validation 
   assert.equal(result.status, 0, result.stderr); assert.equal(result.stdout.trim(), path);
 });
 
+test('the host in-use marker at the plugin root is outside approved contents; nested markers are not', t => {
+  const f = fixture(t), path = f.plugin(), marker = join(f.root, 'executed');
+  f.write(join(path, 'bin/probe.mjs'), 'import {writeFileSync} from "node:fs";writeFileSync(' + JSON.stringify(marker) + ', "ran");');
+  approvePluginFixture(f.root, path);
+  const env = { PATH: process.env.PATH, HOME: join(f.root, 'empty'), LOOP_RUNTIME: 'claude', CLAUDE_CONFIG_DIR: join(f.root, 'claude'), LOOP_ENGINE_PATH: path };
+  const run = () => spawnSync(process.execPath, [cli, 'exec', 'bin/probe.mjs'], { cwd: f.root, encoding: 'utf8', env });
+  f.write(join(path, '.in_use/41485'), '{}'); // Claude Code writes <cache>/.in_use/<pid> while a session uses the plugin.
+  const live = run(); assert.equal(live.status, 0, live.stderr); assert.equal(existsSync(marker), true); rmSync(marker);
+  f.write(join(path, 'bin/.in_use/41485'), '{}');
+  const nested = run(); assert.equal(nested.status, 1, nested.stderr); assert.equal(existsSync(marker), false);
+});
+
 for (const route of ['environment', 'registry', 'claude']) {
   test(route + ' cannot execute missing approvals or substituted plugin contents', t => {
     for (const attack of ['missing-approval', 'malformed-approval', 'commit', 'repository', 'bytes', 'mode', 'extra', 'missing-file', 'sidecar', '__proto__', 'symlink', 'manifest-symlink', 'directory-symlink']) {

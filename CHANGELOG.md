@@ -5,6 +5,14 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.3.1
+
+- Plugin integrity checks (`scripts/project-plugin.mjs`, `tools/loop-engine/bin/plugin-path.mjs`)
+  skip the host's `.in_use/` directory at the plugin root. Claude Code writes `.in_use/<pid>` into
+  the installed cache while a session uses the plugin, so `doctor` and `exec` failed with "plugin
+  integrity mismatch" in every live session. Only the root entry is skipped; a nested `.in_use`
+  still fails, and `exec` targets remain confined to `bin/`.
+
 ## paul-loop 0.3.0
 
 - Add a `claude plugin eval` suite under `evals/` for five skills (entry routing, diagnosing-bugs,
