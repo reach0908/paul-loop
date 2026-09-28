@@ -263,7 +263,7 @@ diagnose / tdd / prd다.
 - **ship-feature·hotfix 미발동.** "PR 올릴 수 있게 준비해 줘, push는 내가 할게"에서 두 스킬 모두 2회 중
   0회 발동했다. ship-feature 설명은 "open PR까지"를 말하고, 본문과 `paul-loop` 라우터는 "로컬 수정은
   전체 루프를 시작하지 않는다"고 말한다. 사용자 결정: PR-ready 요청에서도 발동하도록 별도 PR로 고친다.
-  그 변경(`feature/pr-ready-routing`) 뒤 ship-feature 발동은 Opus 0/3 → 3/3이었다.
+  그 변경(`feature/pr-ready-routing`) 뒤 Opus 발동은 ship-feature 0/3 → 3/3, hotfix 0/3 → 3/3이었다.
 - **retrospect.** 영수증이 없으면 교훈이 미검증으로 기록되는데 `--fix` 내용이 빠지고, 기본 `recall`은
   미검증 교훈을 건너뛴다. 대상이 "다음에 참고로 뜬다"고 안내한 것은 사실과 다르다(판정자도 놓쳤다).
   사용자 결정: 이 작업 뒤 별도 PR로 고친다(`fix/retrospect-unverified`).
