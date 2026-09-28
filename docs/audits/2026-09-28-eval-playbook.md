@@ -213,7 +213,9 @@ diagnose / tdd / prd다.
 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. 비용은 정가 추정이며 구독 과금과 다르다.
 
 [2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 70개의 경로,
-모델, 판정자, 사례, 비용, SHA-256, 쓰임새를 적었다. 정가 추정 비용은 모두 $76.72다.
+모델, 판정자, 사례, 비용, SHA-256, 쓰임새와 채점한 사례 버전(`casesCommit`)을 적었다. 사례 버전은 세 가지다.
+§4의 첫 실행은 `61fb2ef`, tdd·retrospect·diagnose 재실행은 `d74913a`, 나머지는 `fe53c65`로 채점했다.
+Sonnet max diagnose 재실행만 `a6af62d`다. 정가 추정 비용은 모두 $76.72다.
 
 | 묶음 | 파일 | 비용 | 쓰임 |
 |---|---|---|---|

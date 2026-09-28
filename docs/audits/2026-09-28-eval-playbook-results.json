@@ -19,6 +19,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "d74913a",
       "costUsd": 1.81,
       "durationSeconds": 54,
       "sha256": "caa9c00668cc6192384385b4a458eaa4d37327b93265e544c424ca0eac725b5d"
@@ -32,6 +33,7 @@
       "cases": [
         "handoff-mid-task"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.28,
       "durationSeconds": 76,
       "sha256": "cb10ae4dc851aacfec8a90784a3e7a4bd952c5317a6fe0b759d644844be03737"
@@ -45,6 +47,7 @@
       "cases": [
         "retrospect-hunch-unverified"
       ],
+      "casesCommit": "d74913a",
       "costUsd": 2.87,
       "durationSeconds": 119,
       "sha256": "0e1abd1816b05b5666f8ade106fedc1042418bceac3fea2ba3edf30205ccc978"
@@ -58,6 +61,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "d74913a",
       "costUsd": 1.32,
       "durationSeconds": 76,
       "sha256": "dbcccc82fd1f831bb9ec30212d8e35296abd559444bb1e7df520f49628db9dc8"
@@ -71,6 +75,7 @@
       "cases": [
         "diagnose-failing-test"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 1.74,
       "durationSeconds": 40,
       "sha256": "43ff53814c3f920f61af1f62c69af050cf43a1c20bab59daf55af0f003e84ef4"
@@ -84,6 +89,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.26,
       "durationSeconds": 100,
       "sha256": "1ca76e61dfcd64cd62458d4322d97583ddef2f9adb9c75ef4663e9f5130eca10"
@@ -97,6 +103,7 @@
       "cases": [
         "grilling-one-question"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 0.78,
       "durationSeconds": 37,
       "sha256": "5025697f917a4c6bd743660d31c085003ee7ea61028d259d0f3a50d249e820c9"
@@ -110,6 +117,7 @@
       "cases": [
         "handoff-mid-task"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 1.28,
       "durationSeconds": 77,
       "sha256": "0f7c905e3b6b5673af47264574a527b430c9003976dfd17a34235205378e612d"
@@ -123,6 +131,7 @@
       "cases": [
         "issues-from-prd"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.03,
       "durationSeconds": 124,
       "sha256": "def0f73d3a5eeb40057f226a2c0eed46f0b1805fbc1a90bab81ef1b1016fe332"
@@ -136,6 +145,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.09,
       "durationSeconds": 143,
       "sha256": "9e8f480dbccc1e685e565f7e6f45569973f9625e10bcc868ce43135b2f99fdb8"
@@ -149,6 +159,7 @@
       "cases": [
         "retrospect-hunch-unverified"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.31,
       "durationSeconds": 121,
       "sha256": "76bbcaae142c4815ba4097000f25aaa4f4e862417c8e91e741b8af190345bc4d"
@@ -162,6 +173,7 @@
       "cases": [
         "setup-draft-config"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 1.5,
       "durationSeconds": 71,
       "sha256": "94c70e34721dfd9f55f684adfca0a579173aaf70da85ea65a0c5f14c738e86f4"
@@ -175,6 +187,7 @@
       "cases": [
         "ship-feature-pr-ready"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 1.5,
       "durationSeconds": 97,
       "sha256": "3b54bff1671b8138fc3bf4f8240bf51caca00860401c7db14a3f07b617851a14"
@@ -188,6 +201,7 @@
       "cases": [
         "small-fix"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 0.64,
       "durationSeconds": 19,
       "sha256": "14b0f39068980cbec47a7e8e28f6a3b133c3bc5e58acab677f078373a030ea2b"
@@ -201,6 +215,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.37,
       "durationSeconds": 83,
       "sha256": "2abcfdc35e888c81b31a1e90826158fd8c0791c361854ff67eb6a2eaff0b9283"
@@ -214,6 +229,7 @@
       "cases": [
         "write-skill-release"
       ],
+      "casesCommit": "61fb2ef",
       "costUsd": 2.52,
       "durationSeconds": 110,
       "sha256": "1c00905385c91fee915f25d2e91f3e6be81bf8a7238dc32b7eeaa955d8dfd57b"
@@ -227,6 +243,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.04,
       "durationSeconds": 34,
       "sha256": "0780bc0b7b6dd5ceeb216c976cee87056505a1be16c7d89adbfbcbf516eef459"
@@ -240,6 +257,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.44,
       "durationSeconds": 119,
       "sha256": "3976a5d20274345825c4b95b408481168eab5cbd798ea9e0ad8dde4f45d302a6"
@@ -253,6 +271,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.89,
       "durationSeconds": 54,
       "sha256": "2d18f18b600231fc7ce2353a03eb6e552ef40ecccd494650799ba9696f4618b9"
@@ -266,6 +285,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.96,
       "durationSeconds": 21,
       "sha256": "ee7430b6195cadcbf0fda9226b9d0983cd261d67f6051ee427c285bfa302e05a"
@@ -279,6 +299,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.93,
       "durationSeconds": 60,
       "sha256": "523968c0a2365ed67d4868cbdceadbc1ee4b45fb083db284fa6f9f67b847b12b"
@@ -292,6 +313,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.71,
       "durationSeconds": 34,
       "sha256": "e73286cbca8988f918da67ddb2afe8423ec9f098ae6b1e8373cc203b981e9b0f"
@@ -305,6 +327,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 3.03,
       "durationSeconds": 299,
       "sha256": "00e9a518449a34309ac45f9f2a22f97c2f4cd0e89c236aba977ea6464b238695"
@@ -318,6 +341,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 4.06,
       "durationSeconds": 601,
       "sha256": "2b5239de78bff46c485a25d7eb32fa5ba6bf113bdd34c1829bd3ed122ae340ec"
@@ -331,6 +355,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 3.05,
       "durationSeconds": 277,
       "sha256": "d0599b040cd2beff32be0e861ce4ed1e451f3136ab01b2b1b0234cb7499b25b8"
@@ -344,6 +369,7 @@
       "cases": [
         "diagnose-failing-test"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.3,
       "durationSeconds": 20,
       "sha256": "76fbfb62c09ddc6c7b011c4193be2a1df7b82e8cffd7c731bcd6ec8827e62ae2"
@@ -357,6 +383,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.42,
       "durationSeconds": 27,
       "sha256": "d6b681892956fbe797f51796672ae00dffe442b345d5b0a76aeaaaec1ba3a1e1"
@@ -370,6 +397,7 @@
       "cases": [
         "grilling-one-question"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.5,
       "durationSeconds": 56,
       "sha256": "56c0797d2f5e906b1953d643d8b01326b099f54a22685735a45f4f6ad9ae8056"
@@ -383,6 +411,7 @@
       "cases": [
         "handoff-mid-task"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.87,
       "durationSeconds": 70,
       "sha256": "d5c8022be7d22e959dffbc7ec34c76a74814d33a207bd42cb384c59d5d7210f1"
@@ -396,6 +425,7 @@
       "cases": [
         "issues-from-prd"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.11,
       "durationSeconds": 121,
       "sha256": "b9d3fb9fbfa9d1bfd9e74593d8c22b52a46372f723caa648d85cca600b21f73a"
@@ -409,6 +439,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.14,
       "durationSeconds": 162,
       "sha256": "96267223c2792e2c121f805594f9bd3e79b70e5bbc73ac2506d0a2e070f739e5"
@@ -422,6 +453,7 @@
       "cases": [
         "retrospect-hunch-unverified"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.77,
       "durationSeconds": 310,
       "sha256": "402d9982430857d542ff9ec04ac2d7b8a68e1aa52b18d6f1a10df4cd92aa6fda"
@@ -435,6 +467,7 @@
       "cases": [
         "setup-draft-config"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.61,
       "durationSeconds": 62,
       "sha256": "2648724c519c2e3e5eeafde3b68e1d89b8b77242a80d108b9ce103afb72916b6"
@@ -448,6 +481,7 @@
       "cases": [
         "ship-feature-pr-ready"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.79,
       "durationSeconds": 101,
       "sha256": "ece2f6385191b36c8c07c8b82d1dfb27fad686e2d626b5beab41a91af9ccbf2e"
@@ -461,6 +495,7 @@
       "cases": [
         "small-fix"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.27,
       "durationSeconds": 8,
       "sha256": "4480c1423228bcd367dbab71ec80dcadc8bbaf771298c85306de16d11a3e59ad"
@@ -474,6 +509,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.94,
       "durationSeconds": 76,
       "sha256": "36b7aeafa5fe854c6155f7ef5b726835853ee6130ca4af6a20df6ba914de6a7b"
@@ -487,6 +523,7 @@
       "cases": [
         "write-skill-release"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.42,
       "durationSeconds": 87,
       "sha256": "39a8489860536b3d1f173982e117b756816baa0517f198d7b9b60d13c0bd06ce"
@@ -500,6 +537,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.14,
       "durationSeconds": 76,
       "sha256": "5cce14a5c75717f77ea40af61dca065e14eccae764e9768023a9bccdf5eeb0d9"
@@ -513,6 +551,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.83,
       "durationSeconds": 70,
       "sha256": "9dfce02702f3acf35b021eb03deec3e7d517dbb89b11be895975fa44db2ed9ad"
@@ -526,6 +565,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0.76,
       "durationSeconds": 67,
       "sha256": "cb2981e769214a655e9110a713eda1efc304e6d9f16d56479aa82e1b7ff09148"
@@ -539,6 +579,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "a6af62d",
       "costUsd": 1.13,
       "durationSeconds": 109,
       "sha256": "c2d2e2cbcfb7688e1d2ac5efb356ede7c9c7bbc8c3e915dbe890a9f7afc1da90"
@@ -552,6 +593,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 2.79,
       "durationSeconds": 423,
       "sha256": "6d64e6f84f7a0d52dbad47e979215ab92340cfff3e18bf9448c752dfbd2da776"
@@ -565,6 +607,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.33,
       "durationSeconds": 136,
       "sha256": "9edba11f3f52813cbbbad679e4418c8ec6ae021692051951348bbd9938e57705"
@@ -578,6 +621,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.28,
       "durationSeconds": 26,
       "sha256": "4632e6bfcbfcba36dcd1b88edbf89727b4b75e0d15929882118a1f25ed4acb7e"
@@ -591,6 +635,7 @@
       "cases": [
         "handoff-mid-task"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.23,
       "durationSeconds": 38,
       "sha256": "9a03d4a195f2de1fcba8d2542afa91beb2e4342fee2aa63eecb439df6008bd7f"
@@ -604,6 +649,7 @@
       "cases": [
         "hotfix-from-wip-branch"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.33,
       "durationSeconds": 40,
       "sha256": "b5f3a70f67d494e48e15099cde32967dfbb0c9dc71fd496b82ab0b06a11fc83f"
@@ -617,6 +663,7 @@
       "cases": [
         "hotfix-from-wip-branch"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.33,
       "durationSeconds": 53,
       "sha256": "ded045de9c2147381aa1b14655a45063ee17b238a17d5a3de6e9f19e2b2e5ce0"
@@ -630,6 +677,7 @@
       "cases": [
         "issues-from-prd"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.38,
       "durationSeconds": 60,
       "sha256": "2847147e6c123344cfeae62f3bb20881f20080db286170b080c0425e648682fd"
@@ -643,6 +691,7 @@
       "cases": [
         "merge-rename-vs-param"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.54,
       "durationSeconds": 74,
       "sha256": "d05f1ef39f94e9bbe009e934aa88f861127f5ab7dae62dcf6dce19c0eee882be"
@@ -656,6 +705,7 @@
       "cases": [
         "merge-rename-vs-param"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.44,
       "durationSeconds": 54,
       "sha256": "d1f1d101f0abc0079da7c442133cd8f81a0fc6872215d207cfb47ea0ab14b35d"
@@ -669,6 +719,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.39,
       "durationSeconds": 77,
       "sha256": "d14ed6fc10b836e425cfe56bf70ff24868fec8820bc87a06fe1b04f1e0e65159"
@@ -682,6 +733,7 @@
       "cases": [
         "retrospect-hunch-unverified"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.53,
       "durationSeconds": 52,
       "sha256": "f9713e2cc03d73b9dd0267230c4682d7085aa7e85d300866ba075cd69856f6e3"
@@ -695,6 +747,7 @@
       "cases": [
         "review-subtle-bug"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.2,
       "durationSeconds": 35,
       "sha256": "ede39b4e9f70c365582fc5c77f8ed079b2b8ba46596b32b5eaa57c0ed0476541"
@@ -708,6 +761,7 @@
       "cases": [
         "setup-draft-config"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.39,
       "durationSeconds": 50,
       "sha256": "889e41dad6fe779b0c8596fd46365a39b5c6fb1dbae068dc0d2914a6ea129054"
@@ -721,6 +775,7 @@
       "cases": [
         "ship-feature-pr-ready"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.26,
       "durationSeconds": 46,
       "sha256": "25bcd057548d8adf99a4e0d3f51103f5b28dcb8f1d3ff634075183e99ca00a65"
@@ -732,6 +787,7 @@
       "model": "claude-opus-5-5",
       "judge": "claude-sonnet-5",
       "cases": [],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0,
       "durationSeconds": 0,
       "sha256": "d60c3aef7fdb2243704b94b4a494c0f2b2428fb14fddd2eee517040e0746456a"
@@ -745,6 +801,7 @@
       "cases": [
         "handoff-mid-task"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.23,
       "durationSeconds": 39,
       "sha256": "4aa400badb0d252ff2cc151526bbadb5dd55e3c3f5ca15717f11901b47a2115a"
@@ -758,6 +815,7 @@
       "cases": [
         "retrospect-hunch-unverified"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.6,
       "durationSeconds": 70,
       "sha256": "eb3c97a4afef621bb5f1a1c8f5512b01fae5f2be3f199e6e6074808b56357816"
@@ -771,6 +829,7 @@
       "cases": [
         "setup-draft-config"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.41,
       "durationSeconds": 56,
       "sha256": "9da60100c2f6fe98748d7c341690532a9420b5bcb4b5b9f3581ddff3e0dc8a4b"
@@ -784,6 +843,7 @@
       "cases": [
         "ship-feature-pr-ready"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.28,
       "durationSeconds": 53,
       "sha256": "313bf68a6cadbb5d21a0a80522d9ef7547b63e0f1af49beff6eebe4fc776e978"
@@ -797,6 +857,7 @@
       "cases": [
         "write-skill-release"
       ],
+      "casesCommit": "uncommitted, before 61fb2ef",
       "costUsd": 0.41,
       "durationSeconds": 60,
       "sha256": "9b28d52f4af965579cd0b102ce183ccbb69c80fed951e3f4c5f85cf17c3f2233"
@@ -810,6 +871,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "cb90761c0d9992a57b74cfd8f892dac71c4d8636381aa781b4ace22efd537e38"
@@ -823,6 +885,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 1.26,
       "durationSeconds": 144,
       "sha256": "f70d5d58af1f29ab468433348e1fa8a5ca000cd387fe05d674ac947b54e9cce7"
@@ -836,6 +899,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "f38742cc46693e5cb0d573718049dd72c07458a15888518bc562c452119ee73c"
@@ -849,6 +913,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "7c2efde52179b9f039c66de787d2649dcdbbd0ad82de787625a67aa10996c945"
@@ -862,6 +927,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 1,
       "sha256": "e959fe4c80009e2d0b24dbe39b86c560cfe31ac35fd9df13ac28a84909bc875c"
@@ -875,6 +941,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 4.7,
       "durationSeconds": 532,
       "sha256": "fa5ca0da30d15534bb5e1ff04941eaf5495620baf1360a293d86c7ecb2b41982"
@@ -888,6 +955,7 @@
       "cases": [
         "diagnose-misleading-symptom"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "c73c6b387b4f792922e4b521eb0b6049a0abe437e3ecc34e07dc2a2149b0ddc2"
@@ -901,6 +969,7 @@
       "cases": [
         "prd-from-meeting-notes"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "2dc43989c262b2987a7db5d4bda519746e7af0d8a9eb90bb5de862e4ab51798c"
@@ -914,6 +983,7 @@
       "cases": [
         "tdd-new-function"
       ],
+      "casesCommit": "fe53c65",
       "costUsd": 0,
       "durationSeconds": 2,
       "sha256": "ce668564e8dd0cdca28029a91c3ff2be691658dc8ba3f2e2ced52ea6020c6101"
