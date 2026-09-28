@@ -1,6 +1,6 @@
 ---
 name: ship-feature
-description: End-to-end feature delivery when the user asks to take a feature, bug or tracked issue from plan to an open PR, or to ship/deliver/land a feature. Isolate, plan, build, verify, review and open the PR; stop for human merge. Research, local edits and routine Git synchronization use their own bounded procedure. Post-merge improvements require authorized scope.
+description: End-to-end feature delivery when the user asks to take a feature, bug or tracked issue from plan to an open PR, to make it PR-ready while they keep push and PR creation, or to ship/deliver/land a feature. Isolate, plan, build, verify, review and open the PR; stop for human merge. Research, local edits and routine Git synchronization use their own bounded procedure. Post-merge improvements require authorized scope.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
@@ -19,10 +19,11 @@ between genuine approval boundaries. Each
 step's *content* belongs to the skill/agent it delegates to — this skill fixes only the **order, the
 gates, and where a human steps in**.
 
-Use this sequence for delegated delivery through PR creation. Questions, research, a bounded local
-fix, or routine commit/push/main synchronization do not need this sequence or its publisher. Use the
-host's repository procedure and the checks required by that change. Explicit invocation still ends
-at the user's requested artifact or verified local patch when that is the authorized endpoint.
+Use this sequence for delegated delivery through PR creation or to a PR-ready branch. Questions,
+research, a bounded local fix, or routine commit/push/main synchronization do not need this sequence
+or its publisher. Use the host's repository procedure and the checks required by that change.
+Explicit invocation still ends at the user's requested artifact or verified local patch when that is
+the authorized endpoint.
 
 Bundled references (read at the point each is needed): [RISK-GATE.md](RISK-GATE.md) ·
 [AC-CONTRACTS.md](AC-CONTRACTS.md) · [PUBLISH-HANDOFF.md](PUBLISH-HANDOFF.md).
@@ -66,10 +67,12 @@ error is not a code failure or a valid gate verdict.
 ## Execution mode — autonomous by default
 
 Record the requested endpoint and allowed actions using [AUTHORIZATION.md](../AUTHORIZATION.md).
-For delivery through PR creation, continue through steps 0–5. Read/draft requests end at their
-artifact; local implementation requests end at the verified patch. Stop for the human merge
-decision, a REQUIRE action lacking matching approval, or a blocking decision/environment problem
-that cannot be resolved within scope. Release/deploy is a separate request.
+For delivery through PR creation, continue through steps 0–5. When the user keeps push and PR
+creation, run steps 0–4 and end with the verified branch and the PR title and body; skip the
+publisher. Read/draft requests end at their artifact; local implementation requests end at the
+verified patch. Stop for the human merge decision, a REQUIRE action lacking matching approval, or a
+blocking decision/environment problem that cannot be resolved within scope. Release/deploy is a
+separate request.
 
 Reuse implementation approval across source, plan and test edits. Refresh affected evidence;
 artifact binding applies to reviewed merge/publish/deploy/send actions, not every reversible edit.
