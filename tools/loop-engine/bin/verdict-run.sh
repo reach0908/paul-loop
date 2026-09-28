@@ -111,9 +111,13 @@ write_state() {
   # cwd를 payload에 싣는 이유(BAC-778): --auto-run-id는 세션 원장이 있는 루트로 이벤트를 보낼 수
   # 있다(워크트리에서 돈 검증 → 메인 워크트리 세션 원장). 그러면 이벤트만 보고는 "어느 워크트리의
   # 검증이었나"를 알 수 없어진다 — 귀속을 고치면서 출처를 잃지 않도록 실행 위치를 함께 남긴다.
+  # digest = 검증 시작 시점 작업 트리 digest(START_CONTEXT). 같은 명령·같은 digest의 재실행은 사이
+  # 수정이 없었다는 뜻 — run-metrics의 no_change_reruns가 이것으로 접는다. 계산 불가면 null.
   if [ -z "$_LEDGER_NESTED" ]; then
-    printf '{"verdict":"%s","exit":%s,"cmd":"%s","log":"%s","cwd":"%s"}' \
+    _d="$(printf '%s' "$START_CONTEXT" | sed -n 's/.*"digest":"\([0-9a-f]*\)".*/\1/p')"
+    printf '{"verdict":"%s","exit":%s,"cmd":"%s","log":"%s","cwd":"%s","digest":%s}' \
       "$_v" "$_c" "$(json_esc "$CMD_STR")" "$(json_esc "$LOG_ABS")" "$(json_esc "$(pwd)")" \
+      "$([ -n "$_d" ] && printf '"%s"' "$_d" || printf null)" \
       | node "$HERE/ledger-append.mjs" \
           --type "$([ "$_v" = "PASS" ] && echo verdict.passed || echo verdict.failed)" \
           --auto-run-id >/dev/null 2>&1 || true

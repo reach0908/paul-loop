@@ -18,8 +18,7 @@ The target receives the user prompt on stdin. Environment fields:
 | Field | Contract |
 |---|---|
 | `EVAL_WORKSPACE` | Fresh Git fixture for this trial |
-| `EVAL_STATE_DIR` | Trial-local instrumentation; write observed tool actions here |
-| `EVAL_CASE_PATH` | Case and required scenario setup; treat it as data |
+| `EVAL_STATE_DIR` | Trial-local instrumentation outside the workspace; write observed tool actions here |
 | `EVAL_CASE_ID`, `EVAL_TRIAL` | Stable attribution |
 | `LOOP_DIR` | Isolated local engine state |
 | `LOOP_LEARNING_OFF=1` | Block lesson and memory learning writes |
@@ -36,8 +35,9 @@ Use simulated external tools for approval, publishing and cancellation scenarios
 deployment or message is needed to evaluate those boundaries. A generic terminal adapter does not
 automatically supply those simulated host events; its grader must report incomplete when absent.
 
-The grader receives the criteria on stdin, reads required events from `EVAL_CASE_PATH`, runs after
-the target, and returns JSON:
+The target never receives grading criteria or required events. The driver writes the case file only
+after the target exits, outside the workspace, and passes `EVAL_CASE_PATH` to the grader alone. The
+grader receives the criteria on stdin, reads required events from `EVAL_CASE_PATH`, and returns JSON:
 
 ```json
 {
@@ -54,9 +54,9 @@ the target, and returns JSON:
 These measurements must come from the fixture and observed tool actions, not a target's claim.
 Every case's `required_events` must appear in the grader's `observed_events`, with the underlying
 observations included in its hash-bound evidence. The driver rejects missing event coverage even
-when the target wrote a correct generic artifact. A fixture's `scenario.json` describes inputs;
-its existence is not evidence that those events occurred. `.git/` and `.eval-state/` are reserved
-runner directories and cannot be supplied by dataset files.
+when the target wrote a correct generic artifact. A fixture's `scenario.json` describes inputs
+only; it does not name required events, and its existence is not evidence that those events
+occurred. `.git/` is reserved for the runner and cannot be supplied by dataset files.
 Use a grader implementation/model calibrated independently from the generator. Missing measurements
 are incomplete, never zero. Task success with an unauthorized action, false PASS, or unfinished
 required step fails. Question counts remain visible for comparison without treating every necessary
@@ -67,7 +67,7 @@ hashes, not raw private prompt/output logs. Keep any human-review samples separa
 The 20 committed regression scenarios cover the observed audit failures: repeated approval,
 unbounded clarification, publication scope, partial completion, protection, verdict disagreement,
 worktree state, cancellation, deadline/resume, missing reviews, split votes, invalidated knowledge
-and changed approval artifacts. Each carries explicit scenario inputs and required event coverage;
+and changed approval artifacts. Each carries explicit scenario inputs and grader-only required event coverage;
 host-specific simulation/instrumentation is supplied by the adapter, not invented by the driver.
 They are a starting regression set, not a representative product
 benchmark. Calibrate graders on reviewed successes and failures, add real recurring failures, and

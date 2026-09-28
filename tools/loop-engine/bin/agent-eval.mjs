@@ -40,32 +40,32 @@ try {
   try {
     for (const c of cases) for (let trial = 1; trial <= opt.k; trial++) {
       if (cancelled || Date.now() >= deadline) { results.push({ case_id: c.id, trial, status: 'not_run', reason: cancelled ? 'cancelled' : 'budget_exhausted' }); continue }
-      const workspace = mkdtempSync(join(base, 'trial-')), stateDir = join(workspace, '.eval-state')
-      mkdirSync(stateDir)
+      // Runner state and the case file live beside the workspace, not in it: the target sees only
+      // task inputs, never grading criteria or required events.
+      const trialDir = mkdtempSync(join(base, 'trial-')), workspace = join(trialDir, 'workspace'), stateDir = join(trialDir, 'state')
+      mkdirSync(workspace); mkdirSync(stateDir)
       for (const [path, value] of Object.entries(c.files || {})) {
         if (typeof value !== 'string') throw new Error('fixture contents must be strings')
         const abs = canonicalPath(workspace, path), rel = relative(workspace, abs)
-        if (['.git', '.eval-state'].some(p => rel === p || rel.startsWith(p + '/'))) throw new Error('fixture may not override runner Git/state directories')
+        if (rel === '.git' || rel.startsWith('.git/')) throw new Error('fixture may not override the runner Git directory')
         mkdirSync(dirname(abs), { recursive: true }); writeFileSync(abs, value)
       }
-      const ignore = join(workspace, '.gitignore')
-      writeFileSync(ignore, (existsSync(ignore) ? readFileSync(ignore, 'utf8') : '') + '\n.eval-state/\n')
       const git = (...values) => execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'core.excludesFile=/dev/null', ...values], { cwd: workspace, env: fixtureEnv, stdio: 'pipe' })
       git('init', '--template=', '-q', '-b', 'main')
       if (realpathSync(git('rev-parse', '--show-toplevel').toString().trim()) !== realpathSync(workspace)) throw new Error('fixture Git root escaped its workspace')
       git('add', '-A')
-      git('-c', 'user.name=eval-fixture', '-c', 'user.email=eval@localhost', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'frozen fixture')
-      const casePath = join(stateDir, 'case.json'); writeFileSync(casePath, JSON.stringify(c))
-      const env = { ...fixtureEnv, EVAL_WORKSPACE: workspace, EVAL_STATE_DIR: stateDir, EVAL_CASE_PATH: casePath, EVAL_CASE_ID: String(c.id), EVAL_TRIAL: String(trial),
+      git('-c', 'user.name=eval-fixture', '-c', 'user.email=eval@localhost', '-c', 'commit.gpgsign=false', 'commit', '--allow-empty', '-qm', 'frozen fixture')
+      const env = { ...fixtureEnv, EVAL_WORKSPACE: workspace, EVAL_STATE_DIR: stateDir, EVAL_CASE_ID: String(c.id), EVAL_TRIAL: String(trial),
         LOOP_DIR: join(stateDir, 'loop'), LOOP_LEARNING_OFF: '1', LOOP_MEMORY_RECALL_ONLY: '1', LOOP_MEMORY_OFF: opt.memory === 'off' ? '1' : '0' }
       const target = await runEvalProcess(opt.target, { cwd: workspace, env, input: c.prompt, deadline: Math.min(deadline, Date.now() + opt.timeoutMs) })
+      const casePath = join(trialDir, 'case.json'); writeFileSync(casePath, JSON.stringify(c))
       cancelled ||= target.fault === 'cancelled'
       // Save process facts, not target stdout or self-declared success. Adapter instrumentation
       // may write its action trace in EVAL_STATE_DIR for the independent grader to inspect.
       writeFileSync(join(stateDir, 'target.json'), JSON.stringify({ exit: target.exit, fault: target.fault, duration_ms: target.duration_ms }))
       let grade, grader
       if (!target.fault && target.exit === 0) {
-        grader = await runEvalProcess(opt.grader, { cwd: workspace, env, input: JSON.stringify(c.criteria), deadline: Math.min(deadline, Date.now() + opt.timeoutMs) })
+        grader = await runEvalProcess(opt.grader, { cwd: workspace, env: { ...env, EVAL_CASE_PATH: casePath }, input: JSON.stringify(c.criteria), deadline: Math.min(deadline, Date.now() + opt.timeoutMs) })
         cancelled ||= grader.fault === 'cancelled'
         if (!grader.fault && grader.exit === 0) try { grade = JSON.parse(grader.output) } catch { /* incomplete */ }
       }

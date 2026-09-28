@@ -127,4 +127,31 @@ node -e '
 ' "$JSON" "$SID" || fail "the repaired ledger must make Q1/first_pass computable (the whole point)"
 echo "PASS: Q1/first_pass are computable from the session ledger (was INSUFFICIENT_DATA for every run)"
 
+# ── 7) verdict 이벤트가 시작 digest를 싣는다 — 같은 명령을 수정 없이 다시 돌리면 같은 digest ─────
+RR="$DIR/rerun"
+mkdir -p "$RR/.loop/runs"
+git -C "$RR" init -q -b main
+printf '.loop/\n' > "$RR/.gitignore"
+echo x > "$RR/f.txt"
+git -C "$RR" add .
+git -C "$RR" -c user.email=t@t -c user.name=t commit -qm init
+printf '{"id":"x","type":"run.started","ts":"2026-09-28T00:00:00.000Z","aggregate_id":"sess-rerun","payload":{},"version":1}\n' \
+  > "$RR/.loop/runs/sess-rerun.jsonl"
+vrun() { ( cd "$RR" && CLAUDE_CODE_SESSION_ID="sess-rerun" VERDICT_RUN_LEDGER_NESTED= "$VRUN" -- true >/dev/null 2>&1 ) || fail "verdict-run -- true must exit 0"; }
+vrun; vrun; echo y > "$RR/f.txt"; vrun
+node -e '
+  const fs = require("node:fs");
+  const ds = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map(JSON.parse)
+    .filter((e) => e.type === "verdict.passed").map((e) => e.payload.digest);
+  if (ds.length !== 3 || !ds.every((d) => /^[0-9a-f]{64}$/.test(d))) throw new Error("each verdict must carry a sha256 start digest, got " + JSON.stringify(ds));
+  if (ds[0] !== ds[1]) throw new Error("an unchanged rerun must repeat the digest");
+  if (ds[1] === ds[2]) throw new Error("an edit between runs must change the digest");
+' "$RR/.loop/runs/sess-rerun.jsonl" || fail "verdict ledger events must carry the verify-start digest"
+JSON="$(node "$ROOT/tools/loop-engine/bin/run-metrics.mjs" --runs-dir "$RR/.loop/runs" --json)" || fail "run-metrics on the rerun ledger must exit 0"
+node -e '
+  const o = JSON.parse(process.argv[1]).overall.no_change_reruns;
+  if (!o || o.count !== 1 || o.comparable !== 2) throw new Error("expected 1 no-change rerun of 2 comparable, got " + JSON.stringify(o));
+' "$JSON" || fail "run-metrics must count the unchanged rerun from real verdict-run events"
+echo "PASS: verdict events carry the start digest; run-metrics counts the unchanged rerun, not the post-edit one"
+
 exit 0
