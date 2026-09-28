@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The repo's eval suite passes scripts/check-evals.mjs, and the checker fails each rule it exists
 # for: a leaking request, an llm-only case, an unanchored edit grader, a .claude/ target, a grader
-# frontmatter the loader would cut early, and a missing oracle-peek guard. Rules: evals/README.md.
+# frontmatter the loader would cut early or reject, and a missing oracle-peek guard. Rules: evals/README.md.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../../.." && pwd)"
@@ -43,6 +43,9 @@ expect_fail "a grader aimed at .claude/" "targets .claude/"
 
 good "$T/c"; printf -- "---\ntype: regex\ntarget: trace\npattern: '^---'\n---\n" > "$T/c/graders/d.md"
 expect_fail "a grader pattern containing ---" 'frontmatter contains "---"'
+
+good "$T/c"; printf -- "---\ntype: file_exists\npath: 'README.md'\narm: with\n---\n" > "$T/c/graders/a.md"
+expect_fail "an arm value the loader rejects" "arm must be both or with-only"
 
 good "$T/c"; rm "$T/c/graders/no-oracle-peek.md"
 expect_fail "a case without the peek guard" "no-oracle-peek grader missing"

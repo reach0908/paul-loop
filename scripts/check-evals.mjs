@@ -46,6 +46,8 @@ export function checkCase(dir) {
     const t = type(g);
     // The eval loader ends frontmatter at the first `---` anywhere, and one unloadable file fails the whole suite.
     if (g.head.includes('---')) problems.push(`${g.name}: frontmatter contains "---", which ends it early for the eval loader (write -{3})`);
+    const arm = field(g.head, 'arm');
+    if (arm && !['both', 'with-only'].includes(arm)) problems.push(`${g.name}: arm must be both or with-only, which the eval loader accepts`);
     if (t === 'file_exists' && /^['"]?\.claude\//.test(field(g.head, 'path') || '')) problems.push(`${g.name}: targets .claude/, which the eval host blocks writes to`);
     // Edit/Write inputs carry file contents: an unanchored path pattern also matches a document
     // that merely mentions the file.
