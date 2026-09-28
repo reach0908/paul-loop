@@ -80,6 +80,7 @@ Claude Code 2.1.283, `claude-opus-5-5`, 판정자 `claude-sonnet-5`, plugin 있�
 
 ## 한계
 
-- 이 저장소의 macOS eval sandbox에서는 대상이 git을 실행할 수 없다. 이 사례는 git이 필요 없다.
+- macOS eval sandbox에서는 대상이 `git`을 그냥 실행하지 못한다(`/usr/bin/git` shim 실패). 이 사례는 git이
+  필요 없어 fixture에 우회 함수를 넣지 않았다.
 - 내용이 있는 CLAUDE.md 금지 grader는 Write 도구만 본다. Bash 리다이렉트로 만든 CLAUDE.md는 잡지 않는다.
 - CLAUDE.md가 있는 저장소와 아무 지침 파일이 없는 저장소의 분기는 측정하지 않았다.
