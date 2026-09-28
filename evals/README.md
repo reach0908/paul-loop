@@ -66,6 +66,8 @@ through unchanged.
 
 **git on macOS.** The eval sandbox (2.1.283) denies file metadata on real git binaries (Xcode,
 Command Line Tools, Homebrew), so the shell cannot find them on PATH, and `/usr/bin/git`, the xcrun
-shim, fails because it cannot write its cache or reach Xcode. Targets therefore cannot run git on a
-macOS host; `git`-tagged cases are only measurable on a host where that works. Fixture scripts run
-outside the sandbox and are unaffected.
+shim, fails because it cannot write its cache or reach Xcode. Running the real binary by its full path
+works. So each `git`-tagged fixture ends by writing a `git` function that calls `xcrun -f git` into
+the eval home's `.zshenv`, which the target's zsh reads. Git called from other programs (a bash
+script, a node child process, a hook) still hits the shim. Fixture scripts run outside the sandbox
+and are unaffected.

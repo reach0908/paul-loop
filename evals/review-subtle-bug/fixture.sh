@@ -44,3 +44,9 @@ module.exports = { saveAll, toRow }
 JS
 git add -A
 commit "Tidy order persistence: extract toRow, add JSDoc"
+# The sandbox cannot run the /usr/bin/git shim (xcrun cannot write its cache), but the real binary
+# runs by full path. Point the target's zsh at it, only inside the sandboxed home.
+home="$(cd .. && pwd -P)"
+if [[ "$home" == /private/tmp/e-*/home ]] && real_git="$(xcrun -f git 2>/dev/null)"; then
+  printf 'git() { "%s" "$@"; }\n' "$real_git" > "$home/.zshenv"
+fi
