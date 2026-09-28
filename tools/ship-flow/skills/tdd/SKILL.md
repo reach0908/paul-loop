@@ -142,7 +142,7 @@ Rules:
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactoring is not part of the loop.** It belongs to the review stage, not the red → green cycle: `ship-feature` step 4 runs `ship-flow:code-reviewer` and `ship-flow:test-hunter` against the finished diff, and structural work beyond that is what the `improve-codebase-architecture` skill is for. Restructuring while you still owe the next test is how a cycle turns into a rewrite.
+- **Refactoring is not part of the loop.** It belongs to the review stage, not the red → green cycle: `ship-feature` step 4 runs `paul-loop:code-reviewer` and `paul-loop:test-hunter` against the finished diff, and structural work beyond that is what the `improve-codebase-architecture` skill is for. Restructuring while you still owe the next test is how a cycle turns into a rewrite.
 
 ## Checklist Per Cycle
 

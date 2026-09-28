@@ -13,9 +13,9 @@ Node 22 스크립트이며 소비 저장소의 `tools/paul-loop.mjs`로 복사�
   "schemaVersion": 1,
   "runtime": "codex",
   "plugins": {
-    "loop-engine": {
-      "id": "loop-engine@paul-loop-codex",
-      "version": "0.15.13",
+    "paul-loop": {
+      "id": "paul-loop@paul-loop-codex",
+      "version": "0.1.0",
       "integrity": {
         "repository": "https://github.com/reach0908/paul-loop",
         "sourceCommit": "REVIEWED_FULL_COMMIT",
@@ -34,9 +34,9 @@ Node 22 스크립트이며 소비 저장소의 `tools/paul-loop.mjs`로 복사�
 예시의 승인값은 placeholder다. 검토한 provider의 **깨끗한 고정 커밋 checkout**에서
 `node scripts/generate-runtime-packages.mjs`를 실행하고 해당 배포 형태의 값을 가져온다.
 생성 Codex/Claude 패키지는 `build/runtime-packages/<runtime>/plugin-integrity.json`,
-원본 subtree를 설치하는 Claude marketplace는 `build/runtime-packages/claude/source-integrity.json`
+원본 root package를 설치하는 Claude marketplace는 `build/runtime-packages/claude/source-integrity.json`
 을 쓴다. 필요한 plugin의 version과 integrity만 기존 lock에 명시적으로 반영한다.
-ship-flow 등 형제 plugin에도 각자의 승인값이 필요하다. 이 파일은 설치·활성화 명령이 아니다.
+통합 설치에는 paul-loop 한 개의 승인값으로 내부 모듈 전체를 검증한다. 기존 분리 설치만 plugin별 승인을 유지한다. 이 파일은 설치·활성화 명령이 아니다.
 
 생성 지문은 검토한 파일 snapshot에 대한 값이다. sourceCommit 문자열이나 cache 옆
 provenance 파일 자체가 서명/독립 승인인 것은 아니다. 변경 중인 checkout에서 만든 지문을
@@ -88,7 +88,7 @@ Codex 0.146과 앱 내장 0.153.1의 plugin list JSON은 cache path를 제공하
 ## Claude와 복수 프로젝트
 
 Claude는 `.claude/paul-loop.lock.json`에 `runtime: "claude"`, `@paul-loop` ID,
-0.15.0/0.11.0 버전과 필요한 `scope: "user"|"project"|"local"`을 기록한다.
+paul-loop 0.1.0 버전과 필요한 `scope: "user"|"project"|"local"`을 기록한다.
 scope 생략 시 같은 프로젝트의 local → project → user 순서로 선택한다. 다른 프로젝트의
 project/local 등록은 사용하지 않는다. Claude native 설치 위치는 CLI의 installPath를 따른다.
 
@@ -102,8 +102,8 @@ done
 
 자동 전수 검색이나 worktree 일괄 덮어쓰기는 하지 않는다. 각 프로젝트의 lock을 기준으로
 갱신한다. disabled Codex 설치는 add가 활성 상태를 바꿀 수 있어 사전에 거부한다.
-Claude update는 기존 활성 상태가 보존됐는지 재검사한다. `loop-memory`는 lock에 명시한
-기존 설치만 처리하며, 기본 예시에 포함하지 않는다.
+Claude update는 기존 활성 상태가 보존됐는지 재검사한다. 통합 패키지의 메모리 기능은 별도 opt-in이며 설치/갱신으로 켜지지 않는다. 기존 분리 lock은 계속 지원하지만 통합/분리 항목을 섞을 수 없다.
+ID 전환은 [명시적 마이그레이션](unified-installation.md)을 따른다.
 
 ## 보존과 부분 실패
 

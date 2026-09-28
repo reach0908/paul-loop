@@ -148,7 +148,7 @@ decided by what kind of knowledge it is:
 - **Still ambiguous?** Default to the **more narrowly triggered** option. A CLAUDE.md guideline is read
   on every session (constant context cost); a skill only loads when its trigger fires. When in doubt,
   prefer the one that costs nothing until it's actually needed.
-- **Skill-shaped candidates:** use the bundled `ship-flow:write-a-skill` when callable, or follow its
+- **Skill-shaped candidates:** use the bundled `paul-loop:write-a-skill` when callable, or follow its
   source procedure directly within the authorized edit scope. An unavailable runtime invocation does
   not mean the source skill is absent. Do not force a procedure into CLAUDE.md or install tooling just
   to satisfy a stale reference.

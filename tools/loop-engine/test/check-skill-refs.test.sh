@@ -135,7 +135,9 @@ for (const provider of findProviders(root)) {
   if (provider.name) copyFile(join(provider.dir, '.claude-plugin/plugin.json'));
   for (const sub of ['skills', 'agents', 'workflows']) copyMarkdownTree(join(provider.dir, sub));
 }
-const actual = collect(root), copied = collect(fixture);
+const actual = collect(root);
+for (const file of actual.files) copyFile(file); // include manifest-declared custom resources
+const copied = collect(fixture);
 assert.deepEqual([...copied.known].sort(), [...actual.known].sort());
 assert.deepEqual([...copied.namespaces].sort(), [...actual.namespaces].sort());
 assert.deepEqual(copied.files.map(p => relative(fixture, p)).sort(), actual.files.map(p => relative(root, p)).sort());

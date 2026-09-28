@@ -83,7 +83,7 @@ Show counts and a one-line summary per issue. Let the maintainer pick.
 3. **Recommend and draft.** Prepare category/state rationale and the actual proposed brief/comment
    after investigation. Review/read requests stop with this material; they do not authorize posting.
 
-4. **Grill only a blocking decision.** Use `/ship-flow:grill-with-docs` in bounded caller mode with
+4. **Grill only a blocking decision.** Use `/paul-loop:grill-with-docs` in bounded caller mode with
    resolved facts, the specific question and allowed documentation scope. Do not restart discovery.
 
 5. **Apply the authorized outcome.** Reuse exact requested state/comment/close scope; where absent,

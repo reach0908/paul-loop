@@ -1,5 +1,11 @@
 # Shared instruction, authorization, and completion contract
 
+Paul Loop is the installed plugin and public namespace. `ship-flow` is an internal module.
+For skill shell examples, resolve `SHIP_FLOW_PATH` as the parent of the `skills/` directory containing
+this AUTHORIZATION.md file. That module contains `skills/`, `agents/` and `templates/`. Do not assume the host plugin root is
+this module or that its sibling engine's `bin/` is on PATH. A unified install keeps the modules
+under `<PAUL_LOOP_PATH>/tools/`; use the project's verified launcher for engine commands.
+
 Read this contract before a ship-flow procedure. It governs handoffs as well as direct invocation;
 a helper does not invent a new scope, approval, or completion boundary. A delegated agent receives
 these constraints in its brief. This is guidance to follow, not a technical permission mechanism.

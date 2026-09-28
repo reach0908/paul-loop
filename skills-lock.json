@@ -6,7 +6,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/ask-matt/SKILL.md",
       "localPath": "tools/ship-flow/skills/ask-paul/SKILL.md",
-      "computedHash": "20d420df061214047e1f9568799aee9869b0f9d555f3968629fe16a53e6bbb0e",
+      "computedHash": "0cde4e0997b69581aef8f220a161eeee44997f61b14e0032f2bcfbf3d3502a29",
       "fork": {
         "reason": "Rewritten, not ported: upstream routes over ~15 skills this plugin does not ship. Receiving upstream's body would fill it with handoffs to nothing. Renamed ask-matt -> ask-paul in ship-flow 0.9.0 because the body shares no text with upstream and the old name misdescribed what it routes over; the entry stays here to keep tracking upstream's version as a source of ideas, not of text.",
         "since": "2026-08-26"
@@ -35,7 +35,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/diagnosing-bugs/SKILL.md",
       "localPath": "tools/ship-flow/skills/diagnosing-bugs/SKILL.md",
-      "computedHash": "5eeb6ce4031a18e5da2155bc2d89d6a4dba469d522fccf7e34b35448a49b60be"
+      "computedHash": "5c3bfb1218cb1a3465e70dfa7ef2349bc44c40e761bcc4bfcb2db718d774f2ad"
     },
     "domain-modeling": {
       "source": "mattpocock/skills",
@@ -56,14 +56,14 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
       "localPath": "tools/ship-flow/skills/grill-with-docs/SKILL.md",
-      "computedHash": "d7bbe701c957144fa9e44a2dd39dd5131fe427200c39b98775ae8b3c9a34ea94"
+      "computedHash": "9ec07faa71dabc5bbfef219e178118d7273e0cb5a4a303b19d121f6048f18f6d"
     },
     "grilling": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grilling/SKILL.md",
       "localPath": "tools/ship-flow/skills/grilling/SKILL.md",
-      "computedHash": "454a59878eda3ee3c5954087d897fa4fa618f3c948130998fefc2d44608b1ff0",
+      "computedHash": "91cca445acc71b07afe0f94d9457f1d5626b22aef370b4d44bbd2c366ddf7a48",
       "fork": {
         "reason": "Upstream asks the whole frontier in one numbered round; this plugin asks one question at a time, which the user requires. Receiving upstream's body would invert the behaviour.",
         "since": "2026-08-26"
@@ -81,7 +81,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
       "localPath": "tools/ship-flow/skills/improve-codebase-architecture/SKILL.md",
-      "computedHash": "11d66fafb0e89601e5f7d2ee0e2de76230f96a34afd75f18c244b22a09fafab2"
+      "computedHash": "2e8471388c6e3cd2288a37f9f02d2b2ec597db6c62e7574141f48f5f64db40d1"
     },
     "prototype": {
       "source": "mattpocock/skills",
@@ -109,7 +109,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
       "localPath": "tools/ship-flow/skills/setup/SKILL.md",
-      "computedHash": "2f610d682fe8dcb60cecc4ccbac227ac529185eaff721cdee659e5bbbd6f2ea1",
+      "computedHash": "116257ed85fdcd3769b3b98372d36e888ce29f826204ae10781e2a178c6cb06b",
       "fork": {
         "reason": "Deliberate divergence: this one configures the plugin; upstream's configures a tracker, labels and doc layout.",
         "since": "2026-08-26"
@@ -120,7 +120,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/tdd/SKILL.md",
       "localPath": "tools/ship-flow/skills/tdd/SKILL.md",
-      "computedHash": "1e949b0ba1540ee7de8c518248d87c150f16136c688143e0e9fb299459bf95b8"
+      "computedHash": "df393597f4de8bbf0c326923da1e5b77aa3b622cf02b3a17cbd92072da898540"
     },
     "teach": {
       "source": "mattpocock/skills",
@@ -145,7 +145,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/to-spec/SKILL.md",
       "localPath": "tools/ship-flow/skills/to-prd/SKILL.md",
-      "computedHash": "b5bbd7dd9a177993239df3cd8cb666d340bda9a490667f283e89664dc0af6589",
+      "computedHash": "3995da6ba882361d17f4e7f31507ca613a8f7a604262bef4e470baee5b087537",
       "fork": {
         "reason": "Renamed and extended: this plugin writes a PRD and creates a dedicated tracker project. Upstream's to-spec is a narrower artifact.",
         "since": "2026-08-26"
@@ -163,7 +163,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/triage/SKILL.md",
       "localPath": "tools/ship-flow/skills/triage/SKILL.md",
-      "computedHash": "73f00bb9ed2fc334b5945287364c7530d0a57110cc3b9601444d6040cab43182"
+      "computedHash": "70bcf92e223810bf01e1c5dbed084def5c6e8ec080fa6849899163304efa5ff8"
     },
     "wait-what": {
       "source": "mattpocock/skills",
@@ -177,7 +177,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/wayfinder/SKILL.md",
       "localPath": "tools/ship-flow/skills/wayfinder/SKILL.md",
-      "computedHash": "f05a8be61d2ae41bc2fa6270793e08fd68da857cadd3e3b3df1811d8a1f2c84b"
+      "computedHash": "88b77aaafe7ee3f679afa89242bc07b1b3e5454d5426b9bae5cf48dd8842a9a5"
     },
     "wizard": {
       "source": "mattpocock/skills",

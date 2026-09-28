@@ -13,7 +13,7 @@ Follow the [shared authorization and completion contract](../AUTHORIZATION.md) b
 > identifiers, file paths, branch names, and quoted tool output stay verbatim; never translate them.** Key
 > absent or unreadable → fall back to the language the user is writing in; never error on this.
 
-Call `ship-flow:grilling` and `ship-flow:domain-modeling` with the same caller brief: mode, bounded
+Call `paul-loop:grilling` and `paul-loop:domain-modeling` with the same caller brief: mode, bounded
 question, settled decisions, authorization, allowed documentation, and return condition. A delivery
 caller uses grilling's caller mode; a user-requested interview uses interview mode.
 

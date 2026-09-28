@@ -1,6 +1,6 @@
 # Publish handoff — why step 5 hands off, and why by file
 
-Background for `SKILL.md` step 5's handoff to the `ship-flow:publisher` agent. The step itself
+Background for `SKILL.md` step 5's handoff to the `paul-loop:publisher` agent. The step itself
 states what to do; this file states why, so the pattern isn't "simplified" back into the shape it
 was written to replace.
 
@@ -19,7 +19,7 @@ received the Builder's earlier content. Pass only the self-contained handoff and
 context that excludes Builder history, publication stays blocked. This instruction reduces exposure;
 it does not establish an enforced command allowlist or prove resistance to prompt injection.
 
-`ship-flow:publisher` exists to be the narrow half of that split: it executes literal commands it
+`paul-loop:publisher` exists to be the narrow half of that split: it executes literal commands it
 was handed and nothing else. It does not read repository files on its own initiative, fetch
 content, or compose PR/comment text. That is why step 5 has to hand it *finished strings* — a
 publisher that has to go read the diff to write a PR body is just the Builder again with a
@@ -59,7 +59,7 @@ never parsed as shell; the command line only ever carries a path.
    other process on the machine between the write and the read).
 2. Write the PR title, the PR body, and the tracked-issue comment text to **separate files** in it,
    using the Write tool.
-3. Hand `ship-flow:publisher` the file paths plus the exact commands to run.
+3. Hand `paul-loop:publisher` the file paths plus the exact commands to run.
 
 Include the user's authorization record, exact worktree/repository and head/base/destination,
 completed gate evidence, and dependencies between actions. Do not publish from a read/draft request.
@@ -72,7 +72,7 @@ Commands use the CLI's own file flags where they exist — `gh pr create --body-
 variable where they don't. `agents/publisher.md`'s "File-based execution" section carries the exact form and
 the same reasoning from the executing side.
 
-The same rule covers recovery. A `--force-with-lease` push still goes through `ship-flow:publisher`.
+The same rule covers recovery. A `--force-with-lease` push still goes through `paul-loop:publisher`.
 The Builder checks uncertain remote outcomes read-only, preserves successful steps, and sends only
 unfinished authorized actions. A changed head/base invalidates the affected reviewed publication/merge
 approval bound to the old revision, not authorization for necessary implementation edits within scope.

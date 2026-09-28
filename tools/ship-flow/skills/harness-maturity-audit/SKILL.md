@@ -102,7 +102,7 @@ Where the stored workflow is callable and delegation is authorized, invoke it wi
 language (`args.outputLanguage` is optional; absent means config/user-language fallback):
 
 ```javascript
-Workflow({ name: 'ship-flow:harness-audit', args: { outputLanguage: 'ko' } })
+Workflow({ name: 'paul-loop:harness-audit', args: { outputLanguage: 'ko' } })
 ```
 
 Use the actual resolved language rather than copying `ko` regardless of the user. Use
@@ -133,7 +133,7 @@ cannot erase them. Retain observed evidence and resume only missing authorized w
    caller already requested the next bounded implementation or issue-drafting step, continue with its
    inherited scope instead of asking again. Missing evidence remains visibly incomplete.
 3. If issue creation was explicitly authorized, pass concrete findings, destination and authorization
-   to `ship-flow:to-issues`; otherwise provide follow-up proposals without publishing them.
+   to `paul-loop:to-issues`; otherwise provide follow-up proposals without publishing them.
 
 ## Discipline
 

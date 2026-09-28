@@ -12,14 +12,14 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const installer = join(root, 'scripts/install-codex.mjs');
 const marker = '.paul-loop-generated.json', receipt = '.paul-loop-install.json';
 const catalog = 'codex/.agents/plugins/marketplace.json';
-const manifest = 'codex/plugins/ship-flow/.codex-plugin/plugin.json';
-const payload = 'codex/plugins/loop-engine/bin/verdict-run.sh';
+const manifest = 'codex/plugins/paul-loop/.codex-plugin/plugin.json';
+const payload = 'codex/plugins/paul-loop/tools/loop-engine/bin/verdict-run.sh';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
 const generated = buildPackages(root);
-const sourceShipVersion = JSON.parse(generated.get(manifest).content).version;
-const nextShipVersion = sourceShipVersion.replace(/\d+$/, patch => String(Number(patch) + 1));
+const sourceVersion = JSON.parse(generated.get(manifest).content).version;
+const nextVersion = sourceVersion.replace(/\d+$/, patch => String(Number(patch) + 1));
 
 test('Codex packages retain manual skill policy and keep publisher out of implicit discovery', () => {
   let manualSkills = 0;
@@ -30,7 +30,7 @@ test('Codex packages retain manual skill policy and keep publisher out of implic
     manualSkills++;
   }
   assert.ok(manualSkills > 0, 'manual source skills must be exercised');
-  const prefix = 'codex/plugins/ship-flow/';
+  const prefix = 'codex/plugins/paul-loop/tools/ship-flow/';
   assert.equal(generated.get(prefix + 'skills/publisher/agents/openai.yaml')?.content.toString(), 'policy:\n  allow_implicit_invocation: false\n');
   assert.ok(generated.has(prefix + 'skills/publisher/SKILL.md'), 'explicit handoff remains available');
   assert.match(generated.get(prefix + 'agent-templates/publisher.toml').content.toString(), /sandbox_mode = "workspace-write"/);
@@ -46,7 +46,7 @@ test('Codex packages retain manual skill policy and keep publisher out of implic
   assert.match(instructions, /template[^.]*does not prove active registration/s);
   assert.match(instructions, /inherited Builder conversation.*BLOCK/);
   assert.equal(generated.has(prefix + 'skills/ship-feature/agents/openai.yaml'), false, 'delivery remains discoverable');
-  assert.deepEqual(generated.get(prefix + 'skills/diagnosing-bugs/agents/openai.yaml'), generated.get('claude/plugins/ship-flow/skills/diagnosing-bugs/agents/openai.yaml'));
+  assert.deepEqual(generated.get(prefix + 'skills/diagnosing-bugs/agents/openai.yaml'), generated.get('claude/plugins/paul-loop/tools/ship-flow/skills/diagnosing-bugs/agents/openai.yaml'));
 });
 
 test('manual policy conversion preserves UI metadata and rejects a competing policy source', t => {
@@ -56,7 +56,7 @@ test('manual policy conversion preserves UI metadata and rejects a competing pol
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     cpSync(join(root, path), join(dir, path));
   }
-  for (const args of [['init', '-q'], ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'fixture']]) {
+  for (const args of [['init', '-q'], ['add', '.'], ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'fixture']]) {
     const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
   }
@@ -64,13 +64,13 @@ test('manual policy conversion preserves UI metadata and rejects a competing pol
   mkdirSync(dirname(join(dir, path)), { recursive: true });
   const ui = 'interface:\n  display_name: "Ask Paul"\n';
   writeFileSync(join(dir, path), ui);
-  assert.equal(buildPackages(dir).get('codex/plugins/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), ui + '\npolicy:\n  allow_implicit_invocation: false\n');
+  assert.equal(buildPackages(dir).get('codex/plugins/paul-loop/tools/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), ui + '\npolicy:\n  allow_implicit_invocation: false\n');
   const skillPath = join(dir, 'tools/ship-flow/skills/ask-paul/SKILL.md'), skill = readFileSync(skillPath, 'utf8');
   for (const flag of ['disable-model-invocation: true # explicit only', '"disable-model-invocation": true', "'disable-model-invocation': true"]) {
     writeFileSync(skillPath, skill.replace('disable-model-invocation: true', flag));
     const converted = buildPackages(dir);
-    assert.match(converted.get('codex/plugins/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), /allow_implicit_invocation: false/);
-    assert.doesNotMatch(converted.get('codex/plugins/ship-flow/skills/ask-paul/SKILL.md').content.toString(), /disable-model-invocation/);
+    assert.match(converted.get('codex/plugins/paul-loop/tools/ship-flow/skills/ask-paul/agents/openai.yaml').content.toString(), /allow_implicit_invocation: false/);
+    assert.doesNotMatch(converted.get('codex/plugins/paul-loop/tools/ship-flow/skills/ask-paul/SKILL.md').content.toString(), /disable-model-invocation/);
   }
   for (const flag of ['disable-model-invocation: &manual true', 'disable-model-invocation: true\ndisable-model-invocation: false']) {
     writeFileSync(skillPath, skill.replace('disable-model-invocation: true', flag));
@@ -101,12 +101,13 @@ if(args.join(' ')==='plugin marketplace list --json'){
  if(process.env.FAKE_FAIL==='bad-list'){output({unknown:[]});process.exit(0);}
  if(process.env.FAKE_FAIL==='remove-stage')for(const stage of stages)rmSync(join(dirname(target),stage),{recursive:true});
  if(process.env.FAKE_FAIL==='edit-stage')for(const stage of stages)writeFileSync(join(dirname(target),stage,'.paul-loop-install.json'),'{}');
- if(process.env.FAKE_FAIL==='mutate-target')writeFileSync(join(target,'plugins/loop-engine/NOTICE'),'concurrent local edit');
+ if(process.env.FAKE_FAIL==='mutate-target')writeFileSync(join(target,'plugins/paul-loop/NOTICE'),'concurrent local edit');
  output({marketplaces:state.marketplaces});
 }else if(args.join(' ')==='plugin list --json'){
  if(process.env.FAKE_FAIL==='plugin-list')fail('plugin list failed');
  if(process.env.FAKE_FAIL==='bad-plugin-list'){output({available:[]});process.exit(0);}
  if(process.env.FAKE_FAIL==='null-plugin-list'){output(null);process.exit(0);}
+ if(process.env.FAKE_FAIL==='post-cache'&&state.installed.some(p=>p.name==='paul-loop')){const p=state.installed.find(p=>p.name==='paul-loop');writeFileSync(join(home,'plugins/cache/paul-loop-codex/paul-loop',p.version,'NOTICE'),'changed by later observation');}
  output({installed:state.installed||[],available:[]});
 }else if(args[0]==='plugin'&&args[1]==='marketplace'&&args[2]==='add'&&args[3]===target&&args[4]==='--json'&&args.length===5){
  if(process.env.FAKE_FAIL==='marketplace-add')fail('registration failed');
@@ -114,7 +115,7 @@ if(args.join(' ')==='plugin marketplace list --json'){
  state.marketplaces=[{name:'paul-loop-codex',root:target,marketplaceSource:{sourceType:'local',source:target}}];
  writeFileSync(statePath,JSON.stringify(state));
  output({marketplaceName:'paul-loop-codex',installedRoot:target,alreadyAdded:false});
-}else if(args[0]==='plugin'&&args[1]==='add'&&['loop-engine@paul-loop-codex','ship-flow@paul-loop-codex'].includes(args[2])&&args[3]==='--json'&&args.length===4){
+}else if(args[0]==='plugin'&&args[1]==='add'&&['paul-loop@paul-loop-codex'].includes(args[2])&&args[3]==='--json'&&args.length===4){
  const name=args[2].split('@')[0];
  if(process.env.FAKE_FAIL===name)fail('plugin installation failed');
  const source=join(target,'plugins',name), manifest=read(join(source,'.codex-plugin/plugin.json'));
@@ -124,14 +125,14 @@ if(args.join(' ')==='plugin marketplace list --json'){
  if(process.env.FAKE_FAIL==='cache')writeFileSync(join(installedPath,'NOTICE'),'stale cache');
  const entry={pluginId:args[2],name,marketplaceName:'paul-loop-codex',version:manifest.version,installed:true,enabled:true,
    source:{source:'local',path:source},marketplaceSource:{sourceType:'local',source:target}};
- if(name==='ship-flow'){
-  if(process.env.FAKE_FAIL==='post-cache')writeFileSync(join(home,'plugins/cache/paul-loop-codex/loop-engine',state.installed.find(p=>p.pluginId==='loop-engine@paul-loop-codex').version,'NOTICE'),'changed by later installation');
+ if(name==='paul-loop'){
+
   if(process.env.FAKE_FAIL==='post-disabled')entry.enabled=false;
   if(process.env.FAKE_FAIL==='post-unknown')delete entry.enabled;
   if(process.env.FAKE_FAIL==='post-version')entry.version='9.9.9';
  }
  state.installed=(state.installed||[]).filter(p=>p.pluginId!==entry.pluginId);
- if(!(name==='ship-flow'&&process.env.FAKE_FAIL==='post-missing'))state.installed.push(entry);
+ if(!(name==='paul-loop'&&process.env.FAKE_FAIL==='post-missing'))state.installed.push(entry);
  writeFileSync(statePath,JSON.stringify(state));
  output({pluginId:args[2],name,marketplaceName:'paul-loop-codex',version:process.env.FAKE_FAIL==='version'?'9.9.9':manifest.version,installedPath,authPolicy:'ON_INSTALL'});
 }else fail('unexpected command: '+JSON.stringify(args));
@@ -185,11 +186,11 @@ function updateJson(build, rel, change, rehash = true) {
 
 // Model another reviewed release without changing provider source/manifests.
 function nextRelease(build) {
-  updateJson(build, manifest, value => { value.version = nextShipVersion; });
-  updateJson(build, 'claude/plugins/ship-flow/.claude-plugin/plugin.json', value => { value.version = nextShipVersion; });
+  updateJson(build, manifest, value => { value.version = nextVersion; });
+  updateJson(build, 'claude/plugins/paul-loop/.claude-plugin/plugin.json', value => { value.version = nextVersion; });
   updateJson(build, 'provenance.json', value => {
-    value.sourceVersions['ship-flow'] = nextShipVersion; value.sourceCommit = 'b'.repeat(40);
-    value.sourceHashes['tools/ship-flow/.claude-plugin/plugin.json'].sha256 = sha(readFileSync(join(build, 'claude/plugins/ship-flow/.claude-plugin/plugin.json')));
+    value.sourceVersions['paul-loop'] = nextVersion; value.sourceCommit = 'b'.repeat(40);
+    value.sourceHashes['.claude-plugin/plugin.json'].sha256 = sha(readFileSync(join(build, 'claude/plugins/paul-loop/.claude-plugin/plugin.json')));
   });
 }
 
@@ -198,7 +199,7 @@ test('default and explicit plan have no filesystem, host, or subprocess effects'
   for (const args of [[], ['--plan']]) {
     const plan = good(f.invoke(args, { PATH: '/not-a-cli-path' }));
     assert.equal(plan.mode, 'plan'); assert.equal(plan.publication, 'create');
-    assert.equal(plan.commands.filter(c => c[1] === 'plugin' && c[2] === 'add').length, 2);
+    assert.equal(plan.commands.filter(c => c[1] === 'plugin' && c[2] === 'add').length, 1);
   }
   assert.deepEqual(snapshot(f.temp), before); assert.deepEqual(f.calls(), []);
 });
@@ -236,9 +237,9 @@ const corruptions = [
   ['special mode', f => chmodSync(join(f.build, payload), 0o4755), /unsafe regular file/],
   ['unlisted file', f => writeFileSync(join(f.build, 'codex/extra.txt'), 'edit'), /Unexpected file/],
   ['unlisted empty directory', f => mkdirSync(join(f.build, 'codex/extra')), /Unexpected directory/],
-  ['tampered other runtime', f => writeFileSync(join(f.build, 'claude/plugins/loop-engine/NOTICE'), 'tampered'), /Hash\/mode mismatch/],
+  ['tampered other runtime', f => writeFileSync(join(f.build, 'claude/plugins/paul-loop/NOTICE'), 'tampered'), /Hash\/mode mismatch/],
   ['file symlink', f => { rmSync(join(f.build, payload)); symlinkSync('/etc/passwd', join(f.build, payload)); }, /unsafe regular file/],
-  ['directory symlink', f => { rmSync(join(f.build, 'codex/plugins/ship-flow/skills'), { recursive: true }); symlinkSync(f.home, join(f.build, 'codex/plugins/ship-flow/skills')); }, /Unexpected file/],
+  ['directory symlink', f => { rmSync(join(f.build, 'codex/plugins/paul-loop/skills'), { recursive: true }); symlinkSync(f.home, join(f.build, 'codex/plugins/paul-loop/skills')); }, /Unexpected file/],
   ['traversal entry', f => updateJson(f.build, marker, i => { i.files['../escape'] = i.files[payload]; }, false), /Unsafe inventory path/],
   ['absolute entry', f => updateJson(f.build, marker, i => { i.files['/escape'] = i.files[payload]; }, false), /Unsafe inventory path/],
   ['backslash entry', f => updateJson(f.build, marker, i => { i.files['codex\\..\\escape'] = i.files[payload]; }, false), /Unsafe inventory path/],
@@ -253,11 +254,11 @@ const corruptions = [
   ['wrong catalog name', f => updateJson(f.build, catalog, i => { i.name = 'other-marketplace'; }), /Expected the generated/],
   ['catalog traversal', f => updateJson(f.build, catalog, i => { i.plugins[0].source.path = '../escape'; }), /Unsafe catalog source/],
   ['Git catalog source', f => updateJson(f.build, catalog, i => { i.plugins[0].source.source = 'git'; }), /Unsafe catalog source/],
-  ['memory auto-install policy', f => updateJson(f.build, catalog, i => { i.plugins.find(p => p.name === 'loop-memory').policy.installation = 'INSTALLED_BY_DEFAULT'; }), /Unsafe catalog source\/policy/],
+  ['unified auto-install policy', f => updateJson(f.build, catalog, i => { i.plugins[0].policy.installation = 'INSTALLED_BY_DEFAULT'; }), /Unsafe catalog source\/policy/],
   ['wrong manifest name', f => updateJson(f.build, manifest, i => { i.name = 'other'; }), /identity mismatch/],
   ['arbitrary version suffix', f => updateJson(f.build, manifest, i => { i.version += '+local'; }), /identity mismatch/],
   ['different repository source', f => updateJson(f.build, manifest, i => { i.repository = 'https://example.invalid/fork'; }), /source identity mismatch/],
-  ['provenance version drift', f => updateJson(f.build, 'provenance.json', i => { i.sourceVersions['ship-flow'] = '9.0.0'; }), /identity mismatch/],
+  ['provenance version drift', f => updateJson(f.build, 'provenance.json', i => { i.sourceVersions['paul-loop'] = '9.0.0'; }), /identity mismatch/],
 ];
 for (const [name, change, pattern] of corruptions) test(`rejects ${name} before CLI or destination effects`, t => {
   const f = fixture(t); change(f);
@@ -306,10 +307,10 @@ test('owned same-root update retains exact prior directory backup; replay and pl
   const count = f.calls().length, updated = good(f.invoke(['--apply']));
   assert.equal(updated.publication, 'update-with-backup');
   assert.equal(updated.activation.existingEnabledStatesPreserved, true);
-  assert.equal(updated.activation.before['ship-flow'].enabled, true);
-  assert.equal(updated.activation.after['ship-flow'].enabled, true);
+  assert.equal(updated.activation.before['paul-loop'].enabled, true);
+  assert.equal(updated.activation.after['paul-loop'].enabled, true);
   assert.deepEqual(snapshot(updated.backup), prior);
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, nextShipVersion);
+  assert.equal(readJson(join(f.target, 'plugins/paul-loop/.codex-plugin/plugin.json')).version, nextVersion);
   assert.ok(f.calls().slice(count).every(c => c.args[1] !== 'marketplace' || c.args[2] !== 'add'));
   const installed = snapshot(f.target), repeat = good(f.invoke(['--apply']));
   assert.equal(repeat.publication, 'already-current'); assert.equal(repeat.backup, null);
@@ -317,8 +318,7 @@ test('owned same-root update retains exact prior directory backup; replay and pl
 });
 
 const blockedActivations = [
-  ['engine disabled', state => { state.installed.find(p => p.name === 'loop-engine').enabled = false; }, /Existing core activation is disabled/],
-  ['ship-flow disabled', state => { state.installed.find(p => p.name === 'ship-flow').enabled = false; }, /Existing core activation is disabled/],
+  ['unified plugin disabled', state => { state.installed.find(p => p.name === 'paul-loop').enabled = false; }, /Existing core activation is disabled/],
   ['missing enabled state', state => { delete state.installed[0].enabled; }, /Existing core activation is unknown/],
   ['null enabled state', state => { state.installed[0].enabled = null; }, /Existing core activation is unknown/],
   ['nonboolean enabled state', state => { state.installed[0].enabled = 'true'; }, /Existing core activation is unknown/],
@@ -341,7 +341,7 @@ for (const [name, change, pattern] of blockedActivations) test(`${name} preserve
   assert.deepEqual(snapshot(statePath), activationBefore);
   assert.deepEqual(f.calls().slice(calls).map(c => c.args), [['plugin', 'marketplace', 'list', '--json'], ['plugin', 'list', '--json']]);
   assert.ok(!readdirSync(f.temp).some(p => /\.stage-|\.backup-|\.lock$/.test(p)));
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, sourceShipVersion);
+  assert.equal(readJson(join(f.target, 'plugins/paul-loop/.codex-plugin/plugin.json')).version, sourceVersion);
 });
 
 test('disabled core blocks an already-current apply without reinstalling or changing activation', t => {
@@ -367,11 +367,21 @@ test('disabled optional memory and another marketplace core keep their activatio
   assert.deepEqual(readJson(statePath).installed.filter(p => unrelated.some(u => u.pluginId === p.pluginId)), unrelated);
 });
 
+for (const enabled of [true, undefined]) test(`legacy module activation ${enabled} blocks migration before publication`, t => {
+  const f = fixture(t);
+  const state = { marketplaces: [], installed: [{ pluginId: 'ship-flow@zine-codex', name: 'ship-flow', enabled }] };
+  const path = join(f.home, 'fake-state.json'); writeFileSync(path, json(state));
+  bad(f.invoke(['--apply']), /legacy Paul Loop modules remain/);
+  assert.equal(existsSync(f.target), false);
+  assert.deepEqual(readJson(path), JSON.parse(json(state)));
+  assert.deepEqual(f.calls().map(c => c.args), [['plugin', 'marketplace', 'list', '--json'], ['plugin', 'list', '--json']]);
+});
+
 test('registered marketplace with no installed cores permits a clean installation', t => {
   const f = fixture(t);
-  bad(f.invoke(['--apply'], { FAKE_FAIL: 'loop-engine' }), /plugin installation failed/);
+  bad(f.invoke(['--apply'], { FAKE_FAIL: 'paul-loop' }), /plugin installation failed/);
   const result = good(f.invoke(['--apply']));
-  for (const name of ['loop-engine', 'ship-flow']) {
+  for (const name of ['paul-loop']) {
     assert.deepEqual(result.activation.before[name], { installed: false, enabled: null });
     assert.equal(result.activation.after[name].enabled, true);
   }
@@ -381,16 +391,16 @@ for (const failure of ['post-disabled', 'post-unknown', 'post-missing', 'post-ve
   const f = fixture(t);
   bad(f.invoke(['--apply'], { FAKE_FAIL: failure }), /Post-install|Unknown or ambiguous installed core/);
   assert.deepEqual(f.calls().at(-1).args, ['plugin', 'list', '--json']);
-  assert.ok(f.calls().some(c => c.args.includes('ship-flow@paul-loop-codex')));
+  assert.ok(f.calls().some(c => c.args.includes('paul-loop@paul-loop-codex')));
   assert.equal(existsSync(f.target), true);
 });
 
 const localEdits = [
-  ['content', f => writeFileSync(join(f.target, 'plugins/loop-engine/NOTICE'), 'my local edits'), /Hash\/mode mismatch/],
-  ['mode', f => chmodSync(join(f.target, 'plugins/loop-engine/NOTICE'), 0o600), /Hash\/mode mismatch/],
+  ['content', f => writeFileSync(join(f.target, 'plugins/paul-loop/NOTICE'), 'my local edits'), /Hash\/mode mismatch/],
+  ['mode', f => chmodSync(join(f.target, 'plugins/paul-loop/NOTICE'), 0o600), /Hash\/mode mismatch/],
   ['directory mode', f => chmodSync(join(f.target, 'plugins'), 0o700), /edited directory/],
   ['extra file', f => writeFileSync(join(f.target, 'local-note.txt'), 'keep'), /Unexpected file/],
-  ['missing file', f => rmSync(join(f.target, 'plugins/loop-engine/NOTICE')), /Missing file/],
+  ['missing file', f => rmSync(join(f.target, 'plugins/paul-loop/NOTICE')), /Missing file/],
   ['receipt source', f => updateJson(f.target, receipt, i => { i.sourceIdentity = 'https://example.invalid/fork'; }, false), /Ownership\/source\/root/],
   ['receipt root', f => updateJson(f.target, receipt, i => { i.targetRoot += '-moved'; }, false), /Ownership\/source\/root/],
 ];
@@ -475,38 +485,39 @@ test('a concurrent edit during CLI preflight is preserved and blocks publication
   const f = fixture(t); good(f.invoke(['--apply'])); nextRelease(f.build);
   const calls = f.calls().length;
   bad(f.invoke(['--apply'], { FAKE_FAIL: 'mutate-target' }), /Hash\/mode mismatch/);
-  assert.equal(readFileSync(join(f.target, 'plugins/loop-engine/NOTICE'), 'utf8'), 'concurrent local edit');
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, sourceShipVersion);
+  assert.equal(readFileSync(join(f.target, 'plugins/paul-loop/NOTICE'), 'utf8'), 'concurrent local edit');
+  assert.equal(readJson(join(f.target, 'plugins/paul-loop/.codex-plugin/plugin.json')).version, sourceVersion);
   assert.equal(f.calls().length, calls + 2);
 });
 
-for (const failure of ['list', 'bad-list', 'plugin-list', 'bad-plugin-list', 'null-plugin-list', 'marketplace-add', 'loop-engine', 'ship-flow', 'version', 'cache']) test(`CLI ${failure} error is actionable failure, stops dependent commands, and keeps published evidence`, t => {
+for (const failure of ['list', 'bad-list', 'plugin-list', 'bad-plugin-list', 'null-plugin-list', 'marketplace-add', 'paul-loop', 'version', 'cache']) test(`CLI ${failure} error is actionable failure, stops dependent commands, and keeps published evidence`, t => {
   const f = fixture(t);
   bad(f.invoke(['--apply'], { FAKE_FAIL: failure }), /Completed CLI commands:/);
   const calls = f.calls();
   const preflightFailure = ['list', 'bad-list', 'plugin-list', 'bad-plugin-list', 'null-plugin-list'].includes(failure);
   assert.equal(existsSync(f.target), !preflightFailure);
-  if (failure !== 'ship-flow') assert.ok(!calls.some(c => c.args.includes('ship-flow@paul-loop-codex')));
+  if (preflightFailure || failure === 'marketplace-add') assert.ok(!calls.some(c => c.args.includes('paul-loop@paul-loop-codex')));
+  else assert.deepEqual(calls.at(-1).args, ['plugin', 'add', 'paul-loop@paul-loop-codex', '--json']);
   assert.ok(!readdirSync(f.temp).some(p => /\.stage-|\.lock$/.test(p)));
   if (!preflightFailure) good(f.invoke(['--apply']));
 });
 
 test('CLI failure after update retains backup and reports the actual partial state', t => {
   const f = fixture(t); good(f.invoke(['--apply'])); nextRelease(f.build);
-  const prior = snapshot(f.target), result = f.invoke(['--apply'], { FAKE_FAIL: 'ship-flow' });
+  const prior = snapshot(f.target), result = f.invoke(['--apply'], { FAKE_FAIL: 'paul-loop' });
   bad(result, /published; retained for inspection\/retry/);
   const backups = readdirSync(f.temp).filter(p => p.includes('.backup-'));
   assert.equal(backups.length, 1); assert.deepEqual(snapshot(join(f.temp, backups[0])), prior);
-  assert.equal(readJson(join(f.target, 'plugins/ship-flow/.codex-plugin/plugin.json')).version, nextShipVersion);
-  assert.match(result.stderr, /loop-engine@paul-loop-codex/);
+  assert.equal(readJson(join(f.target, 'plugins/paul-loop/.codex-plugin/plugin.json')).version, nextVersion);
+  assert.match(result.stderr, /paul-loop@paul-loop-codex/);
   good(f.invoke(['--apply'])); assert.equal(readdirSync(f.temp).filter(p => p.includes('.backup-')).length, 1);
 });
 
-test('later plugin installation cannot invalidate an earlier cache and still report success', t => {
+test('post-install observation cannot mutate the cache and still report success', t => {
   const f = fixture(t);
   const result = f.invoke(['--apply'], { FAKE_FAIL: 'post-cache' });
   bad(result, /Hash\/mode mismatch/);
-  assert.ok(f.calls().some(c => c.args.includes('ship-flow@paul-loop-codex')));
+  assert.ok(f.calls().some(c => c.args.includes('paul-loop@paul-loop-codex')));
   assert.match(result.stderr, /published; retained for inspection\/retry/);
   assert.equal(result.stdout, '');
 });
@@ -515,7 +526,7 @@ test('official CLI ingestion in a disposable CODEX_HOME (opt-in)', { skip: proce
   const f = fixture(t, true);
   const result = good(f.invoke(['--apply']));
   assert.equal(result.status, 'installed');
-  for (const name of ['loop-engine', 'ship-flow']) {
+  for (const name of ['paul-loop']) {
     assert.deepEqual(result.activation.before[name], { installed: false, enabled: null });
     assert.equal(result.activation.after[name].enabled, true);
   }
@@ -530,7 +541,7 @@ test('official CLI ingestion in a disposable CODEX_HOME (opt-in)', { skip: proce
   const replay = good(f.invoke(['--apply'])); assert.equal(replay.publication, 'already-current');
   const list = spawnSync('codex', ['plugin', 'list', '--json'], { cwd: f.temp, env: f.env, encoding: 'utf8', timeout: 30000 });
   const installed = good(list).installed;
-  assert.deepEqual(installed.map(p => p.pluginId).sort(), ['loop-engine@paul-loop-codex', 'ship-flow@paul-loop-codex']);
+  assert.deepEqual(installed.map(p => p.pluginId).sort(), ['paul-loop@paul-loop-codex']);
   assert.ok(installed.every(p => p.installed === true && p.enabled === true));
   const config = readFileSync(join(f.home, 'config.toml'), 'utf8');
   assert.doesNotMatch(config, /trusted|hooks|credentials|api_key|token/i);

@@ -72,7 +72,7 @@ export function validateGeneratedDocRefs(files) {
   let documents = 0, references = 0;
   const errors = [];
   for (const [path, data] of files) {
-    const match = /^((?:claude|codex)\/plugins\/[^/]+\/)($|skills\/|agents\/)/.exec(path);
+    const match = /^((?:claude|codex)\/plugins\/[^/]+\/)(?:tools\/[^/]+\/)?($|skills\/|agents\/)/.exec(path);
     if (!match || !path.endsWith('.md')) continue;
     documents++;
     for (const link of localMarkdownLinks(data.content.toString('utf8'))) {

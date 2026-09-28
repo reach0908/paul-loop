@@ -2,8 +2,8 @@
 
 This installer distributes the generated paul-loop Codex packages to a durable **local marketplace**.
 It uses the existing `paul-loop-codex` catalog and ordinary official CLI commands to install
-`loop-engine` and `ship-flow`. It does not depend on any consumer repository or consumer-specific
-marketplace. The packages keep their exact source release versions.
+`paul-loop` only. It does not depend on any consumer repository or consumer-specific
+marketplace. The package keeps its exact source release version.
 
 This is **not a public Git-native marketplace snapshot**. Do not pass the provider Git URL to
 `codex plugin marketplace add` and expect its ungenerated source tree to work as this marketplace.
@@ -73,7 +73,7 @@ the printed plan is not a stored approval token or an immutable execution plan.
    Another name at that root, Git source, duplicate entry, different source/root, or unsupported
    CLI response stops the operation before publication. Registration alone never grants ownership
    of an absent or arbitrary directory. Then run `codex plugin list --json` to inspect installed
-   core plugins. Any existing core must have a unique matching LOCAL identity, `installed: true`
+   Paul Loop. Enabled or unknown legacy module installations stop migration. Any existing unified plugin must have a unique matching LOCAL identity, `installed: true`
    and `enabled: true`. A disabled or unknown state stops before destination publication and
    mutating CLI commands. No installed cores is a valid clean-install state; available catalog
    listings alone do not count as installed. This check also runs for initial registration so an
@@ -83,19 +83,19 @@ the printed plan is not a stored approval token or an immutable execution plan.
    failure restores the previous directory when the target is vacant. Identical inventory skips
    republication and creates no backup. Register an unregistered marketplace with the ordinary
    `codex plugin marketplace add <destination> --json`, then verify its LOCAL source/root again.
-5. Run `codex plugin add loop-engine@paul-loop-codex --json`, then
-   `codex plugin add ship-flow@paul-loop-codex --json`. Verify each returned identity and exact
+5. Run `codex plugin add paul-loop@paul-loop-codex --json`. Verify each returned identity and exact
    version, and compare the actual installed cache's complete file hashes/modes to the supplied
    payload. A bad response, missing file, stale cache, timeout or command failure stops dependent
-   commands and returns failure. Finally, run `codex plugin list --json` again: both cores must
+   commands and returns failure. Finally, run `codex plugin list --json` again: the unified plugin must
    report the installed source versions and `enabled: true`, preserving every existing enabled
    state. A disabled, missing, ambiguous or unknown post-install state is a failure. Success JSON
-   includes the before/after activation observations. After the final CLI call, compare both
-   complete installed caches again so a later installation cannot invalidate earlier evidence.
+   includes the before/after activation observations. After the final CLI call, compare the
+   complete installed cache again so a later installation cannot invalidate earlier evidence.
 
-The copied generated catalog still lists optional `loop-memory`, because rewriting the catalog
-would create a different artifact. This installer **never installs memory**, enables its database
-infrastructure, copies project agent templates, edits project launchers, or changes hook trust.
+The catalog has one entry. Memory code is bundled, but its hooks remain off until explicit opt-in.
+This installer never enables memory infrastructure, copies project agent templates, edits project
+launchers, or changes hook trust. It refuses enabled/unknown legacy modules before publication;
+follow the [migration guide](unified-installation.md) for old three-plugin installations.
 The official CLI performs its normal registration and core plugin configuration; the installer
 does not rewrite `config.toml`, force configuration overrides, set feature flags, or edit caches.
 It uses the caller's current `CODEX_HOME` (or normal Codex default) only through those CLI commands.
@@ -142,10 +142,10 @@ source commit establish local integrity/traceability, not authenticity, approval
 After installation, a consuming project can use the
 [`scripts/project-plugin.mjs`](../scripts/project-plugin.mjs) launcher. Review and copy the launcher
 into the project's `scripts/`. Create `.codex/paul-loop.lock.json` using the
-[project lock and approval format](project-installations.md#codex-설정-예시), with entries for
-`loop-engine@paul-loop-codex` and `ship-flow@paul-loop-codex`.
+[project lock and approval format](project-installations.md#codex-설정-예시), with one entry for
+`paul-loop@paul-loop-codex`.
 
-For each core plugin, copy its `version` and complete `integrity` object (`repository`,
+For the unified plugin, copy its `version` and complete `integrity` object (`repository`,
 `sourceCommit`, `sha256`) from `build/runtime-packages/codex/plugin-integrity.json` in the
 **reviewed build used for this installation**. The versions must also match the install result.
 Generate that build from the clean, fixed provider commit you reviewed; keep its approval values
@@ -181,7 +181,12 @@ inject OS rename errors inside the installer subprocess to exercise rollback and
 modify provider tests, the generator or any user installation. The opt-in test uses no credentials
 or trust changes and is an ingestion check, not native session/hook E2E.
 
-## Installer lane plan and acceptance review
+## Historical installer lane plan and acceptance review (split plugins, 2026-09-06)
+
+The remaining sections preserve the earlier two-core-plugin evaluation; they are not the unified
+installation contract or current qualification evidence.
+
+
 
 Scope: `scripts/install-codex.mjs`, its dedicated CLI/filesystem tests, and this guide.
 Project launcher changes, shared documentation and consumer rollout are outside this scope.

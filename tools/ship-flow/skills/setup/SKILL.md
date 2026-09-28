@@ -1,11 +1,11 @@
 ---
 name: setup
-description: One-time interactive setup for this plugin in a consuming repo — interviews the user, writes `.claude/ship-flow.config.json`, and installs (or offers to install) a CLAUDE.md constitution, a CI workflow, and branch protection from this plugin's templates/. Use once per repo, when a repo first adopts ship-flow, or when re-running to fill in config that was skipped the first time.
+description: One-time interactive setup for this plugin in a consuming repo — interviews the user, writes `.claude/ship-flow.config.json`, and installs (or offers to install) a CLAUDE.md constitution, a CI workflow, and branch protection from this plugin's templates/. Use once per repo, when a repo first adopts Paul Loop, or when re-running to fill in config that was skipped the first time.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
 
-# setup — one-time ship-flow bootstrap
+# setup — one-time Paul Loop bootstrap
 
 > **Output language.** Read `outputLanguage` (a BCP-47 tag, e.g. `ko`) from
 > `.claude/ship-flow.config.json` and write **every human-facing prose artifact** — reports, summaries,
@@ -109,13 +109,14 @@ one). Derive it from the active runtime's verified resolver or PATH, not an assu
 | Situation | Value |
 |---|---|
 | Required bin commands have been verified on PATH in this runtime | `""` |
+| Unified Paul Loop installation with a reviewed project lock | `node tools/paul-loop.mjs exec bin/` (copy the reviewed provider launcher first) |
 | This repo already has its own resolver wrapper | `node tools/plugin-path.mjs exec bin/` (or whatever its real path is) |
 | Skills also need to run headless (CI, a cron shell) where nothing is on PATH | `node "$LOOP_ENGINE_PATH/bin/plugin-path.mjs" exec bin/`, paired with the `setup-loop-engine` action from step 4 |
 
 If resolution fails, report the missing capability and leave execution-dependent setup incomplete.
 Do not claim an empty prefix works, install a plugin, or activate hooks to repair it without scope.
-Resolve `ship-flow` and `loop-engine` independently with the available `plugin-path.mjs resolve
-<plugin>` command (or the caller's verified equivalent). In the steps below, `${CLAUDE_PLUGIN_ROOT}`
+Resolve the internal `ship-flow` and `loop-engine` paths through the one approved bundle; legacy split installations still resolve them independently with the available `plugin-path.mjs resolve
+<plugin>` command (or the caller's verified equivalent). In the steps below, `${SHIP_FLOW_PATH}`
 means the resolved **ship-flow** root; bind that root explicitly in runtimes without this variable.
 
 ### 2a. Record tracker operations and role mapping
@@ -134,7 +135,7 @@ drafting and review can continue; only the affected tracker mutation waits. Crea
 issues or comments requires the corresponding publication scope, beyond writing this local doc.
 
 ### 3. Install `CLAUDE.md`
-Read `${CLAUDE_PLUGIN_ROOT}/templates/CLAUDE.md.template`, substitute every `{{PLACEHOLDER}}` with the
+Read `${SHIP_FLOW_PATH}/templates/CLAUDE.md.template`, substitute every `{{PLACEHOLDER}}` with the
 interview's answers (see the template's own placeholder list at its end for what's expected), and
 write the result to the consuming repo's `CLAUDE.md`.
 
@@ -144,20 +145,21 @@ only for a conflicting content choice after preparing the concrete diff.
 
 ### 4. CI + turbo wiring (optional scope)
 Prepare the requested CI changes before asking for any missing installation decision. Reuse explicit
-setup scope; do not ask again for already-authorized installation. A starting workflow comes from `${CLAUDE_PLUGIN_ROOT}/templates/ci.yml.template`
+setup scope; do not ask again for already-authorized installation. A starting workflow comes from `${SHIP_FLOW_PATH}/templates/ci.yml.template`
 (substituting `{{RELEASE_BRANCH}}` and `{{VERIFY_COMMAND}}` from the config) at
 `.github/workflows/ci.yml`. If the repo already has a CI workflow, don't overwrite it — point out
 `templates/ci.yml.template`'s `ci-gate` pattern (the always-run aggregator, and why it exists) as
 something worth adopting into their existing workflow instead, and stop there.
 
 If the repo is (or will be) a turbo monorepo with no verify wiring yet, point at
-`${CLAUDE_PLUGIN_ROOT}/templates/turbo-verify-wiring.example.md` as a starting point — this one is
+`${SHIP_FLOW_PATH}/templates/turbo-verify-wiring.example.md` as a starting point — this one is
 reference material to adapt by hand, not something this skill copies verbatim (task names vary too
 much repo to repo to template safely).
 
-If any CI job in this repo needs to invoke a loop-engine or ship-flow bin script directly (a PR gate
+For existing split-release CI integrations only (the old module tags remain historical releases):
+if any CI job in this repo needs to invoke a loop-engine or ship-flow bin script directly (a PR gate
 running `classify-risk.sh`/`ac-verify.sh`, or a repo-local harness self-test) — ask whether to
-install `${CLAUDE_PLUGIN_ROOT}/templates/setup-loop-engine.action.yml.template` at
+install `${SHIP_FLOW_PATH}/templates/setup-loop-engine.action.yml.template` at
 `.github/actions/setup-loop-engine/action.yml` (BAC-753), substituting `{{LOOP_ENGINE_TAG}}`/
 `{{SHIP_FLOW_TAG}}` with the plugin versions this repo currently targets (`vX.Y.Z`, optionally with
 build metadata; match `minPluginVersions` if present). Also substitute `{{LOOP_ENGINE_COMMIT}}` and
@@ -175,7 +177,7 @@ process outside the live-session plugin cache, so any such job needs this action
 `LOOP_ENGINE_PATH`/`SHIP_FLOW_PATH` exports before loop-engine's bundled `bin/plugin-path.mjs`
 resolver (or a bin script invoked directly) can find anything.
 
-For `git-flow` repos, also offer `${CLAUDE_PLUGIN_ROOT}/templates/loop-selftest.yml.template` as a
+For `git-flow` repos, also offer `${SHIP_FLOW_PATH}/templates/loop-selftest.yml.template` as a
 `{integrationBranch}`-PR backstop for harness/policy changes that `ci.yml` never sees (git-flow's
 feature→integration PRs skip `ci.yml`'s trigger entirely — see `ci.yml.template`'s own comments).
 Like `turbo-verify-wiring.example.md`, this one is reference material to adapt by hand — the actual
@@ -207,7 +209,7 @@ drop it while filling in the other placeholders.
 
 Resolve that sibling plugin with `plugin-path.mjs resolve loop-engine` using the verified resolver
 from step 2, and read `templates/risk-rules.example.json` under the returned root. It is not under
-ship-flow's `${CLAUDE_PLUGIN_ROOT}`. An unresolved sibling is a reported setup gap, not permission
+ship-flow's `${SHIP_FLOW_PATH}`. An unresolved sibling is a reported setup gap, not permission
 to fabricate a path or silently copy a different template.
 
 ### 5. Review a branch-protection plan, then apply only its approved content

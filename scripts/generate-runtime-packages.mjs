@@ -7,6 +7,7 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync,
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { embedRoleResources, rebaseDocLinks, scratchContract, validateGeneratedDocRefs } from './runtime-docs.mjs';
+import { components, unifiedHooks } from './unified-plugin.mjs';
 
 const adapterVersion = '1.0.0';
 const json = (value) => JSON.stringify(value, null, 2) + '\n';
@@ -18,7 +19,13 @@ export function buildPackages(root) {
   const files = new Map();
   const put = (path, content, mode = 0o644) => files.set(path, { content: Buffer.from(content), mode });
   const sourceFiles = execFileSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', 'tools'], { encoding: 'utf8' }).split('\0').filter(Boolean).sort();
-  const sourceCatalog = readJson(join(root, '.claude-plugin/marketplace.json'));
+  const publicCatalog = readJson(join(root, '.claude-plugin/marketplace.json'));
+  const unified = readJson(join(root, '.claude-plugin/plugin.json'));
+  if (publicCatalog.plugins.length !== 1 || publicCatalog.plugins[0].name !== 'paul-loop' ||
+      publicCatalog.plugins[0].source !== './' || unified.name !== 'paul-loop' ||
+      publicCatalog.plugins[0].version !== unified.version) throw new Error('unified marketplace identity/version drift');
+  const sourceCatalog = { ...publicCatalog, plugins: components.map(name => ({ name, source: `./tools/${name}`,
+    version: readJson(join(root, `tools/${name}/.claude-plugin/plugin.json`)).version })) };
   const capabilities = readJson(join(root, 'tools/loop-engine/runtime/capabilities.json'));
   const versions = Object.fromEntries(sourceCatalog.plugins.map((p) => [p.name, readJson(join(root, p.source, '.claude-plugin/plugin.json')).version]));
   const provenance = { schemaVersion: 1, adapterVersion, sourceCommit: execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), sourceVersions: versions, sourceHashes: Object.fromEntries(['scripts/generate-runtime-packages.mjs', 'scripts/runtime-docs.mjs', '.claude-plugin/marketplace.json', 'skills-lock.json', 'docs/runtime-compatibility.md', 'LICENSE', 'NOTICE'].map((p) => [p, { sha256: sha(readFileSync(join(root, p))) }])), limitations: capabilities.codex };
@@ -130,11 +137,62 @@ export function buildPackages(root) {
     put(runtime === 'codex' ? `${runtime}/.agents/plugins/marketplace.json` : `${runtime}/.claude-plugin/marketplace.json`, json(runtime === 'codex' ? { name: 'paul-loop-codex', interface: { displayName: 'Paul Loop Codex (generated)' }, plugins: catalog } : { ...sourceCatalog, plugins: catalog }));
     put(`${runtime}/plugins.example.json`, json({ schemaVersion: 1, runtime, plugins: Object.fromEntries(Object.entries(versions).map(([name, version]) => [name, { path: `./plugins/${name}`, version }])) }));
   }
+  // Keep the module layout so existing imports and verified component commands still work.
+  // Only the root manifest/catalog is installed; nested manifests are module identity records.
+  const providerFiles = execFileSync('git', ['-C', root, 'ls-files', '--cached', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean).sort();
+  for (const source of providerFiles) {
+    const stat = lstatSync(join(root, source));
+    if (!stat.isFile()) throw new Error(`non-file source rejected: ${source}`);
+    provenance.sourceHashes[source] = { sha256: sha(readFileSync(join(root, source))), mode: stat.mode & 0o777 };
+  }
+  const read = path => readFileSync(join(root, path), 'utf8');
+  if (JSON.stringify(readJson(join(root, 'hooks/hooks.json'))) !== JSON.stringify(unifiedHooks(read, 'claude'))) {
+    throw new Error('unified hooks drift; run node scripts/unified-plugin.mjs --write-hooks');
+  }
+  for (const runtime of ['claude', 'codex']) {
+    const out = `${runtime}/plugins/paul-loop`;
+    for (const [path, data] of [...files]) {
+      const match = new RegExp(`^${runtime}/plugins/(${components.join('|')})/(.+)$`).exec(path);
+      if (match) { files.delete(path); files.set(`${out}/tools/${match[1]}/${match[2]}`, data); }
+    }
+    for (const source of providerFiles) {
+      if (!['LICENSE', 'NOTICE', 'README.md', 'scripts/project-plugin.mjs', 'hooks/run.mjs'].includes(source)) continue;
+      put(`${out}/${source}`, readFileSync(join(root, source)), lstatSync(join(root, source)).mode & 0o777);
+    }
+    put(`${out}/hooks/hooks.json`, json(unifiedHooks(read, runtime)));
+    if (runtime === 'claude') put(`${out}/.claude-plugin/plugin.json`, json(unified));
+    else {
+      for (const rel of ['capabilities.json', 'hook-adapter.mjs']) put(`${out}/runtime/${rel}`, readFileSync(join(root, 'tools/loop-engine/runtime', rel)));
+      // Codex discovers entry skills at the root. Rebase links to the one module resource tree.
+      for (const [path, data] of [...files]) {
+        const prefix = `${out}/tools/ship-flow/skills/`;
+        if (!path.startsWith(prefix) || !/\/(?:SKILL\.md|agents\/openai\.yaml)$/.test(path)) continue;
+        const rel = path.slice(prefix.length), dest = `skills/${rel}`;
+        let content = rel.endsWith('SKILL.md') ? rebaseDocLinks(data.content.toString(), `tools/ship-flow/skills/${rel}`, dest) : data.content.toString();
+        if (rel.endsWith('openai.yaml') && !/^interface:/m.test(content)) {
+          const name = rel.split('/')[0];
+          content = `interface:\n  display_name: ${JSON.stringify(name)}\n  short_description: ${JSON.stringify(`Paul Loop ${name} procedure`)}\n\n${content}`;
+        }
+        put(`${out}/${dest}`, content, data.mode);
+      }
+      const { name, version, description, author, homepage, repository, license } = unified;
+      put(`${out}/.codex-plugin/plugin.json`, json({ name, version, description, author, homepage, repository, license, skills: './skills/',
+        interface: { displayName: 'Paul Loop', shortDescription: 'Develop, verify and deliver with Paul Loop', longDescription: description, developerName: author.name,
+          category: 'Productivity', capabilities: ['Skills', 'Hooks'], defaultPrompt: ['Use Paul Loop to complete this task with the smallest appropriate workflow.'] } }));
+    }
+    const entry = runtime === 'claude' ? { ...publicCatalog.plugins[0], source: './plugins/paul-loop' }
+      : { name: 'paul-loop', source: { source: 'local', path: './plugins/paul-loop' }, policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' }, category: 'Productivity' };
+    put(runtime === 'codex' ? `${runtime}/.agents/plugins/marketplace.json` : `${runtime}/.claude-plugin/marketplace.json`, json(runtime === 'codex'
+      ? { name: 'paul-loop-codex', interface: { displayName: 'Paul Loop' }, plugins: [entry] } : { ...publicCatalog, plugins: [entry] }));
+    put(`${runtime}/plugins.example.json`, json({ schemaVersion: 1, runtime, plugins: { 'paul-loop': { path: './plugins/paul-loop', version: unified.version } } }));
+  }
+  provenance.componentVersions = provenance.sourceVersions;
+  provenance.sourceVersions = { 'paul-loop': unified.version };
   provenance.documentation = validateGeneratedDocRefs(files);
   // Review these from the provider build; never derive an expected pin from an installed cache.
-  const pins = (runtime, source = false) => ({ schemaVersion: 1, runtime, plugins: Object.fromEntries(sourceCatalog.plugins.map(plugin => {
-    const name = plugin.name, version = versions[name], repository = readJson(join(root, plugin.source, '.claude-plugin/plugin.json')).repository;
-    const prefix = source ? 'tools/' + name + '/' : runtime + '/plugins/' + name + '/';
+  const pins = (runtime, source = false) => ({ schemaVersion: 1, runtime, plugins: Object.fromEntries(publicCatalog.plugins.map(plugin => {
+    const name = plugin.name, version = unified.version, repository = unified.repository;
+    const prefix = source ? '' : runtime + '/plugins/' + name + '/';
     const entries = source ? Object.entries(provenance.sourceHashes) : [...files].map(([path, data]) => [path, { sha256: sha(data.content), mode: data.mode }]);
     const inventory = Object.fromEntries(entries.filter(([path]) => path.startsWith(prefix)).map(([path, data]) => [path.slice(prefix.length), data]).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
     const sourceCommit = provenance.sourceCommit;

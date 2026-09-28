@@ -82,7 +82,9 @@ jobs:
           new_refs=()
           while IFS= read -r src; do
             [ -n "$src" ] || continue
-            manifest="${src#./}/.claude-plugin/plugin.json"
+            dir="${src#./}"
+            [ -n "$dir" ] || dir="."
+            manifest="$dir/.claude-plugin/plugin.json"
             if [ ! -f "$manifest" ]; then
               echo "::error::marketplace.json lists $src but $manifest does not exist"
               exit 1

@@ -77,7 +77,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.a
       const output = adaptOutput(event, result.stdout || '');
       if (output) process.stdout.write(output);
       // Only the heartbeat emits the package warning, once per engine SessionStart.
-      if (event === 'SessionStart' && relTarget.endsWith('/loop-doctor-heartbeat.mjs')) {
+      if (event === 'SessionStart' && (relTarget.endsWith('/loop-doctor-heartbeat.mjs') ||
+          (relTarget === 'hooks/run.mjs' && process.argv[3] === 'loop-engine' && process.argv[4] === 'loop-doctor-heartbeat.mjs'))) {
         process.stdout.write('\n[paul-loop Codex adapter] This hook fired; installation alone never proves all hooks are trusted. Native Workflow JS and PermissionDenied/InstructionsLoaded/PostToolUseFailure telemetry are unsupported. Hook ask remains deny on identical retries; separate review alone does not change it. A supported human-authorized host route is required. See runtime/capabilities.json.\n');
       }
     }

@@ -1,9 +1,18 @@
 # Changelog
 
-Each plugin in this marketplace versions independently, following [semver](https://semver.org).
+Paul Loop now versions as one plugin, following [semver](https://semver.org).
 Explicit-version channel — see [README § Development status](README.md#development-status) for why
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
+
+## paul-loop 0.1.0
+
+- Install one `paul-loop` plugin with engine, delivery skills and optional memory included. Invoke
+  Paul Loop directly; the public skill/agent namespace is `paul-loop:`.
+- Keep semantic memory off until explicit opt-in, including when an embedding key already exists.
+  Preserve verifier, privacy, authorization and isolated publisher requirements.
+- Bind project resolution to one reviewed bundle pin. Keep legacy installations intact and require
+  an explicit migration to avoid duplicate hooks; configuration paths and lesson data stay in place.
 
 ## loop-engine 0.15.20
 
