@@ -69,7 +69,7 @@ smoke는 사례 검증용 1회 실행이라 점수로 쓰지 않는다. 결과 S
 - setup은 `.claude/ship-flow.config.json`을 쓰는데 host가 막으므로 스킬의 "초안만" 경로를 채점한다.
 - to-prd·to-issues는 `backlog-file` tracker 설정으로 게시 대상을 로컬 파일로 한정했다.
 
-## 4. with/without 측정 (git이 필요 없는 12개, git 사례는 §4d)
+## 4. with/without 측정 (git이 필요 없는 12개, git 사례는 §4c)
 
 Claude Code 2.1.283, 대상 `claude-opus-5-5`(eval 자식의 기본 effort는 `medium`), 판정자 `claude-sonnet-5`,
 조건별 3회, `--allow-tools Bash Write Edit`. `~/.claude/plugins/cache/`를 뺀 PATH와 `env -u CLAUDE_EFFORT`로
@@ -172,7 +172,7 @@ diagnose / tdd / prd다.
   기록 정규식(`green-after-last-edit`)과 마지막 메시지 판정(`cause-reported`)으로 나누고 이 칸만 다시
   돌렸다. 다른 칸은 이전 판정자 grader로 채점했고 모두 통과했다.
 
-## 4d. git이 필요한 4개 사례 (with/without)
+## 4c. git이 필요한 4개 사례 (with/without)
 
 §5의 git 함수를 fixture에 넣은 뒤(`961a7ef`) §4와 같은 조건으로 측정했다.
 
@@ -192,7 +192,7 @@ diagnose / tdd / prd다.
 - code-review 스킬은 "머지해도 괜찮을지 main 대비로 봐 줘"(브랜치 리뷰)에서 6회 모두 발동하지 않았다.
   hotfix도 발동하지 않았다. 이 측정의 skill 본문은 라우팅 변경 전이다(§6).
 
-## 4e. 이번 결과로 본 선택
+## 4d. 이번 결과로 본 선택
 
 사례별 3회라 권고가 아니라 관찰이다.
 
@@ -216,7 +216,7 @@ diagnose / tdd / prd다.
       (CommandLineTools 경로 2/2, Xcode 경로 2/2).
   - sandbox의 쓰기 제한은 그대로이고, shim의 cache 쓰기만 피한다. git 사례 4개의 fixture가 끝에서 이 함수를
     eval home에만 쓰게 했다(`961a7ef`). bash 스크립트, node 자식 프로세스, hook이 부르는 git은 여전히 shim을
-    거쳐 실패한다. 측정은 §4d.
+    거쳐 실패한다. 측정은 §4c.
 - **PATH 누출.** Claude Code 세션 안에서 eval을 실행하면 설치된 plugin의 `bin/`이 자식 PATH에 들어간다.
   이 host에는 이전 loop-engine 0.2.0이 있어 plugin 없는 조건에서도 `lessons.sh` 등을 부를 수 있었다.
   retrospect smoke 1회차는 그 오래된 `lessons.sh`가 sandbox에서 실패해 아무것도 기록하지 못했다.
@@ -255,7 +255,7 @@ diagnose / tdd / prd다.
 - **outputLanguage.** `ko` 설정에서도 PRD·이슈 템플릿 제목은 영어로 남았다(본문은 한국어). 라우팅 변경 뒤
   ship-feature의 첫 측정에서도 1회가 마지막 보고를 영어로 했다.
 - **code-review 미발동.** 설명은 "Use when the user wants to review a branch"인데, 브랜치를 main 대비로 봐
-  달라는 요청 6회에서 한 번도 발동하지 않았다. 대상은 스킬 없이도 버그를 찾았다(§4d). 후속 과제다.
+  달라는 요청 6회에서 한 번도 발동하지 않았다. 대상은 스킬 없이도 버그를 찾았다(§4c). 후속 과제다.
 - **ship-feature planner 생략.** 본문은 "compact plan still gets the planner"라고 planner 검사를 필수로 둔다.
   그런데 라우팅 변경 뒤 발동한 6회 중 3회만 planner를 불렀다. 부르지 않은 실행은 보고에도 생략을 적지
   않았다. 후속 과제다.
@@ -285,7 +285,7 @@ diagnose / tdd / prd다.
 | with/without(재실행 포함) | 16 | $28.35 | §4. 재실행한 사례는 재실행 결과를 씀 |
 | 모델(Sonnet) | 12 | $12.19 | §4a |
 | effort | 15 | $24.09 | §4b |
-| git 사례 | 4 | $5.62 | §4d |
+| git 사례 | 4 | $5.62 | §4c |
 | 대체됨 | 11 | $8.25 | 사용량 한도로 즉시 실패, 판정자 발췌 잘림, `tool: Task` grader. 점수 아님 |
 
 환경 확인용 진단 실행은 점수가 아니어서 목록에 넣지 않았다. git·effort 확인에 Haiku·Sonnet·Opus로 13번,
