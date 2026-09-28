@@ -29,6 +29,8 @@ pstack 플레이북에는 대조군이 없다(arena 기본값 3모델 × 1회). 
 - `.claude/`는 eval host가 쓰기를 막는다(규칙 6).
 - grader frontmatter 안의 `---`는 loader가 거기서 frontmatter를 끝낸다. 파일 하나가 로드되지 않으면
   suite 전체가 실패한다(규칙 6, checker).
+- 기록은 JSON이라 명령 안의 줄바꿈이 `\n` 두 글자로 남는다. 그래서 기록 정규식의 `\bgit`은 새 줄에서 시작하는
+  git을 놓친다. `tool_used` input_match는 영향이 없다는 것을 탐침 사례로 확인했다(규칙 3).
 - `tool_used: Skill` grader는 `--ablation none`에서 점수에 들어간다. `summarize-evals`는 이를 발동률로
   따로 세고 통과에서 뺀다. `arm: both`인 Skill 금지 grader(예: small-fix의 `no-delivery-loop`)는
   점수로 남는다.
@@ -174,11 +176,12 @@ diagnose / tdd / prd다.
 
 ## 4c. git이 필요한 4개 사례 (with/without)
 
-§5의 git 함수를 fixture에 넣은 뒤(`961a7ef`) §4와 같은 조건으로 측정했다.
+§5의 git 함수를 fixture에 넣은 뒤(`961a7ef`) §4와 같은 조건으로 측정했다. hotfix는 grader를 고친 뒤
+(`d638109`) 다시 잰 결과다.
 
 | 사례 | plugin 있음 | 없음 | 스킬 발동 | 턴 | 비용 |
 |---|---|---|---|---|---|
-| hotfix-from-wip-branch | 3/3 | 3/3 | 0/3 | 8.3 / 5.7 | $0.39 / $0.35 |
+| hotfix-from-wip-branch | 3/3 | 3/3 | 0/3 | 9.0 / 5.3 | $0.28 / $0.18 |
 | merge-rename-vs-param | 3/3 | 3/3 | 3/3 | 3.0 / 5.7 | $0.34 / $0.15 |
 | review-planted-bug | 3/3 | 3/3 | 0/3 | 3.3 / 3.3 | $0.16 / $0.15 |
 | review-subtle-bug | 3/3 | 3/3 | 0/3 | 4.0 / 4.3 | $0.18 / $0.15 |
@@ -186,9 +189,20 @@ diagnose / tdd / prd다.
 - 네 사례 모두 plugin 유무로 결과가 갈리지 않았다.
 - review 두 사례의 12회는 모두 실제 `git diff` 출력을 읽고 심은 버그를 찾았다. #144 audit의
   review-planted-bug 3/3 대 3/3은 git이 막혀 diff를 읽지 못한 결과라 쓸 수 없다고 적었는데, 이번 결과로 대신한다.
-- hotfix는 12회 모두 `main`에서 분기하고 수정과 회귀 테스트만 커밋했다. WIP를 보존했고 push·deploy는 없었다.
+- hotfix는 6회 모두 `main`에서 분기하고 수정과 회귀 테스트만 커밋했다. WIP를 보존했고 push·deploy는 없었다.
   `git worktree add`처럼 git이 git을 부르는 명령에서는 실행마다 6~28줄의 shim 오류가 찍혔지만 결과에는
   영향이 없었다.
+- hotfix grader는 실패를 읽고 세 번 고쳤다(규칙 8). 세 번 모두 대상은 맞게 했는데 grader가 떨어뜨렸다.
+  - `fix-only-and-verified`(판정자, 기록 전체)는 긴 실행에서 가운데의 테스트 실행을 보지 못했다. 그래서 테스트
+    통과 뒤 커밋은 기록 정규식 `green-before-commit`으로, 커밋 내용은 `fix-only`로, 게시를 넘겼는지는
+    `leaves-merge-and-deploy`로 나눴다(`8f14fd6`).
+  - 정규식이 테스트와 커밋을 한 명령에서 한 실행을 놓쳐 그 경우를 더했다(`6a180c9`).
+  - sandbox가 `.git/config` 쓰기를 막아 worktree 생성이 실패한 실행이 있었다. 이 실행은 `commit-tree`와
+    `update-ref`로 커밋했는데 reflog에 `commit` 문구가 남지 않았다. 그래서 `fix-committed`는 브랜치가 main의
+    커밋에서 움직였는지를 본다. `fix-only`는 가운데의 커밋을 판정자가 보지 못해 마지막 보고를 본다
+    (`d638109`). 이 grader는 대상의 보고를 채점한다. 분기점, 커밋, WIP 보존, 커밋 전 통과는 파일과 기록으로
+    본다.
+  - 앞선 결과 세 묶음(각 6회)은 대체됨으로 남겼다.
 - code-review 스킬은 "머지해도 괜찮을지 main 대비로 봐 줘"(브랜치 리뷰)에서 6회 모두 발동하지 않았다.
   hotfix도 발동하지 않았다. 이 측정의 skill 본문은 라우팅 변경 전이다(§6).
 
@@ -216,7 +230,8 @@ diagnose / tdd / prd다.
       (CommandLineTools 경로 2/2, Xcode 경로 2/2).
   - sandbox의 쓰기 제한은 그대로이고, shim의 cache 쓰기만 피한다. git 사례 4개의 fixture가 끝에서 이 함수를
     eval home에만 쓰게 했다(`961a7ef`). bash 스크립트, node 자식 프로세스, hook이 부르는 git은 여전히 shim을
-    거쳐 실패한다. 측정은 §4c.
+    거쳐 실패한다. sandbox는 `.git/config` 쓰기도 막는다. 그래서 upstream을 설정하는 `git worktree add ...
+    origin/main`은 브랜치만 만들고 실패한다. 측정은 §4c.
 - **PATH 누출.** Claude Code 세션 안에서 eval을 실행하면 설치된 plugin의 `bin/`이 자식 PATH에 들어간다.
   이 host에는 이전 loop-engine 0.2.0이 있어 plugin 없는 조건에서도 `lessons.sh` 등을 부를 수 있었다.
   retrospect smoke 1회차는 그 오래된 `lessons.sh`가 sandbox에서 실패해 아무것도 기록하지 못했다.
@@ -269,15 +284,15 @@ diagnose / tdd / prd다.
 
 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. 비용은 정가 추정이며 구독 과금과 다르다.
 
-[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 76개를 적었다.
+[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 79개를 적었다.
 파일마다 경로, 모델, 판정자, 사례, 비용, SHA-256, 쓰임새와 채점한 사례 버전(`casesCommit`)이 있다. 사례 버전은
 다음과 같다.
 
 - §4의 첫 실행은 `61fb2ef`, tdd·retrospect·diagnose 재실행은 `d74913a`로 채점했다.
-- Sonnet max diagnose 재실행은 `a6af62d`, ship-feature 재실행 둘은 `6a1972f`, git 사례는 `961a7ef`다.
+- Sonnet max diagnose 재실행은 `a6af62d`, ship-feature 재실행 둘은 `6a1972f`, git 사례는 `961a7ef`(hotfix는 `d638109`)다.
 - 나머지는 `fe53c65`다.
 
-정가 추정 비용은 모두 $84.73다.
+정가 추정 비용은 모두 $91.16다.
 
 | 묶음 | 파일 | 비용 | 쓰임 |
 |---|---|---|---|
@@ -285,11 +300,11 @@ diagnose / tdd / prd다.
 | with/without(재실행 포함) | 16 | $28.35 | §4. 재실행한 사례는 재실행 결과를 씀 |
 | 모델(Sonnet) | 12 | $12.19 | §4a |
 | effort | 15 | $24.09 | §4b |
-| git 사례 | 4 | $5.62 | §4c |
-| 대체됨 | 11 | $8.25 | 사용량 한도로 즉시 실패, 판정자 발췌 잘림, `tool: Task` grader. 점수 아님 |
+| git 사례 | 4 | $4.79 | §4c |
+| 대체됨 | 14 | $15.51 | 사용량 한도로 즉시 실패, 판정자 발췌 잘림, `tool: Task` grader, 고치기 전 hotfix grader. 점수 아님 |
 
 환경 확인용 진단 실행은 점수가 아니어서 목록에 넣지 않았다. git·effort 확인에 Haiku·Sonnet·Opus로 13번,
-git 함수 탐침에 Sonnet으로 3번(각 2회)을 돌렸다. retrospect 판정 rubric 재측정과 라우팅 변경 측정은 각 변경의
+git 함수와 input_match 탐침에 Sonnet으로 5번(각 2회)을 돌렸다. retrospect 판정 rubric 재측정과 라우팅 변경 측정은 각 변경의
 audit에 해시와 함께 적었다.
 
 ## 한계
@@ -301,5 +316,7 @@ audit에 해시와 함께 적었다.
   경로를 찾은 실행도 있다). git을 많이 쓰는 plugin 쪽 흐름이 불리할 수 있다.
 - 사례 설정에 `pluginBinPrefix`가 없어 엔진 게이트(`classify-risk`, `verdict-run`, `ac-verify`)는 측정하지
   않았다(§5).
+- diagnose-failing-test의 `verified-after-fix`는 아직 기록 전체를 보는 판정자로 실행 순서를 본다. 이 사례의
+  실행은 6~7턴으로 짧아 문제가 드러나지 않았지만, hotfix와 같은 이유로 떨어질 수 있다.
 - 포크된 스킬 subagent 안의 도구 호출이 `tool_used`에 세어지는지 확인하지 못했다. 금지 grader가
   아무것도 확인하지 않고 통과할 수 있다.

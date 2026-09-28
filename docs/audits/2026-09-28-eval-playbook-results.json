@@ -2,13 +2,13 @@
   "note": "Raw results stay in git-ignored .loop/plugin-eval/ of the eval-playbook worktree. Cost is list-price estimate, not subscription billing.",
   "claudeCode": "2.1.283",
   "totalsUsd": {
-    "all": 84.73,
+    "all": 91.16,
     "smoke": 6.23,
     "withWithout": 28.35,
     "model": 12.19,
     "effort": 24.09,
-    "git": 5.62,
-    "superseded": 8.25
+    "git": 4.79,
+    "superseded": 15.51
   },
   "results": [
     {
@@ -650,10 +650,10 @@
       "cases": [
         "hotfix-from-wip-branch"
       ],
-      "casesCommit": "961a7ef",
-      "costUsd": 2.21,
-      "durationSeconds": 101,
-      "sha256": "7e3f9ad1ca4d7ee64232766172f03d866a161df51c659069cd467b20d04df291"
+      "casesCommit": "d638109",
+      "costUsd": 1.38,
+      "durationSeconds": 108,
+      "sha256": "c99c3192ce7f3aaed8a31505a83e8b39c88133f27e1d26c9f385612fc7f975d2"
     },
     {
       "path": "2026-09-29-git-cases/merge-rename-vs-param/result.json",
@@ -946,6 +946,48 @@
       "costUsd": 0.41,
       "durationSeconds": 60,
       "sha256": "9b28d52f4af965579cd0b102ce183ccbb69c80fed951e3f4c5f85cf17c3f2233"
+    },
+    {
+      "path": "superseded/2026-09-29-git-cases-2/hotfix-from-wip-branch/result.json",
+      "kind": "superseded",
+      "note": "usage limit hit or truncated judge excerpt; not a score",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "hotfix-from-wip-branch"
+      ],
+      "casesCommit": "8f14fd6",
+      "costUsd": 2.32,
+      "durationSeconds": 112,
+      "sha256": "81a2a44a4a0b69cd8c577b248e573dac22afe2ba5c50ebc4806f4b83fa6c229d"
+    },
+    {
+      "path": "superseded/2026-09-29-git-cases-3/hotfix-from-wip-branch/result.json",
+      "kind": "superseded",
+      "note": "usage limit hit or truncated judge excerpt; not a score",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "hotfix-from-wip-branch"
+      ],
+      "casesCommit": "6a180c9",
+      "costUsd": 2.73,
+      "durationSeconds": 104,
+      "sha256": "698ff048fddfa5ed758689da3ff956fbfbce0aeaf9a7143af6d68a6b86e2e328"
+    },
+    {
+      "path": "superseded/2026-09-29-git-cases/hotfix-from-wip-branch/result.json",
+      "kind": "superseded",
+      "note": "usage limit hit or truncated judge excerpt; not a score",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "hotfix-from-wip-branch"
+      ],
+      "casesCommit": "961a7ef",
+      "costUsd": 2.21,
+      "durationSeconds": 101,
+      "sha256": "7e3f9ad1ca4d7ee64232766172f03d866a161df51c659069cd467b20d04df291"
     },
     {
       "path": "superseded/opus-max-prd/result.json",
