@@ -5,6 +5,17 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.3.0
+
+- Add a `claude plugin eval` suite under `evals/` for five skills (entry routing, diagnosing-bugs,
+  tdd, code-review, grilling), each scored on its outcome and on the steps that produced it.
+- `agent-eval` keeps runner state and the case file outside the workspace and gives
+  `EVAL_CASE_PATH` to the grader only, written after the target exits. Regression fixtures no longer
+  list `required_events` in `scenario.json`. The native runner writes case data and the
+  before-snapshot only after the target exits and grades from the in-memory snapshot.
+- Verdict ledger events carry the verify-start workspace digest; `run-metrics` reports
+  `no_change_reruns` (same command, same digest), and `INSUFFICIENT_DATA` without digests.
+
 ## paul-loop 0.2.0
 
 - Add `improvement-research`: brief, collect (Aside CLI with a user-designated account, or host web
