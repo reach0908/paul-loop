@@ -211,4 +211,38 @@ node -e '
 ' "$JSON" || fail "no-compaction fixture must report INSUFFICIENT_DATA, not a fabricated ratio"
 echo "PASS: runs with no compaction events report post_compaction_red=INSUFFICIENT_DATA (no fabricated ratio)"
 
+# ── 10) 변경 없는 재실행 — 같은 명령의 직전 verdict와 시작 digest가 같으면 사이 수정이 없었다 ─────
+# runG: test@D1 FAIL → test@D1 FAIL(무변경) → test@D2 PASS(변경) → lint@D2(첫 lint, 비교 불가)
+#       → test@D2 PASS(무변경) → test(digest 없음, 비교 불가). comparable=3, no_change=2.
+RERUN="$DIR/rerun"
+mkdir -p "$RERUN"
+cat > "$RERUN/runG.jsonl" <<'EOF'
+{"id":"g1","type":"run.started","ts":"2026-09-28T00:00:00.000Z","aggregate_id":"runG","payload":{},"version":1}
+{"id":"g2","type":"verdict.failed","ts":"2026-09-28T00:01:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm test","digest":"d1"},"version":1}
+{"id":"g3","type":"verdict.failed","ts":"2026-09-28T00:02:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm test","digest":"d1"},"version":1}
+{"id":"g4","type":"verdict.passed","ts":"2026-09-28T00:03:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm test","digest":"d2"},"version":1}
+{"id":"g5","type":"verdict.passed","ts":"2026-09-28T00:04:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm run lint","digest":"d2"},"version":1}
+{"id":"g6","type":"verdict.passed","ts":"2026-09-28T00:05:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm test","digest":"d2"},"version":1}
+{"id":"g7","type":"verdict.passed","ts":"2026-09-28T00:06:00.000Z","aggregate_id":"runG","payload":{"cmd":"npm test","digest":null},"version":1}
+EOF
+JSON="$(node "$METRICS" --runs-dir "$RERUN" --json)" || fail "run-metrics with digest-bearing verdicts must exit 0"
+node -e '
+  const m = JSON.parse(process.argv[1]);
+  const runG = m.runs.find((r) => r.run_id === "runG");
+  if (JSON.stringify(runG.no_change_reruns) !== JSON.stringify({ count: 2, comparable: 3 }))
+    throw new Error("runG no_change_reruns must be {count:2, comparable:3}, got " + JSON.stringify(runG.no_change_reruns));
+  const o = m.overall.no_change_reruns;
+  if (!o || o.count !== 2 || o.comparable !== 3 || Math.abs(o.ratio - 2 / 3) > 1e-9)
+    throw new Error("overall no_change_reruns must be 2/3, got " + JSON.stringify(o));
+' "$JSON" || fail "no-change rerun fold values wrong"
+OUT="$(node "$METRICS" --runs-dir "$RERUN")"
+printf '%s' "$OUT" | grep -q "no_change_reruns" || fail "text output must show no_change_reruns, got: $OUT"
+JSON="$(node "$METRICS" --runs-dir "$AB" --json)" || fail "run-metrics on digest-free fixture must exit 0"
+node -e '
+  const m = JSON.parse(process.argv[1]);
+  if (m.overall.no_change_reruns !== "INSUFFICIENT_DATA")
+    throw new Error("verdicts without digests -> no_change_reruns must be INSUFFICIENT_DATA, got " + JSON.stringify(m.overall.no_change_reruns));
+' "$JSON" || fail "digest-free ledger must not report a fabricated rerun ratio"
+echo "PASS: no-change reruns fold per command on the start digest; digest-free verdicts stay INSUFFICIENT_DATA"
+
 exit 0
