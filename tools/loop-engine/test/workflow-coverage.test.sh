@@ -56,5 +56,50 @@ for (const invalid of ['', '  ', {}, []]) {
   r = await audit({}, async (_, o) => o.phase === 'Context' ? invalid : o.phase === 'Investigate' ? lane : 'report', parallel, pipeline, () => {}, () => {})
   assert.equal(r.status, 'incomplete'); assert.equal(r.stageCoverage.context, 'incomplete')
 }
-console.log('PASS: required lane coverage, evidence-backed quorum, global dispatch limits, prior context and language')
+const research = load('improvement-research')
+const runResearch = (a, fn) => research(a, fn, parallel, pipeline, () => {}, () => {})
+const sourced = (claim, url, load_bearing = true) => ({ claim, source: url, evidence_class: 'empirical', load_bearing })
+const opened = status => ({ status, opened: true, source_opened: 'https://a.example', note: 'read original', correction: status === 'corrected' ? 'fixed value' : undefined })
+for (const bad of [{ topic: 't' }, { topic: 't', domains: [{ key: 'a', prompt: 'p' }], reportPath: '/r.md' }, { topic: 't', domains: [{ key: '', prompt: 'p' }] }]) {
+  await assert.rejects(runResearch(bad, async () => null))
+}
+r = await runResearch({ topic: 't', domains: [{ key: 'a', prompt: 'p' }, { key: 'b', prompt: 'p' }] }, async (_, o) =>
+  o.label === 'collect:a' ? null
+  : o.phase === 'Collect' ? { claims: [sourced('kept', 'https://a.example/x'), sourced('no url', ''), sourced('bad url', 'see paper')] }
+  : o.phase === 'Verify' ? opened('confirmed') : 'report')
+assert.equal(r.status, 'incomplete'); assert.equal(r.coverage.find(c => c.domain === 'a').status, 'incomplete')
+assert.equal(r.verified.length, 1); assert.equal(r.rejected.length, 2)
+const verifyPrompts = []
+r = await runResearch({ topic: 't', reportPath: '/abs/report.md' }, async (prompt, o) => {
+  if (o.label === 'extract') { assert.match(prompt, /untrusted data/); return { claims: [sourced('a', 'https://a.example'), sourced('b', 'https://b.example'), sourced('c', 'https://c.example')] } }
+  if (o.phase === 'Verify') {
+    verifyPrompts.push(prompt)
+    if (prompt.includes('https://a.example')) return { status: 'unreachable', opened: false, note: '403' }
+    if (prompt.includes('https://b.example')) return { status: 'confirmed', opened: false, note: 'from memory' }
+    return { status: 'corrected', opened: true, note: 'date differs' }
+  }
+  return 'report'
+})
+assert.equal(r.mode, 'verify'); assert.equal(r.unreachable.length, 1); assert.equal(r.refuted.length, 0)
+assert.equal(r.inconclusive.length, 2, 'unopened confirm and correction without a value stay inconclusive'); assert.equal(r.status, 'incomplete')
+assert.ok(verifyPrompts.length === 3 && verifyPrompts.every(p => p.includes('untrusted data')))
+r = await runResearch({ topic: 't', domains: [{ key: 'a', prompt: 'p' }], maxClaimsPerDomain: 1 }, async (prompt, o) =>
+  o.phase === 'Collect' ? { claims: [sourced('minor', 'https://m.example', false), sourced('major', 'https://j.example')] }
+  : o.phase === 'Verify' ? (assert.ok(prompt.includes('major')), opened('corrected')) : 'report')
+assert.equal(r.verified.length, 1); assert.equal(r.verified[0].claim, 'major')
+assert.equal(r.unverifiedOverCap.length, 1); assert.equal(r.unverifiedOverCap[0].claim, 'minor'); assert.equal(r.status, 'incomplete')
+calls = 0
+r = await runResearch({ topic: 't', domains: [{ key: 'a', prompt: 'p' }, { key: 'b', prompt: 'p' }], maxAgentCalls: 2 }, async (_, o) => {
+  calls++
+  return o.phase === 'Collect' ? { claims: [sourced('x', 'https://x.example')] } : o.phase === 'Verify' ? opened('confirmed') : 'report'
+})
+assert.ok(calls <= 2); assert.equal(r.status, 'incomplete'); assert.ok(r.incompleteCalls.some(c => c.status === 'not_run'))
+r = await runResearch({ topic: 't', domains: [{ key: 'a', prompt: 'p' }], outputLanguage: 'ko' }, async (prompt, o) =>
+  o.phase === 'Collect' ? { claims: [sourced('x', 'https://x.example')] }
+  : o.phase === 'Verify' ? opened('confirmed') : (assert.ok(prompt.includes('in ko')), '보고서'))
+assert.equal(r.status, 'complete'); assert.equal(r.reportBody, '보고서'); assert.equal(r.verified.length, 1)
+r = await runResearch({ topic: 't', domains: [{ key: 'a', prompt: 'p' }] }, async (_, o) =>
+  o.phase === 'Collect' ? { claims: [sourced('x', 'https://x.example')] } : o.phase === 'Verify' ? opened('confirmed') : '  ')
+assert.equal(r.status, 'incomplete'); assert.equal(r.reportBody, '')
+console.log('PASS: required lane coverage, evidence-backed quorum, global dispatch limits, prior context and language; improvement-research source-verified claims')
 JS

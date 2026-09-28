@@ -5,6 +5,15 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.2.0
+
+- Add `improvement-research`: brief, collect (Aside CLI with a user-designated account, or host web
+  tools), keep raw output local-only with SHA-256, re-verify every load-bearing claim at its source
+  with a different tool, then write a dated report. It stops at the report.
+- Replace the `trends-research` workflow with `improvement-research`. It collects per domain or
+  verifies an existing report, drops claims without a source URL, counts unopened or inconsistent
+  verdicts as inconclusive rather than confirmed, caps agent calls and logs every dropped claim.
+
 ## paul-loop 0.1.0
 
 - Install one `paul-loop` plugin with engine, delivery skills and optional memory included. Invoke

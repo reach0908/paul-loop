@@ -5,6 +5,12 @@
 별도 worktree에만 있던 provider 관련 Markdown 7개를 이번 PR로 통합한다.
 원본 worktree·commit·비공개 JSON은 삭제하거나 변경하지 않았다.
 
+> **2026-09-28 확인:** 위 커밋과 `fcbfd32`, 브랜치 `codex/paul-loop-research-simplify`를
+> 이 머신의 provider checkout·plugin marketplace clone·`~/.codex`·원격에서 찾지 못했다.
+> 당시 Aside 원 로그(`/tmp/paul-loop-aside-*.log`)도 남아 있지 않다. 따라서 아래 SHA-256과
+> 원본 JSON을 대조할 수 없고, 종합 문서 §3 사용 현황은 현재 재현할 수 없다. 다른 기기에
+> 남아 있을 가능성은 배제하지 않았다. [09-28 harvest](2026-09-28-harvest.md#1-기존-조사-문서와-도구-점검) 참조.
+
 공개본은 당시 본문과 출처를 유지하되, 현재 상태표로 연결하는 시점 안내를 추가하고
 개인 home 경로를 `<local-home>`으로 표시했다. 비공개 JSON과 소비 프로젝트 후속 기록의
 링크는 아래 보존 설명으로 연결했다. 이번 통합은 외부 논문·제품의 새 원문 조사가 아니다.

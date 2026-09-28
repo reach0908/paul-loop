@@ -6,7 +6,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/ask-matt/SKILL.md",
       "localPath": "tools/ship-flow/skills/ask-paul/SKILL.md",
-      "computedHash": "0cde4e0997b69581aef8f220a161eeee44997f61b14e0032f2bcfbf3d3502a29",
+      "computedHash": "22058247b605f58f63c5cb826ef54cdfee575677c50820ec0dae5fef633a79d8",
       "fork": {
         "reason": "Rewritten, not ported: upstream routes over ~15 skills this plugin does not ship. Receiving upstream's body would fill it with handoffs to nothing. Renamed ask-matt -> ask-paul in ship-flow 0.9.0 because the body shares no text with upstream and the old name misdescribed what it routes over; the entry stays here to keep tracking upstream's version as a source of ideas, not of text.",
         "since": "2026-08-26"

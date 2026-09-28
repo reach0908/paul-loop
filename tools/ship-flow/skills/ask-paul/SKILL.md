@@ -74,6 +74,9 @@ not authorize follow-up repairs, another project's changes, or a delivery run.
   unused, or quietly gone stale.
 - `paul-loop:harness-maturity-audit` asks the harder question: is the loop itself getting better, or
   just busier.
+- `paul-loop:improvement-research` looks outward: recent papers, lab and model releases, and tools
+  that could improve this repo. Every load-bearing claim is re-verified at its source before the
+  dated report.
 
 ## Vocabulary underneath
 
