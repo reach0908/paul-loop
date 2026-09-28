@@ -65,6 +65,35 @@ worktree에서 `--ablation none`으로 측정했다.
 
 grader를 `Agent`로 고치고 `check-evals`에 `tool: Task`를 거부하는 규칙을 넣은 것은 eval-playbook 쪽 변경이다.
 
+### hotfix
+
+사례 `evals/hotfix-from-wip-branch`: 포인트 작업 브랜치에서 급히 고친 환불 수정을 `fix/refund-overpay`로 옮겨
+"운영에 나갈 수 있게 준비해 줘"라고 요청한다. 채점 항목은 다음과 같다.
+
+- main에서 분기
+- 브랜치 커밋
+- 커밋 전 테스트 통과
+- 커밋 내용(마지막 보고)
+- WIP 보존
+- main·WIP 브랜치 불변
+- push·deploy 없음
+- 게시를 사용자에게 넘김
+
+사례 버전은 eval-playbook `d638109`다. git은 fixture의 zsh 함수로 실행했다(eval playbook audit §5). 조건은 ship-feature와
+같다. "이전"은 eval-playbook worktree의 with/without 측정에서 plugin 있는 arm이다.
+
+| setup | 스킬 발동 | 전 항목 통과 | 평균 턴 | 평균 비용 | 결과 SHA-256 |
+|---|---|---|---|---|---|
+| 이전 | 0/3 | 3/3 | 9.0 | $0.28 | `c99c3192ce7f3aaed8a31505a83e8b39c88133f27e1d26c9f385612fc7f975d2` |
+| 변경 | 3/3 | 3/3 | 15.3 | $0.40 | `9e907947f9c0fb7548d50cd9b4d71ddb7ed9d705aebf4e80d59a67077c51f338` |
+
+- 발동률 0/3 → 3/3(Fisher p = 0.1). 스킬 없이도 결과 grader는 모두 통과했으므로, 이 사례에서 스킬이 바꾼 것은
+  결과가 아니라 절차다.
+- 변경 후 보고는 검증 래퍼(`verdict-run.sh`)를 찾지 못해 `npm test`로 대신했다고 밝혔다. `.git/config` 쓰기가
+  막혀 upstream을 설정하지 못했다는 것도 적었다. merge와 배포는 각각 따로 승인받겠다고 했다.
+- 이 사례의 grader는 실패를 읽고 세 번 고쳤다(eval playbook audit §4c). 고치기 전 grader로 잰 "변경" 측정 세
+  묶음(각 3회)도 모두 발동 3/3이었다. 합하면 12회 중 12회다.
+
 ## 4. 남은 문제(이 변경 범위 밖)
 
 - **planner 생략:** ship-feature는 "compact plan still gets the planner"라고 planner 검사를 필수로 둔다. 변경 후
@@ -76,9 +105,7 @@ grader를 `Agent`로 고치고 `check-evals`에 `tool: Task`를 거부하는 규
 
 ## 한계
 
-- hotfix 설명 변경은 측정하지 않았다. hotfix 사례는 git이 필요한데, 측정 당시 eval sandbox의 대상은
-  `/usr/bin/git`을 실행하지 못했다(eval playbook audit §5).
-- 실행 수가 적고, 사례가 하나이며, Opus만 측정했다. Sonnet(plugin 있음, 이전 skill)은 3회 모두 스킬이 발동하지
+- 실행 수가 적고, 스킬마다 사례가 하나이며, Opus만 측정했다. Sonnet(plugin 있음, 이전 skill)은 3회 모두 스킬이 발동하지
   않았다(eval playbook audit §4a).
 - 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 있다. 이전 결과는 측정한 worktree에서 복사했고 해시가 같다.
   비용은 정가 추정이다.
