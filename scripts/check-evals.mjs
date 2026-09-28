@@ -33,7 +33,8 @@ export function checkCase(dir) {
   const graders = existsSync(gdir) ? readdirSync(gdir).filter(f => f.endsWith('.md')).map(f => ({ name: f.slice(0, -3), ...frontmatter(readFileSync(join(gdir, f), 'utf8')) })) : [];
   if (!graders.length) problems.push('no graders');
   const type = g => field(g.head, 'type');
-  const indicator = g => type(g) === 'tool_used' && field(g.head, 'tool') === 'Skill' && field(g.head, 'arm') !== 'both';
+  // Indicators are not scored under with/without: Skill graders not marked `arm: both`, and `arm: with-only`.
+  const indicator = g => (type(g) === 'tool_used' && field(g.head, 'tool') === 'Skill' && field(g.head, 'arm') !== 'both') || field(g.head, 'arm') === 'with-only';
   // A reply-only case (tag `dialogue`) has no artifact to check; its judge verdicts get a human read.
   const dialogue = /\bdialogue\b/.test(field(head, 'tags') || '');
   if (!dialogue && !graders.some(g => type(g) !== 'llm' && !indicator(g) && g.name !== PEEK_GRADER)) problems.push('no scored deterministic grader besides the peek guard (llm judges and Skill indicators alone cannot carry a case; tag `dialogue` if the reply is the only artifact)');

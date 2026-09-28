@@ -44,6 +44,9 @@ expect_fail "a grader aimed at .claude/" "targets .claude/"
 good "$T/c"; printf -- "---\ntype: regex\ntarget: trace\npattern: '^---'\n---\n" > "$T/c/graders/d.md"
 expect_fail "a grader pattern containing ---" 'frontmatter contains "---"'
 
+good "$T/c"; sed -i.bak 's/^path:.*/&\narm: with-only/' "$T/c/graders/kept.md"
+expect_fail "a case whose only deterministic grader is with-only" "no scored deterministic grader"
+
 good "$T/c"; printf -- "---\ntype: file_exists\npath: 'README.md'\narm: with\n---\n" > "$T/c/graders/a.md"
 expect_fail "an arm value the loader rejects" "arm must be both or with-only"
 
