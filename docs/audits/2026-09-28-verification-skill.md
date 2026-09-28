@@ -65,6 +65,11 @@ Bash sandbox가 거부하던 원인은 `~/.docker` 안의 심볼릭 링크 31개
 - verification-skill-cli: plugin 없는 쪽도 스킬 파일은 만들었지만(3/3) 기능 지도는 만들지 않았고(0/3), 1회는 끝까지 실행한 증거가 판정에서 떨어졌다. 기능 지도 grader는 이 스킬이 정한 형식이라 plugin 쪽이 정의상 유리하다. 두 조건 공통 목표(스킬 작성 후 실제 실행 입증)는 3/3 대 2/3이다. 통과율 3/3 대 0/3의 Fisher 정확 검정 p = 0.1.
 - 첫 실행(`2026-09-28-bash-cases`)에서 이 사례는 6회 모두 스킬 파일 grader가 실패했다. 원인은 스킬이 아니라 사례 설계였다. eval host가 `.claude/skills/`를 보호 경로로 막아 모든 실행이 임시 폴더에 만들고 옮겨 달라고 안내했다(우회하지 않았다). 또 제품 파일 수정 grader가 Edit 입력 전체를 검사해, 스킬 문서 안의 `bin/todo.js` 글자에도 걸렸다. 저장 위치를 요청에 적고 grader를 `file_path`로 고정해 다시 실행했다. 첫 실행 결과는 점수로 쓰지 않는다.
 
+- **측정 뒤 확인된 환경 한계.**
+  - 이 macOS host의 eval sandbox 안에서는 대상이 git을 실행할 수 없다. `/usr/bin/git`(xcrun shim)은 cache 파일을 만들지 못해 실패하고, 실제 git 바이너리(Xcode·Homebrew)는 sandbox가 파일 정보 조회를 막아 PATH에서 찾히지 않는다. 위 표의 24회 중 13회에서 판정 발췌에 git 실패가 보인다(diagnose 4, review 3, tdd plugin 없음 3, verification plugin 없음 3).
+  - diagnose·tdd·verification은 과제에 git이 필요 없다. review-planted-bug는 "main 대비 리뷰"라 git diff가 필요한데, `read-the-diff` grader는 git 호출 시도만 셌다. 그래서 diff를 보지 못한 실행도 통과했다. 이 사례의 3/3 대 3/3은 유효한 비교가 아니다. 후속 변경에서 이 grader가 실제 diff 출력(`diff --git`)을 요구하도록 바꾼다.
+  - 이 세션에서 실행한 eval은 두 조건 모두 자식 PATH에 설치된 loop-engine 0.2.0의 `bin/`이 들어가 있었다. 결과 발췌를 검색해 보니 위 네 사례에서는 그 명령을 호출한 흔적이 없다.
+
 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. `2026-09-28-bash-cases/result.json` SHA-256 `cb1de9b8cf5ce0fe34a201d9e05b0112d46892e1a3e34f7c50cb606cd06ef525`(1,429초, 정가 추정 $8.76), `2026-09-28-verification-rerun/result.json` SHA-256 `1edcaae5ef2cac515ec119e31da2397c40b393e088230d6765a59f0df13ac7e3`(609초, $3.29). 구독 과금과는 다르다.
 
 ## 한계
