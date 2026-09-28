@@ -45,6 +45,8 @@ export function checkCase(dir) {
 
   for (const g of graders) {
     const t = type(g);
+    // Claude Code names its subagent tool Agent; a `tool: Task` grader matches nothing and a max-0 guard passes vacuously.
+    if (['tool_used', 'tool_order'].includes(t) && /\btool:\s*Task\b/.test(g.head)) problems.push(`${g.name}: the subagent tool is Agent, not Task`);
     // The eval loader ends frontmatter at the first `---` anywhere, and one unloadable file fails the whole suite.
     if (g.head.includes('---')) problems.push(`${g.name}: frontmatter contains "---", which ends it early for the eval loader (write -{3})`);
     const arm = field(g.head, 'arm');

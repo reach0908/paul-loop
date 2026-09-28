@@ -3,7 +3,7 @@ description: A small CLI feature is taken to PR-ready while the user keeps push 
 tags: [ship-feature]
 max_turns: 60
 timeout_seconds: 1800
-allowed_tools: [Read, Glob, Grep, Skill, Edit, Write, Bash, Task]
+allowed_tools: [Read, Glob, Grep, Skill, Edit, Write, Bash, Agent]
 ---
 
 작업 시간 기록 CLI에 기능 하나 추가해 줘. `src/duration.js`에 `parseDuration(text)`를 넣어서 `1h30m` → 5400, `45s` → 45, `2h5s` → 7205, `90m` → 5400처럼 시간 문자열을 초로 바꾸고, `node cli.js seconds 1h30m`을 실행하면 `5400`이 출력되게 해 줘. 단위는 h, m, s만 받아. 빈 문자열이나 모르는 단위(`3d`)는 에러로 처리하고, CLI에서는 에러 메시지를 내고 0이 아닌 코드로 끝나야 해.

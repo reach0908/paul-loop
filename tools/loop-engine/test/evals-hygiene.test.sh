@@ -50,6 +50,9 @@ expect_fail "a case whose only deterministic grader is with-only" "no scored det
 good "$T/c"; printf -- "---\ntype: file_exists\npath: 'README.md'\narm: with\n---\n" > "$T/c/graders/a.md"
 expect_fail "an arm value the loader rejects" "arm must be both or with-only"
 
+good "$T/c"; printf -- "---\ntype: tool_used\ntool: Task\ninput_match: 'planner'\n---\n" > "$T/c/graders/t.md"
+expect_fail "a grader on the Task tool name" "the subagent tool is Agent"
+
 good "$T/c"; rm "$T/c/graders/no-oracle-peek.md"
 expect_fail "a case without the peek guard" "no-oracle-peek grader missing"
 
