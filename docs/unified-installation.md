@@ -42,6 +42,10 @@ plugin identities stable, so it cannot perform the three-to-one identity migrati
 
 ## Optional memory
 
+Follow the [memory activation and operations guide](memory-guide.md) for the ordered DB/schema,
+authorization, key, synchronization, host opt-in and verification steps. For general use, start with
+[the user guide](getting-started.md).
+
 File lessons need no service. For semantic memory, deliberately configure the user-owned database
 authorization, embedding provider and signing key, then enable `memory_enabled` in the Claude plugin
 configuration or supply `PAUL_LOOP_MEMORY=1` in a Codex session's environment. Merely having an API key

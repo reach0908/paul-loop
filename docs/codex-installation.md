@@ -100,6 +100,10 @@ The official CLI performs its normal registration and core plugin configuration;
 does not rewrite `config.toml`, force configuration overrides, set feature flags, or edit caches.
 It uses the caller's current `CODEX_HOME` (or normal Codex default) only through those CLI commands.
 
+For everyday requests, see [the user guide](getting-started.md). To enable the bundled optional
+semantic memory, follow [the activation guide](memory-guide.md); enabling a plugin does not prepare
+a DB or pass an environment variable from a terminal back into the running desktop host.
+
 ## Updates and recovery
 
 For a future update, explicitly obtain and review the intended provider revision, regenerate it,

@@ -1,8 +1,10 @@
 # Memory hardening contract
 
-Memory remains **opt-in** (`defaultEnabled: false`). The base loop-engine / ship-flow plugin needs no
-Postgres, embedding credential, or signing key. This document describes compatibility changes in
-this hardening patch; these are local guardrails, not proof against an agent with unrestricted shell,
+Memory remains **opt-in**. The unified Paul Loop package defaults `memory_enabled` to false;
+legacy split memory installations used `defaultEnabled: false`. Base file lessons and delivery need no
+Postgres, embedding credential, or signing key. For setup, follow the
+[memory activation guide](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md).
+This document describes compatibility changes in this hardening patch; these are local guardrails, not proof against an agent with unrestricted shell,
 DB administrator privileges, or access to signing secrets.
 
 ## Evidence and learning

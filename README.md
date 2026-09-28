@@ -3,6 +3,43 @@
 A verifier-driven development plugin for Claude Code and Codex. Install **paul-loop** once and ask
 Paul Loop (폴루프) to develop, fix, verify, review or deliver a change.
 
+## Quick start
+
+Follow the [한국어 사용 가이드](https://github.com/reach0908/paul-loop/blob/main/docs/getting-started.md) for installation, project setup, daily requests,
+updates and troubleshooting. For semantic memory, use the [메모리 활성화 가이드](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md).
+
+1. **Install one plugin.** Choose [Claude Code](#install-claude-code) or the
+   [generated Codex marketplace](docs/codex-installation.md). Existing split installations follow
+   [the migration guide](docs/unified-installation.md) first to avoid duplicate hooks.
+2. **Open a new project session.** Invoke `/paul-loop:paul-loop` in Claude or `$paul-loop` in Codex,
+   then describe the intended result, such as “fix this failure and verify it” or “implement this
+   issue through an open PR.” Small edits do not require a full delivery loop.
+3. **Connect the project's verifier when needed.** Preserve existing settings and use the
+   [reviewed project launcher and lock](docs/project-installations.md) for shell commands.
+4. **Choose memory deliberately.** [File lessons](docs/verified-lesson-workflow.md) need no DB or
+   API key but require recorded verification evidence. Optional semantic memory additionally needs
+   a dedicated migrated DB, project-specific DB authorization, embedding/signing keys, initial
+   synchronization, then host opt-in. The [activation guide](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md) covers that order,
+   desktop environment inheritance, observation and how to turn it off.
+
+The unified instructions apply to the `paul-loop` 0.1.0 package. Check
+[PR #140 and its release state](https://github.com/reach0908/paul-loop/pull/140) before using public
+installation commands: a prepared package or merged PR alone is not a published release or an
+updated consumer installation.
+
+## Guides
+
+| Task | Guide |
+|---|---|
+| First installation and everyday use | [처음 사용하기](https://github.com/reach0908/paul-loop/blob/main/docs/getting-started.md) |
+| Enable, observe or disable semantic memory | [메모리 활성화와 운영](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md) |
+| Reuse a verified fix without a DB | [File-lesson workflow](docs/verified-lesson-workflow.md) |
+| Move from three plugins to one | [Unified installation](docs/unified-installation.md) |
+| Review/update a project's approved installation | [Project launcher and lock](docs/project-installations.md) |
+| Host support and remaining limitations | [Runtime compatibility](docs/runtime-compatibility.md) |
+
+The sections below are the module and command reference.
+
 ## Why
 
 Agentic coding loops fail in a specific, recurring way: the agent decides for itself whether its
@@ -226,6 +263,9 @@ happily exit `0` over nothing — this guard turns that into an explicit `FAILED
 
 ## What's in `loop-memory`
 
+For the complete setup sequence, use the [memory activation and operations guide](https://github.com/reach0908/paul-loop/blob/main/docs/memory-guide.md).
+The fields below are a reference, not an automatic provisioning procedure.
+
 **Opt-in inside Paul Loop.** The payload is included, but hooks return before reading prompts,
 loading credentials or writing memory telemetry unless `memory_enabled=true` is configured in
 Claude Code or `PAUL_LOOP_MEMORY=1` is explicitly supplied in the session environment. Existing
@@ -251,6 +291,7 @@ Configure the installed plugin with `/plugin configure paul-loop@paul-loop`:
 
 | Key | Required | Notes |
 |---|---|---|
+| `memory_enabled` | no | Defaults to false. Enable after DB/schema, project authorization, keys and initial sync are ready. `PAUL_LOOP_MEMORY` in the session overrides this option; `LOOP_MEMORY_OFF=1` always wins. |
 | `openai_api_key` / `gemini_api_key` | no (but you need at least one) | `sensitive: true` — stored in the OS keychain / `~/.claude/.credentials.json`, never in `settings.json`. Without either key both hooks no-op. |
 | `loop_memory_signing_key` | no | HMAC-SHA256 key required for store writes and recall, including knowledge. Missing configuration fails closed — see "Threat model" below. `sensitive: true`. |
 | `loop_dotenv_path` | no | Repo-relative (or absolute) dotenv-shaped file the hooks read **before** their key gate. Default `.loop/.env`. See "Keys that live in a `.env`" below. |
