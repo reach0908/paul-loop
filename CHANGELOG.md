@@ -5,6 +5,15 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.6.0
+
+- `ship-feature` also starts when the user wants a change made PR-ready while they keep push and PR
+  creation. It runs steps 0–4 and ends with the verified branch plus the PR title and body, without
+  the publisher. The `paul-loop` router says the same. `hotfix` also starts when a finished fix has
+  to move onto its own branch so it can ship while the user keeps push and merge. On the
+  `ship-feature-pr-ready` and `hotfix-from-wip-branch` eval cases, Opus now fires each skill in 3 of 3
+  runs instead of 0 of 3 (`docs/audits/2026-09-28-pr-ready-routing.md`).
+
 ## paul-loop 0.5.0
 
 - Adopt pstack's eval playbook (MIT, cursor/plugins `ecc249f`) as the rules in `evals/README.md`:

@@ -22,7 +22,7 @@ Use existing conversation and repository evidence to choose the endpoint:
 | Question or a small local change | Answer or implement directly; run the checks appropriate to the change. |
 | Diagnose a failure | Read [diagnosing-bugs](../diagnosing-bugs/SKILL.md) when a tight reproduction is needed. |
 | Review changes | Read [code-review](../code-review/SKILL.md). |
-| Deliver a feature or issue through an open PR | Read [ship-feature](../ship-feature/SKILL.md). Preserve independent reviews and human merge approval. |
+| Deliver a feature or issue through an open PR, or make it PR-ready for the user to publish | Read [ship-feature](../ship-feature/SKILL.md). Preserve independent reviews and human merge approval. |
 | Commit, push or synchronize existing work | Use the host's normal authorized Git procedure; publisher is only an explicit delivery handoff. |
 | Configure Paul Loop for this project | Read [setup](../setup/SKILL.md). |
 | Give the project a scripted way to drive and prove the running app | Read [create-verification-skill](../create-verification-skill/SKILL.md). |

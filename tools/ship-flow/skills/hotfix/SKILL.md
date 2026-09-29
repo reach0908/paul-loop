@@ -1,6 +1,6 @@
 ---
 name: hotfix
-description: Land an already-implemented, already-verified small fix through this repo's real gates (worktree isolation → verify → PR→integration → PR→release → deploy), stopping for human confirmation at the merge and deploy checkpoints. Use when the user wants to ship/merge/release a change that's already coded and verified (not a new feature to build — that's ship-feature), or asks to land/deploy a fix that just needs to reach production safely.
+description: Land an already-implemented, already-verified small fix through this repo's real gates (worktree isolation → verify → PR→integration → PR→release → deploy), stopping for human confirmation at the merge and deploy checkpoints. Use when the user wants to ship/merge/release a change that's already coded and verified (not a new feature to build — that's ship-feature), or asks to land/deploy a fix that just needs to reach production safely, including moving a finished fix onto its own branch so it can ship while the user keeps push and merge.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
