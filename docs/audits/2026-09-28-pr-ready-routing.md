@@ -1,6 +1,9 @@
 # "PR 준비, push는 내가" 요청을 ship-feature와 hotfix로 보내기
 
-Base: `56d19e9` (#143). 변경: `df35913`. 발견 경로: eval playbook 측정
+Base: `56d19e9` (#143)에서 측정했고, 뒤에 `8e10e22`(#146, 0.5.0) 위로 rebase했다. 변경: `39935ec`(rebase 전
+`df35913`). 그 사이 #144가 ship-feature 3단계(실행 검증)에 6줄을 넣고 `paul-loop` 라우터에 다른 용도의 줄 하나를
+넣었다. 두 변경 모두 이 변경이 바꾼 설명과 발동 조건에 닿지 않지만, 아래 측정은 그 본문으로 돌리지 않았다.
+발견 경로: eval playbook 측정
 ([2026-09-28-eval-playbook.md](2026-09-28-eval-playbook.md))의 `ship-feature-pr-ready` 사례에서 plugin이
 있어도 ship-feature가 발동하지 않았다.
 
