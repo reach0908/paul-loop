@@ -12,7 +12,8 @@ out="$(node "$CHECK" "$ROOT/evals")" || fail "repo eval suite violates evals/REA
 $out"
 echo "PASS: repo eval suite passes the eval checks"
 
-T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+T="$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXX")" || fail "mktemp -d failed"
+trap 'rm -rf "$T"' EXIT
 good() { # $1 case dir: a minimal case that passes every rule
   mkdir -p "$1/graders"
   printf -- '---\ndescription: d\ntags: [x]\nmax_turns: 5\ntimeout_seconds: 60\n---\n\nFix the typo in README.md.\n' > "$1/prompt.md"
