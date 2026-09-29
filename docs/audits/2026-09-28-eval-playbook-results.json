@@ -2,9 +2,9 @@
   "note": "Raw results stay in git-ignored .loop/plugin-eval/ of the eval-playbook worktree. Cost is list-price estimate, not subscription billing.",
   "claudeCode": "2.1.283",
   "totalsUsd": {
-    "all": 91.16,
+    "all": 94.63,
     "smoke": 6.23,
-    "withWithout": 28.35,
+    "withWithout": 31.82,
     "model": 12.19,
     "effort": 24.09,
     "git": 4.79,
@@ -696,6 +696,20 @@
       "costUsd": 1.01,
       "durationSeconds": 58,
       "sha256": "f906c1e7252e64b697bf328946640cc646d9e154b11ec708fd77f9a72ac4af70"
+    },
+    {
+      "path": "2026-09-29-verification/verification-skill-cli/result.json",
+      "kind": "with-without",
+      "note": "verification-skill-cli after the peek guard and feature-file anchor; used",
+      "model": "claude-opus-5-5",
+      "judge": "claude-sonnet-5",
+      "cases": [
+        "verification-skill-cli"
+      ],
+      "casesCommit": "c375ace",
+      "costUsd": 3.47,
+      "durationSeconds": 215,
+      "sha256": "387b4f1c3f7350367adab5be993a9c79c0f4e446f119b9bcda6a2a499d08c8d6"
     },
     {
       "path": "smoke-diagnose-misleading-symptom/result.json",

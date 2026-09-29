@@ -1,7 +1,9 @@
 # Eval 플레이북 적용과 스킬별 사례 확장
 
 사용자 요청: pstack의 eval 플레이북을 이 plugin에 적용하고, 기존 eval을 개선하고, 스킬마다 사례와
-채점 기준을 만든다. 모델 비교는 Opus와 Sonnet만 쓴다. Base: `56d19e9` (#143, paul-loop 0.3.0).
+채점 기준을 만든다. 모델 비교는 Opus와 Sonnet만 쓴다. Base: `56d19e9` (#143, paul-loop 0.3.0)에서 측정했고,
+뒤에 `582bb3d`(#145 0.3.1, #144 0.4.0) 위로 rebase했다. #145는 plugin 무결성 검사만 바꿨다. #144에서 온
+`verification-skill-cli` 사례는 고친 뒤 다시 쟀다(§2).
 
 ## 1. 플레이북 → 이 runner
 
@@ -43,6 +45,13 @@ pstack 플레이북에는 대조군이 없다(arena 기본값 3모델 × 1회). 
 - review 2개 `read-the-diff`: git 호출 시도만 세던 것을 실제 diff 출력(`diff --git a/src/…`)을 요구하도록
   바꿨다(§5).
 - 모든 사례에 `no-oracle-peek`.
+- #144의 `verification-skill-cli`(rebase 뒤 checker가 두 가지를 잡았다):
+  - `no-oracle-peek`이 없어 넣었다.
+  - `feature-file-shape`는 어떤 Write든 내용에 `How to get to it (user POV)`만 있으면 통과했다. 이 문구는 README
+    색인에도 나온다. 그래서 `features/` 아래 README가 아닌 기능 파일에 그 H2가 있어야 통과하게 했다(`c375ace`).
+  - 다시 잰 결과(§4 조건): plugin 있음 3/3, 없음 0/3(Fisher p = 0.1), 스킬 발동 3/3, 턴 18.7 / 10.7, 비용
+    $0.75 / $0.41이었다. 없는 쪽은 #144 때처럼 기능 지도를 만들지 않았다. 지도 grader는 이 스킬이 정한 형식이라
+    plugin 쪽이 정의상 유리하다.
 
 ## 3. 새 사례 11개
 
@@ -287,20 +296,20 @@ diagnose / tdd / prd다.
 
 원시 결과는 gitignore된 `.loop/plugin-eval/`에만 둔다. 비용은 정가 추정이며 구독 과금과 다르다.
 
-[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 79개를 적었다.
+[2026-09-28-eval-playbook-results.json](2026-09-28-eval-playbook-results.json)에 결과 파일 80개를 적었다.
 파일마다 경로, 모델, 판정자, 사례, 비용, SHA-256, 쓰임새와 채점한 사례 버전(`casesCommit`)이 있다. 사례 버전은
 다음과 같다.
 
 - §4의 첫 실행은 `61fb2ef`, tdd·retrospect·diagnose 재실행은 `d74913a`로 채점했다.
-- Sonnet max diagnose 재실행은 `a6af62d`, ship-feature 재실행 둘은 `6a1972f`, git 사례는 `961a7ef`(hotfix는 `d638109`)다.
+- Sonnet max diagnose 재실행은 `a6af62d`, ship-feature 재실행 둘은 `6a1972f`, git 사례는 `961a7ef`(hotfix는 `d638109`), verification 재측정은 `c375ace`다.
 - 나머지는 `fe53c65`다.
 
-정가 추정 비용은 모두 $91.16다.
+정가 추정 비용은 모두 $94.63다.
 
 | 묶음 | 파일 | 비용 | 쓰임 |
 |---|---|---|---|
 | smoke | 18 | $6.23 | 사례 확인용, 점수 아님 |
-| with/without(재실행 포함) | 16 | $28.35 | §4. 재실행한 사례는 재실행 결과를 씀 |
+| with/without(재실행 포함) | 17 | $31.82 | §4, §2(verification). 재실행한 사례는 재실행 결과를 씀 |
 | 모델(Sonnet) | 12 | $12.19 | §4a |
 | effort | 15 | $24.09 | §4b |
 | git 사례 | 4 | $4.79 | §4c |

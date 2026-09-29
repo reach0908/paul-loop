@@ -5,6 +5,29 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.5.0
+
+- Adopt pstack's eval playbook (MIT, cursor/plugins `ecc249f`) as the rules in `evals/README.md`:
+  a blinded, organic request; grading from traces and artifacts; edit graders anchored on
+  `file_path`; an oracle-peek guard in every case; a judge from the other model; reading every
+  failure before recording; and a control arm with Fisher's exact p.
+- `scripts/check-evals.mjs` enforces the mechanical rules, and `scripts/summarize-evals.mjs` reports
+  pass counts without Skill indicators, fire rates, cost, turns and Fisher p. Both are covered by
+  `evals-hygiene.test.sh`.
+- Add eleven cases covering diagnosing-bugs, code-review, ship-feature, to-prd, to-issues,
+  retrospect, handoff, write-a-skill, setup, resolving-merge-conflicts and hotfix. Existing cases
+  now anchor edit graders on the path, grade TDD red-green and diff reading from the trace, and use
+  an organic grilling request.
+- The checker rejects `tool: Task` in `tool_used`/`tool_order` graders, because Claude Code names its
+  subagent tool `Agent`; the ship-feature graders now count `Agent` calls. The retrospect judge
+  rubric states that recall skips unverified lessons.
+- Cases that need git are tagged `git`. The macOS eval sandbox cannot run the `/usr/bin/git` shim,
+  so their fixtures give the target's zsh a `git` function that calls the real binary.
+- The `verification-skill-cli` case gains the oracle-peek guard, and its feature-file grader now
+  needs a feature file under `features/` instead of the heading anywhere in any written file.
+- Record the Opus with/without measurement of all seventeen cases, plus an Opus vs Sonnet and effort
+  comparison, in `docs/audits/2026-09-28-eval-playbook.md`.
+
 ## paul-loop 0.4.0
 
 - Add `create-verification-skill`, adapted from pstack (MIT, cursor/plugins `ecc249f`): it generates
