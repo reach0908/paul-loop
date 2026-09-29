@@ -97,11 +97,22 @@ grader를 `Agent`로 고치고 `check-evals`에 `tool: Task`를 거부하는 규
 - 이 사례의 grader는 실패를 읽고 세 번 고쳤다(eval playbook audit §4c). 고치기 전 grader로 잰 "변경" 측정 세
   묶음(각 3회)도 모두 발동 3/3이었다. 합하면 12회 중 12회다.
 
+### rebase 뒤 확인
+
+rebase한 본문(`eec1a1b`, #144의 3단계 변경 포함)으로 두 사례를 같은 조건에서 3회씩 다시 돌렸다.
+
+| 사례 | 스킬 발동 | 전 항목 통과 | planner | 결과 SHA-256 |
+|---|---|---|---|---|
+| ship-feature-pr-ready | 3/3 | 2/3 | 2/3 | `cd6b7e4c1cf08e171ba0f4e602db2420f0c005421917e1c36d1028db9372cc3c` |
+| hotfix-from-wip-branch | 3/3 | 3/3 | 해당 없음 | `dc22e19d4dd5bba825494c308c3909bc0d73351d5bda85e9a9503637b54094ab` |
+
+ship-feature는 3회 모두 리뷰 agent 세 개를 불렀고, 떨어진 1회는 planner만 빠졌다.
+
 ## 4. 남은 문제(이 변경 범위 밖)
 
-- **planner 생략:** ship-feature는 "compact plan still gets the planner"라고 planner 검사를 필수로 둔다. 변경 후
-  2/3이 planner를 부르지 않았고, 보고에도 생략을 적지 않았다. 이번 측정은 trace를 남기지 않아서 이유를 확인할 수
-  없다. 버린 실행까지 합하면 6회 중 3회만 planner를 불렀다.
+- **planner 생략:** ship-feature는 "compact plan still gets the planner"라고 planner 검사를 필수로 둔다. 첫 변경 후
+  측정에서는 2/3이 planner를 부르지 않았고, 보고에도 생략을 적지 않았다. 그 측정은 trace를 남기지 않아서 이유를
+  확인할 수 없다. 버린 실행과 rebase 뒤 확인까지 합하면 9회 중 5회만 planner를 불렀다.
 - **엔진 게이트 없음:** 사례 설정에 `pluginBinPrefix`가 없고 통합 plugin은 루트에 `bin/`이 없다. 그래서
   `classify-risk.sh`, `verdict-run.sh`, `ac-verify.sh`를 찾지 못했다. 3회 모두 이를 보고서와 PR 본문에 밝히고
   `npm test`와 CLI 직접 실행으로 대신했다. 이 사례는 게이트 결과가 아니라 순서와 라우팅을 잰다.
