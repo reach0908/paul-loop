@@ -6,7 +6,7 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/ask-matt/SKILL.md",
       "localPath": "tools/ship-flow/skills/ask-paul/SKILL.md",
-      "computedHash": "22058247b605f58f63c5cb826ef54cdfee575677c50820ec0dae5fef633a79d8",
+      "computedHash": "95ca5ae549fe991973d8193eddc2d3ad1b06bbb618a01fa903074789ac5f8773",
       "fork": {
         "reason": "Rewritten, not ported: upstream routes over ~15 skills this plugin does not ship. Receiving upstream's body would fill it with handoffs to nothing. Renamed ask-matt -> ask-paul in ship-flow 0.9.0 because the body shares no text with upstream and the old name misdescribed what it routes over; the entry stays here to keep tracking upstream's version as a source of ideas, not of text.",
         "since": "2026-08-26"
@@ -29,6 +29,17 @@
       "skillPath": "skills/engineering/codebase-design/SKILL.md",
       "localPath": "tools/ship-flow/skills/codebase-design/SKILL.md",
       "computedHash": "dc921a272da24b0fbdc1b12552f4a3bce28211ed785fab775792878c5348cc1b"
+    },
+    "create-verification-skill": {
+      "source": "cursor/plugins",
+      "sourceType": "github",
+      "skillPath": "pstack/skills/create-verification-skill/SKILL.md",
+      "localPath": "tools/ship-flow/skills/create-verification-skill/SKILL.md",
+      "computedHash": "0520f5458cd321b3b25f069b0f449bfcfb7988f5f632b0ee701cffe92d82363c",
+      "fork": {
+        "reason": "Adapted, not verbatim: generated skills go to the host's project skill directory instead of .cursor/skills, the body follows this plugin's authorization and output-language contracts, and map upkeep runs through ship-feature step 3 instead of upstream's separate maintain-verification-skill, which is not ported. references/feature-map-example/ is copied unchanged from cursor/plugins ecc249f.",
+        "since": "2026-09-28"
+      }
     },
     "diagnosing-bugs": {
       "source": "mattpocock/skills",

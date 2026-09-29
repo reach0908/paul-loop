@@ -1,6 +1,6 @@
 {
   "name": "paul-loop",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Paul Loop: develop, verify, review and deliver changes through one entry point, with optional semantic memory.",
   "author": {
     "name": "paulkim-lansik"

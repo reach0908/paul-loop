@@ -222,6 +222,12 @@ before another full run; a focused PASS never clears this gate.
 Build and run the app, drive the changed surface (CLI/API/GUI — whatever applies) through it, and
 confirm **what was intended actually works**. This produces runtime evidence, not a re-run of the test
 suite. Check each AC command's effects against the authorized environment before execution.
+When the project has a `verify-*` skill with a feature map ([create-verification-skill](../create-verification-skill/SKILL.md)),
+use its Launch/Doctor/Drive/Evidence/Cleanup and drive every mapped entry point of the changed feature,
+not one convenient one; if the change alters a mapped feature, update its feature file in this change.
+Proof standards either way: the real user path, not internal setters or test-only endpoints; the action
+and the resulting state; side effects (files, rows, messages) alongside what is visible; a dry-run's
+skips observed, not assumed from its name; evidence still present at its named location after teardown.
 When step 1's plan has any AC contracts, this is formalized via
 `{{pluginBinPrefix}}ac-verify.sh <plan-file>` (ADR-0104 — positional plan file, no `--`) — deterministic
 subprocess judgment per contracted AC, composing with (not replacing) the observe-the-running-app check.

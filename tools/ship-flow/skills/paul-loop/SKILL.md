@@ -25,6 +25,7 @@ Use existing conversation and repository evidence to choose the endpoint:
 | Deliver a feature or issue through an open PR | Read [ship-feature](../ship-feature/SKILL.md). Preserve independent reviews and human merge approval. |
 | Commit, push or synchronize existing work | Use the host's normal authorized Git procedure; publisher is only an explicit delivery handoff. |
 | Configure Paul Loop for this project | Read [setup](../setup/SKILL.md). |
+| Give the project a scripted way to drive and prove the running app | Read [create-verification-skill](../create-verification-skill/SKILL.md). |
 | Recall or retain a verified fix | Use existing file lessons first. Semantic memory requires explicit opt-in and configured infrastructure. |
 
 For other procedures, consult [the routing map](../ask-paul/SKILL.md) only when needed.

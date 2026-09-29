@@ -77,6 +77,8 @@ not authorize follow-up repairs, another project's changes, or a delivery run.
 - `paul-loop:improvement-research` looks outward: recent papers, lab and model releases, and tools
   that could improve this repo. Every load-bearing claim is re-verified at its source before the
   dated report.
+- `paul-loop:create-verification-skill` gives a project a scripted way to launch, drive and prove its
+  running app, plus a feature map of what to drive; ship-feature's runtime verify then uses it.
 
 ## Vocabulary underneath
 

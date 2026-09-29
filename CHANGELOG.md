@@ -5,6 +5,18 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.4.0
+
+- Add `create-verification-skill`, adapted from pstack (MIT, cursor/plugins `ecc249f`): it generates
+  a project-local `verify-<app>` skill (launch, read-only doctor, drive, evidence, cleanup) with a
+  feature map, and runs it once end to end before handing it over. The skill is derived and the
+  feature-map example is copied; see `NOTICE` and the `fork` entry in `skills-lock.json`.
+- ship-feature step 3 uses a project `verify-*` skill when present, drives every mapped entry point
+  of the changed feature and updates its map file in the same change. The proof standards apply
+  either way.
+- Add the `verification-skill-cli` eval case (3/3 with the plugin, 0/3 without, n=3) and record
+  the first measurement of the Bash-granting cases.
+
 ## paul-loop 0.3.1
 
 - Plugin integrity checks (`scripts/project-plugin.mjs`, `tools/loop-engine/bin/plugin-path.mjs`)
