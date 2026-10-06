@@ -1,6 +1,8 @@
 # retrospect: 영수증 없는 교훈을 정직하게 기록하기
 
-Base: `56d19e9` (#143). 변경: `c40db97`. 발견 경로: eval playbook 측정
+Base: `56d19e9` (#143)에서 측정했고, 2026-10-06에 `917aca0`(#148, 0.7.0) 위로 rebase했다. 변경: `6f5580f`(rebase
+전 `c40db97`). 그 사이 #148이 retrospect 본문의 Destination 목록 아래에 AGENTS.md 안내 3줄을 넣었다.
+`lessons.mjs`와 `loop-fix.sh`는 바뀌지 않았다. 발견 경로: eval playbook 측정
 ([2026-09-28-eval-playbook.md](2026-09-28-eval-playbook.md) §6)의 `retrospect-hunch-unverified` 사례.
 
 ## 1. 문제

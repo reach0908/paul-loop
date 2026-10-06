@@ -5,6 +5,15 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.8.0
+
+- `retrospect` says what to do when a fix was made outside `loop-fix` and `verdict-run`, so no
+  receipts exist. It records the lesson without `--verified` and puts the fix in `--title`, because
+  an unverified record drops `--fix`. It tells the user that default `recall` and `loop-fix` skip the
+  lesson and only `--include-unverified` shows it. It offers, rather than runs, a reproduction under
+  `loop-fix` or `verdict-run` that would make the lesson verified. The trust gate is unchanged
+  (`docs/audits/2026-09-28-retrospect-unverified-lessons.md`).
+
 ## paul-loop 0.7.0
 
 - `setup` picks the project instruction file for the constitution instead of always writing
