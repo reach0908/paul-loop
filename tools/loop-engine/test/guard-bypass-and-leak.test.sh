@@ -79,6 +79,24 @@ check "an Edit reaching a protected file through a symlinked root is blocked" \
 echo x > "$WORK/loose.test.sh"
 check "a file in no repository at all is still allowed" allow "$REPO" Edit "$WORK/loose.test.sh" "$REPO"
 
+# M2c: running an engine command by absolute path is not a write to it. With an absolute
+# pluginBinPrefix, the shape the pipe-status hook itself recommends — `verdict-run.sh > log 2>&1;
+# echo "EXIT:$?"` — used to be denied as "the verifier itself" because of the `>`. Only the
+# command-position occurrence is exempt; every way to write an engine file is still a mutation.
+ENGINE="$(cd "$HERE/.." && pwd -P)"
+check "running an engine command by absolute path with its output redirected is allowed" \
+  allow "$REPO" Bash "\"$ENGINE/bin/verdict-run.sh\" -- npm test > \"$WORK/out.log\" 2>&1; echo \"EXIT:\$?\"" "$REPO"
+check "a redirect onto an engine file is still a mutation" deny "$REPO" Bash "echo x > $ENGINE/bin/verdict-run.sh" "$REPO"
+check "an engine command redirected onto another engine file is still a mutation" \
+  deny "$REPO" Bash "$ENGINE/bin/verdict-run.sh > $ENGINE/bin/gate.sh" "$REPO"
+check "an engine command redirected onto itself is still a mutation" \
+  deny "$REPO" Bash "$ENGINE/bin/verdict-run.sh > $ENGINE/bin/verdict-run.sh" "$REPO"
+check "cp onto an engine file is still a mutation" deny "$REPO" Bash "cp decoy $ENGINE/bin/verdict-run.sh" "$REPO"
+check "replacing an engine file and then running it is still a mutation" \
+  deny "$REPO" Bash "cp decoy $ENGINE/bin/verdict-run.sh && $ENGINE/bin/verdict-run.sh" "$REPO"
+check "an engine command redirected into authoritative loop state is still a mutation" \
+  deny "$REPO" Bash "$ENGINE/bin/verdict-run.sh -- npm test > .loop/verdict-state.json" "$REPO"
+
 # ── M4: no output field carries credentials ───────────────────────────────────────────────────────
 SECRET='hunter2SUPERSECRET'
 for url in "postgres://user:${SECRET}@localhost" "postgres://user:${SECRET}@host:not-a-port/db" "not-a-url-at-all://${SECRET}" "localhost:5434?p=${SECRET}"; do

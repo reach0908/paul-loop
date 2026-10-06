@@ -5,6 +5,22 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.8.1
+
+- `hotfix`, `retrospect` and `deps-audit` no longer say an empty `pluginBinPrefix` works because the
+  engine's `bin/` is on PATH. The unified install does not put it there, which `AUTHORIZATION.md`
+  already said. An empty prefix is used only when the command resolves inside the active Paul Loop
+  installation; otherwise the skill reports the missing launcher and points to `setup` instead of
+  running a command from another installation.
+- The guard no longer treats running an engine command by its absolute path as a write to the
+  verifier. With an absolute `pluginBinPrefix`, `verdict-run.sh -- npm test > log 2>&1`, the shape
+  the pipe-status hook recommends, was denied because of the `>`. Writing to an engine file,
+  redirecting onto one and writing authoritative loop state are still denied.
+- The eval cases that run engine commands record the engine `bin/` of the plugin under test as
+  `pluginBinPrefix`. The hotfix case keeps that config ignored so its pinned commit ids stay stable,
+  and its green-before-commit grader accepts the `VERDICT: PASS` that verdict-run prints
+  (`docs/audits/2026-10-06-engine-bin-path.md`).
+
 ## paul-loop 0.8.0
 
 - `retrospect` says what to do when a fix was made outside `loop-fix` and `verdict-run`, so no

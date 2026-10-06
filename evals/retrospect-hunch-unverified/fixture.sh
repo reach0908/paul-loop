@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 commit() { git -c user.name=fixture -c user.email=fixture@localhost commit -qm "$1"; }
-mkdir -p src test logs .loop
+mkdir -p src test logs .loop .claude
 printf '{ "name": "slugs", "version": "1.0.0", "scripts": { "test": "node --test" } }\n' > package.json
+# The engine commands of the plugin this script ships in; nothing puts them on PATH.
+engine_bin="$(cd "$(dirname "$0")/../.." && pwd -P)/tools/loop-engine/bin/"
+printf '{ "pluginBinPrefix": "%s" }\n' "$engine_bin" > .claude/ship-flow.config.json
 cat > src/slug.js <<'JS'
 function slugify(text) {
   return text

@@ -21,13 +21,12 @@ docs/lessons.md (in the plugin, not this repo).
 > Commands below are written as **substitutable literals** beginning with `{{pluginBinPrefix}}`
 > (BAC-753). Before running one, read `pluginBinPrefix` from `.claude/ship-flow.config.json` and
 > replace the token with its value, **concatenated onto the script name with no separator** — then run
-> the result verbatim. Never type a `{{…}}` token into a shell. The default (key absent) is `""`: in a
-> live session a plugin's `bin/` is already on PATH, so `lessons.sh …` runs as-is. If this repo's CI or
-> its own wrapper needs an explicit resolver, the value is something like
-> `node "$LOOP_ENGINE_PATH/bin/plugin-path.mjs" exec bin/` — loop-engine's own bundled resolver
-> (`resolve [plugin]` / `exec <relative-bin> [args...]`, env-var overrides
-> `LOOP_ENGINE_PATH`/`SHIP_FLOW_PATH`/`LOOP_MEMORY_PATH`), which covers what bare-PATH doesn't: CI (no
-> live plugin load) and resolving a *different* installed plugin's path. `lessons.sh`/`loop-fix.sh` take
+> the result verbatim. Never type a `{{…}}` token into a shell. The usual value is the project's
+> verified launcher, `node tools/paul-loop.mjs exec bin/`, or an explicit absolute path to the engine's
+> `bin/`. The unified install does not put that `bin/` on PATH: an empty or absent prefix is usable only
+> if `command -v lessons.sh` resolves inside the active Paul Loop installation. Otherwise report the
+> missing launcher and point to `setup`; do not run a command from another installation or search the
+> plugin cache for one. `lessons.sh`/`loop-fix.sh` take
 > **no `--` separator** — passing one is a usage error, not a harmless no-op.
 
 ## The one rule

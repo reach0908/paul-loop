@@ -21,13 +21,12 @@ Answers whether each installed extension **(1) is maintained upstream, (2) is yo
 Run this repo's installed loop-engine plugin's `deps-audit` script. The commands below are
 **substitutable literals** beginning with `{{pluginBinPrefix}}` (BAC-753): read `pluginBinPrefix` from
 `.claude/ship-flow.config.json`, replace the token with its value **concatenated onto the script name
-with no separator**, and run the result verbatim — never type a `{{…}}` token into a shell. The default
-(key absent) is `""`, since in a live session a plugin's `bin/` is already on PATH. If this repo's CI or
-its own wrapper needs an explicit resolver, the value is something like
-`node "$LOOP_ENGINE_PATH/bin/plugin-path.mjs" exec bin/` — loop-engine's own bundled resolver
-(`exec <relative-bin> [args...]`, env-var overrides `LOOP_ENGINE_PATH`/`SHIP_FLOW_PATH`/`LOOP_MEMORY_PATH`),
-which covers what bare-PATH doesn't: CI (no live plugin load) or resolving a *different* installed
-plugin's path. `deps-audit.mjs` takes **no `--` separator** — its flags go directly after the script name:
+with no separator**, and run the result verbatim — never type a `{{…}}` token into a shell. The usual
+value is the project's verified launcher, `node tools/paul-loop.mjs exec bin/`, or an explicit absolute
+path to the engine's `bin/`. The unified install does not put that `bin/` on PATH: an empty or absent
+prefix is usable only if `command -v deps-audit.mjs` resolves inside the active Paul Loop installation.
+Otherwise report the missing launcher and point to `setup` rather than running a command from another
+installation. `deps-audit.mjs` takes **no `--` separator** — its flags go directly after the script name:
 
 ```bash
 {{pluginBinPrefix}}deps-audit.mjs                      # fast — local manifests + usage + gh freshness (no clone)
