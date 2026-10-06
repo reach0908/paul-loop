@@ -5,14 +5,16 @@ export GIT_AUTHOR_NAME=Mina GIT_AUTHOR_EMAIL=mina@shop.example GIT_COMMITTER_NAM
 commit() { GIT_AUTHOR_DATE="$1" GIT_COMMITTER_DATE="$1" git -c commit.gpgsign=false commit -qm "$2"; }
 mkdir -p src test scripts .claude
 printf '{ "name": "shop-api", "version": "1.4.2", "scripts": { "test": "node --test" } }\n' > package.json
-cat > .claude/ship-flow.config.json <<'JSON'
+# The engine commands of the plugin this script ships in; nothing puts them on PATH.
+engine_bin="$(cd "$(dirname "$0")/../.." && pwd -P)/tools/loop-engine/bin/"
+cat > .claude/ship-flow.config.json <<JSON
 {
   "branchModel": "trunk-based",
   "releaseBranch": "main",
   "packageManager": "npm",
   "verifyCommand": "npm test",
   "projectName": "shop-api",
-  "pluginBinPrefix": "",
+  "pluginBinPrefix": "$engine_bin",
   "deployHook": "scripts/deploy.sh",
   "outputLanguage": "ko"
 }

@@ -81,8 +81,11 @@ Check prerequisites and reuse installed dependencies; install only when necessar
 command is the **ceiling** — don't move on until it's green (self-judgement never substitutes for
 it). Run it wrapped, always, never raw: `{{pluginBinPrefix}}verdict-run.sh -- <verifyCommand>`
 (BAC-745; substitute `pluginBinPrefix` from `.claude/ship-flow.config.json` onto the script name with no
-separator — default `""`, since a plugin's `bin/` is on PATH in a live session — and never type a `{{…}}`
-token into a shell. `verdict-run.sh` is the one script here that *needs* the `--`). The wrapper emits
+separator, and never type a `{{…}}` token into a shell. The unified install does not put the engine's
+`bin/` on PATH: an empty or absent prefix is usable only if `command -v verdict-run.sh` resolves inside
+the active Paul Loop installation; otherwise report the missing launcher and point to `setup` rather
+than running a command from another installation. `verdict-run.sh` is the one script here that *needs*
+the `--`). The wrapper emits
 one canonical contract consistent with the process result, including for nested verifier contracts.
 Read its `VERDICT:`/`EXIT:` lines and command status together. Missing or conflicting fields are
 unresolved evidence, never PASS. Distinguish a tested failure from invocation/environment failure;

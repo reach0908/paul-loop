@@ -42,11 +42,14 @@ test('formats zero as seconds', () => {
   assert.equal(formatDuration(0), '0s')
 })
 JS
-cat > .claude/ship-flow.config.json <<'JSON'
+# The engine commands of the plugin this script ships in; nothing puts them on PATH.
+engine_bin="$(cd "$(dirname "$0")/../.." && pwd -P)/tools/loop-engine/bin/"
+cat > .claude/ship-flow.config.json <<JSON
 {
   "branchModel": "trunk-based",
   "releaseBranch": "main",
   "verifyCommand": "npm test",
+  "pluginBinPrefix": "$engine_bin",
   "outputLanguage": "ko"
 }
 JSON
