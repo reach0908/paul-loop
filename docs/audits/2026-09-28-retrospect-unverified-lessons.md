@@ -59,6 +59,10 @@ Claude Code 2.1.283, `claude-opus-5-5`(기본 effort), 판정자 `claude-sonnet-
 | r1 | 변경 | 2/3 | $1.20 | `ba9a4f254a9d53c3be87448b813ce0d8d7cb66d26045ecd5346fa313db267439` |
 | r2 | 이전 | 2/3 | $1.56 | `d790ad15604f2a97f3f8ae6d7a49220996ce430aebd0f644a1cba9f3a87b4c62` |
 | r2 | 변경 | 3/3 | $1.21 | `619976327921b45611b19ef7c29012c74b2e520df0216445b6ebbeaf3f860817` |
+| r2 | 변경, rebase 뒤(2.1.291) | 3/3 | $1.31 | `2c706718bcdcd1fbd7c40c0c7a88ad634eb1ece0c544d771efb4a37ff70dd384` |
+
+마지막 줄은 2026-10-06에 rebase한 본문을 Claude Code 2.1.291에서 같은 조건으로 다시 돌린 결과다. 3회 모두 기본
+recall에는 나오지 않는다고 말했고, `--include-unverified`로 조회해 확인했다.
 
 결정적 grader는 12회 모두 통과했다. 차이는 판정 grader에서만 났다. 2/3 대 3/3은 효과 주장이 아니라 회귀가 없다는
 확인이다.
