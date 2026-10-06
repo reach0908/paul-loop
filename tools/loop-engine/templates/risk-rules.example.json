@@ -25,7 +25,7 @@
     {
       "id": "harness",
       "startsWith": [".claude/", "tools/", ".husky/", ".loop/", "docs/adr/"],
-      "exact": ["CLAUDE.md", "risk-rules.json"],
+      "exact": ["CLAUDE.md", "AGENTS.md", "risk-rules.json"],
       "excludeStartsWith": [".loop/lessons/"],
       "dims": { "blast": "high" },
       "why": "harness/constitution layer — silently weakening the gate itself must not be low-risk. Keep 'risk-rules.json' in exact even after you rename/move this file locally, so this self-coverage property survives."

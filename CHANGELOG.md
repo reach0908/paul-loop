@@ -5,6 +5,20 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.7.0
+
+- `setup` picks the project instruction file for the constitution instead of always writing
+  `CLAUDE.md`. Since Claude Code 2.1.277 reads `AGENTS.md` only when a project has no `CLAUDE.md`,
+  a repository that keeps its instructions in `AGENTS.md` gets the constitution there, and a new
+  repository also used with Codex gets `AGENTS.md` plus a `CLAUDE.md` that only imports it. Setup
+  never writes `CLAUDE.local.md`. The constitution template title no longer names `CLAUDE.md`.
+- `classify-risk` treats `AGENTS.md` and `CLAUDE.local.md` at any depth like `CLAUDE.md`: an edit to
+  one is no longer a docs-only change. The example `harness` rule covers `AGENTS.md`.
+- ship-feature, its risk gate and retrospect name `AGENTS.md` alongside `CLAUDE.md`.
+- Add the `setup-agents-md-repo` eval case: on a repository with only `AGENTS.md`, setup now
+  installs the constitution there in 3 of 3 runs instead of 0 of 3
+  (`docs/audits/2026-09-28-agents-md-instructions.md`).
+
 ## paul-loop 0.6.0
 
 - `ship-feature` also starts when the user wants a change made PR-ready while they keep push and PR

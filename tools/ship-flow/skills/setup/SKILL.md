@@ -1,6 +1,6 @@
 ---
 name: setup
-description: One-time interactive setup for this plugin in a consuming repo — interviews the user, writes `.claude/ship-flow.config.json`, and installs (or offers to install) a CLAUDE.md constitution, a CI workflow, and branch protection from this plugin's templates/. Use once per repo, when a repo first adopts Paul Loop, or when re-running to fill in config that was skipped the first time.
+description: One-time interactive setup for this plugin in a consuming repo — interviews the user, writes `.claude/ship-flow.config.json`, and installs (or offers to install) a constitution in the project's instruction file (CLAUDE.md or AGENTS.md), a CI workflow, and branch protection from this plugin's templates/. Use once per repo, when a repo first adopts Paul Loop, or when re-running to fill in config that was skipped the first time.
 ---
 
 Follow the [shared authorization and completion contract](../AUTHORIZATION.md) before this procedure.
@@ -15,7 +15,7 @@ Follow the [shared authorization and completion contract](../AUTHORIZATION.md) b
 
 This plugin's skills (`hotfix`, and others as they're added) read `.claude/ship-flow.config.json` at
 the consuming repo's root. This skill is how that file — and the repo-level scaffolding it depends on
-(a CLAUDE.md, a CI workflow, branch protection) — gets created in the first place.
+(project instructions, a CI workflow, branch protection) — gets created in the first place.
 
 **This skill is not part of the day-to-day delivery loop.** Run it once when adopting this plugin in a
 repo; re-run it later only to fill in something skipped the first time or to change a config value.
@@ -25,11 +25,11 @@ repo; re-run it later only to fill in something skipped the first time or to cha
 A plugin's own root-level `CLAUDE.md` is **not** loaded as project context by Claude Code (confirmed
 against the official plugin spec) — so the constitution layer can't just ship inside the plugin and
 work automatically. That's why this skill exists: it *copies* a template into the consuming repo's own
-`CLAUDE.md`, where it will actually be loaded.
+instruction file (`CLAUDE.md` or `AGENTS.md`, step 3), where it will actually be loaded.
 
 | Can install directly | Needs this skill to copy/patch into place |
 |---|---|
-| Skills, agents, workflows (this plugin itself) | `CLAUDE.md` (constitution) |
+| Skills, agents, workflows (this plugin itself) | Project instructions (constitution in `CLAUDE.md` or `AGENTS.md`) |
 | | CI workflow (`.github/workflows/ci.yml` or equivalent) |
 | | Branch protection (a GitHub API call, not a file) |
 | | `turbo.json`/verify-script wiring (repo-specific, example only) |
@@ -38,6 +38,8 @@ work automatically. That's why this skill exists: it *copies* a template into th
 
 ### 1. Check for existing config
 Read `.claude/ship-flow.config.json` if it exists. Reuse its values and the user's requested changes.
+Note which instruction files exist at the root and under `.claude/` (`CLAUDE.md`, `CLAUDE.local.md`,
+`AGENTS.md`); step 3 chooses its target from them.
 Fill missing facts from repository documentation and manifests; preserve unrelated settings. If the
 request is a setup review or draft, return the proposed files without installing them.
 
@@ -59,14 +61,14 @@ same exact setup twice. Resolve these fields:
    verdict contract into one canonical result consistent with the command status. Conflicting or
    missing verdict fields cannot count as PASS. Don't write `verdict-run.sh`
    itself into this field.
-4. **Project name**: what should the `CLAUDE.md` template call this repo?
+4. **Project name**: what should the constitution template call this repo?
 5. **Issue tracker** (optional): does this repo use an external tracker (Linear, Jira, bare GitHub
    Issues, none)? Only asked if relevant — don't force an answer if the repo has no tracker at all.
 6. **Output language**: which language should this repo's agents write prose in — reports, summaries,
    PR bodies, tracked-issue comments? **Infer a default first rather than asking cold**
    — reuse an explicit preference without asking again. Otherwise the user's language is a reversible
-   default; disclose it in the result. The language used in this session is the strongest signal, and an
-   existing `CLAUDE.md`, README, recent commit messages, or tracked-issue titles corroborate it. Present
+   default; disclose it in the result. The language used in this session is the strongest signal, and existing
+   instruction files, README, recent commit messages, or tracked-issue titles corroborate it. Present
    what you inferred and let the user correct it. Record it as `outputLanguage`, a **BCP-47 tag** (`ko`, `ja`, `en`, `pt-BR`), not a
    language name — a tag has one spelling, "Korean"/"korean"/"한국어" have three.
 
@@ -134,12 +136,23 @@ For no tracker, record that choice and the local spec/review route. For unresolv
 drafting and review can continue; only the affected tracker mutation waits. Creating labels, projects,
 issues or comments requires the corresponding publication scope, beyond writing this local doc.
 
-### 3. Install `CLAUDE.md`
+### 3. Install the constitution in the project's instruction file
 Read `${SHIP_FLOW_PATH}/templates/CLAUDE.md.template`, substitute every `{{PLACEHOLDER}}` with the
 interview's answers (see the template's own placeholder list at its end for what's expected), and
-write the result to the consuming repo's `CLAUDE.md`.
+write the result to the file chosen here. Claude Code 2.1.277+ reads `AGENTS.md` only when there is no
+`CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`; Codex reads `AGENTS.md`.
 
-**If a `CLAUDE.md` already exists**: don't overwrite it silently. Show the user a diff-style summary of
+| The repository has | Write to |
+|---|---|
+| `CLAUDE.md` or `.claude/CLAUDE.md` | That file. If an `AGENTS.md` sits beside it and is not imported, Claude is not reading it: say so and offer an `@AGENTS.md` import. |
+| `AGENTS.md` or `.claude/AGENTS.md`, no `CLAUDE.md` | That `AGENTS.md`. Don't create a `CLAUDE.md`, which would stop Claude from reading `AGENTS.md`; for sessions on an older Claude Code, a `CLAUDE.md` may hold only `@AGENTS.md`. |
+| Neither | `CLAUDE.md` for a Claude-only repository; for one also used with Codex or other agents, `AGENTS.md` plus a `CLAUDE.md` holding only `@AGENTS.md`. Ask only when the runtimes are unknown. |
+
+Never write to `CLAUDE.local.md`: it is personal. It also counts as a `CLAUDE.md`, so whoever has one
+stops loading `AGENTS.md`; mention that the **Project instructions** setting
+(`claude-md-and-agents-md`) fixes it in user settings, since project settings ignore that key.
+
+**If the chosen file already exists**: don't overwrite it silently. Show the user a diff-style summary of
 what the template would add/change. Apply an already-authorized merge or replacement; otherwise ask
 only for a conflicting content choice after preparing the concrete diff.
 
