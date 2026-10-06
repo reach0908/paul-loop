@@ -196,7 +196,22 @@ function inspect(payload, patchMode = false) {
       .split(/[\s>|<;&()'"`]+/)
       .filter(Boolean)
       .map((t) => t.replace(/^\.\//, ''));
-    const hitTok = tokens.find((t) => matchesGlob(t) || inPlugin(t));
+    // Running an engine command by its absolute path (an absolute pluginBinPrefix) is how the verifier
+    // gets invoked, not a write to it — `verdict-run.sh -- npm test > log 2>&1` must not trip on the `>`.
+    // Only the command-position occurrence is exempt, once per segment: the same path as an argument,
+    // a redirect target or a second occurrence still hits.
+    const executed = cmd
+      .split(/&&|\|\||[;|&(\n]/)
+      .map((s) => s.trim().split(/\s+/).find((w) => !/^\w+=/.test(w)) ?? '')
+      .filter((w) => !/[<>]/.test(w))
+      .map((w) => w.replace(/^['"]|['"]$/g, ''));
+    const runs = (t) => {
+      const i = executed.indexOf(t);
+      if (i < 0) return false;
+      executed.splice(i, 1);
+      return true;
+    };
+    const hitTok = tokens.find((t) => matchesGlob(t) || (inPlugin(t) && !runs(t)));
     if (!hitTok) return;
     deny(
       `Bash blocked while the guard is armed: '${hitTok}' matches ${inPlugin(hitTok) ? `this project's verifier itself (loop-engine, ${pluginPath})` : '.loop/protect.globs'}. ` +
