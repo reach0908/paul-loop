@@ -64,7 +64,7 @@ Claude Code 2.1.283, `claude-opus-5-5`(기본 effort), 판정자 `claude-sonnet-
 마지막 줄은 2026-10-06에 rebase한 본문을 Claude Code 2.1.291에서 같은 조건으로 다시 돌린 결과다. 3회 모두 기본
 recall에는 나오지 않는다고 말했고, `--include-unverified`로 조회해 확인했다.
 
-결정적 grader는 12회 모두 통과했다. 차이는 판정 grader에서만 났다. 2/3 대 3/3은 효과 주장이 아니라 회귀가 없다는
+결정적 grader는 15회 모두 통과했다. 차이는 판정 grader에서만 났다. 2/3 대 3/3은 효과 주장이 아니라 회귀가 없다는
 확인이다.
 
 ### r1을 바꾼 이유
