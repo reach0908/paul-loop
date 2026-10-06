@@ -58,6 +58,12 @@ verified lesson when it converges. Nothing else to do — just point `--lessons`
   `promote --runs` can annotate the candidate when the gate regresses — without it, regressions only
   show in their own section.
 - **Never** record `--verified` for a fix the verifier didn't confirm.
+- **No receipts** (the fix was made outside `loop-fix`/`verdict-run`, so plain logs are all there is):
+  record without `--verified` and say it is unverified. An unverified record keeps the signature and
+  `--title` but drops `--fix`, and default `recall` skips it (`--include-unverified` shows the title),
+  so put the fix in `--title` and do not tell the user it will surface by itself. A verified lesson
+  needs the failure and the fix reproduced under `loop-fix` or `verdict-run`; that changes the working
+  tree, so offer it rather than doing it. Leave out anything no run confirmed, such as a suspected cause.
 - **Tag the kind of lesson:** add `--category domain` when the lesson is about product/domain behavior
   (not process/tooling) — e.g. a business-rule bug, not a flaky test or a build config gotcha. Omit it
   and it defaults to `engineering` (the vast majority of lessons). `recall`/`stats` accept the same flag
