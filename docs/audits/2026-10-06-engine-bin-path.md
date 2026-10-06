@@ -49,9 +49,13 @@ ADR-0009의 통합 설치에서 엔진 명령은 `<PAUL_LOOP_PATH>/tools/loop-en
 - hotfix fixture는 원래 설정 파일을 커밋했다. 절대 경로가 들어가면 checkout 위치마다 커밋 ID가 달라지고,
   고정 ID를 쓰는 grader 4개가 깨진다. 그래서 설정 파일을 consumer 저장소처럼 git이 무시하는 로컬 파일로 두고
   ID를 다시 고정했다(main `a52beeb`, feature/points `442d668`, 두 번 실행해 같음).
-- hotfix의 `green-before-commit`는 `verdict-run.sh`의 `VERDICT: PASS`도 통과 표시로 받는다. 남겨 둔 실행
-  e-sQCFQU는 이 조건으로만 맞는다. 커밋 전에 테스트를 돌리지 않은 경우와 실패한 경우를 흉내 낸 입력은
-  불합격으로 남는다.
+- hotfix의 `green-before-commit`는 `verdict-run.sh`가 출력하는 `=== VERDICT ===` 다음 줄의
+  `VERDICT: PASS`도 통과 표시로 받는다. 머리줄까지 요구하는 이유가 있다. 남겨 둔 실행 6회 중 3회는 마지막
+  메시지에도 `VERDICT: PASS`를 썼으므로, 머리줄 없이 맞추면 설명 글만으로 통과할 수 있다. 남겨 둔 실행
+  e-sQCFQU는 이 조건으로만 맞는다. 흉내 낸 입력 세 가지는 불합격으로 남는다.
+  - 커밋 전에 테스트를 돌리지 않은 경우
+  - 실패한 경우
+  - 설명 글에만 `VERDICT: PASS`가 있는 경우
 
 **guard (`protect-during-loop.mjs`).** 첫 측정에서 찾은 결함이다(§3).
 
@@ -63,8 +67,8 @@ ADR-0009의 통합 설치에서 엔진 명령은 `<PAUL_LOOP_PATH>/tools/loop-en
 - 이제 명령 위치(세그먼트의 첫 단어, 앞의 `VAR=…` 제외)에 있는 엔진 경로는 실행으로 보고, 세그먼트마다 한
   번만 예외로 둔다. 같은 경로가 인자, 리다이렉션 대상, 두 번째 출현으로 나오면 그대로 막는다. 엔진 파일에
   쓰기와 authoritative loop state 쓰기도 그대로 막힌다.
-- `guard-bypass-and-leak.test.sh` M2c에 허용 1건과 차단 5건을 더했다. 허용 건은 수정 전에 실패해 eval의 차단을
-  재현했다. 차단 5건은 수정 전후 모두 통과한다. 첫 측정에서 실제로 막힌 명령 두 개도 수정한 훅에 다시 넣어
+- `guard-bypass-and-leak.test.sh` M2c에 허용 1건과 차단 6건을 더했다. 허용 건은 수정 전에 실패해 eval의 차단을
+  재현했다. 차단 건에는 엔진 파일을 바꾼 뒤 같은 명령에서 실행하는 경우(`cp … && <엔진 경로>`)도 있다. 첫 측정에서 실제로 막힌 명령 두 개도 수정한 훅에 다시 넣어
   보니 통과했다.
 
 ## 3. 측정
@@ -106,6 +110,8 @@ CLI를 거슬러 찾은 실행은 없었다.
 **guard 수정 뒤(`b322ddc`).**
 
 - hotfix는 3/3이다. guard 차단은 0건이고, 3회 중 2회는 리다이렉션을 붙인 `verdict-run.sh`를 그대로 실행했다.
+  이 측정은 `green-before-commit`에 머리줄 조건을 넣기 전에 했다. 남겨 둔 세 trace에 고친 grader를 다시
+  적용해도 모두 맞는다.
 - ship-feature는 2/3이다. guard 차단은 0건이다. 실패 1회는 다시 `planned`다.
 
 실행 수가 3회라 고장은 잡아도 효과의 크기는 말할 수 없다(3/3 대 0/3의 Fisher p는 0.1이다).

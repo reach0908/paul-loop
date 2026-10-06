@@ -18,7 +18,7 @@ and refer to `loop-engine` only (see the un-prefixed version numbers).
   redirecting onto one and writing authoritative loop state are still denied.
 - The eval cases that run engine commands record the engine `bin/` of the plugin under test as
   `pluginBinPrefix`. The hotfix case keeps that config ignored so its pinned commit ids stay stable,
-  and its green-before-commit grader accepts `VERDICT: PASS`
+  and its green-before-commit grader accepts the `VERDICT: PASS` that verdict-run prints
   (`docs/audits/2026-10-06-engine-bin-path.md`).
 
 ## paul-loop 0.8.0

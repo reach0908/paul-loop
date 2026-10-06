@@ -92,6 +92,8 @@ check "an engine command redirected onto another engine file is still a mutation
 check "an engine command redirected onto itself is still a mutation" \
   deny "$REPO" Bash "$ENGINE/bin/verdict-run.sh > $ENGINE/bin/verdict-run.sh" "$REPO"
 check "cp onto an engine file is still a mutation" deny "$REPO" Bash "cp decoy $ENGINE/bin/verdict-run.sh" "$REPO"
+check "replacing an engine file and then running it is still a mutation" \
+  deny "$REPO" Bash "cp decoy $ENGINE/bin/verdict-run.sh && $ENGINE/bin/verdict-run.sh" "$REPO"
 check "an engine command redirected into authoritative loop state is still a mutation" \
   deny "$REPO" Bash "$ENGINE/bin/verdict-run.sh -- npm test > .loop/verdict-state.json" "$REPO"
 
