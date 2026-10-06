@@ -72,6 +72,9 @@ Claude Code 2.1.283, `claude-opus-5-5`, 판정자 `claude-sonnet-5`, plugin 있�
 |---|---|---|---|---|
 | 이전(`56d19e9`, 사례만 복사) | 0/3 | 8.7 | $0.42 | `8b0f1d221558af581d801a1eef12a12be590c331edfc3bcfb2b18ee6ac2079df` |
 | 이 변경 | 3/3 | 9.3 | $0.43 | `c1ef2d728d855aaae123767a23ccbe46fd5a4af970a1534e6e7f380beb2101b7` |
+| 이 변경, rebase 뒤(2.1.291) | 3/3 | 10.7 | $0.53 | `60ff4cd77beaac496734cfc1a604faed5f85579d2d0df9fe02a14e2913f41ade` |
+
+마지막 줄은 2026-10-06에 rebase한 본문을 Claude Code 2.1.291에서 같은 조건으로 다시 돌린 결과다.
 
 - 이전 3회는 모두 헌장을 새 `CLAUDE.md`에 쓰고 맨 위에 `@AGENTS.md`를 넣었다. 그래서 우려한 가림은 일어나지
   않았다. 세 번 모두 "Claude Code는 AGENTS.md를 자동으로 읽지 않는다"고 설명했는데 2.1.277 이후로는 틀린
