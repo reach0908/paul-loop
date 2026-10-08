@@ -254,6 +254,7 @@ mainSwitch = (() => {
       }
       const g = parseGit(raw);
       if (!g || (g.sub !== 'checkout' && g.sub !== 'switch')) continue;
+      if (raw.some((t) => /^(GIT_DIR|GIT_WORK_TREE)=/.test(t))) continue; // not modelled
       const dir = gitSegmentDir(raw, cwd);
       if (!dir || !isMainWorktree(dir)) continue;
       const target = branchMove(g.sub, g.args, dir);

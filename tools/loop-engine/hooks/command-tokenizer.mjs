@@ -109,11 +109,10 @@ export const GIT_VALUE_GLOBAL = new Set([
 export const literal = (word) =>
   word.length >= 2 && ['"', "'"].includes(word[0]) && word.slice(-1) === word[0] ? word.slice(1, -1) : word;
 
-// git 세그먼트가 실제로 도는 디렉터리. `-C <dir>`/`-C<dir>`는 cwd 기준으로 풀고, --git-dir·--work-tree나
-// GIT_DIR=·GIT_WORK_TREE= 프리픽스는 모델링하지 않으므로 null(엉뚱한 저장소로 판정하지 않는다).
-// rawToks는 env 프리픽스가 남은 토큰이다. gate-worktree-create.mjs·gate-before-merge.mjs 공용.
+// git 세그먼트가 실제로 도는 디렉터리. `-C <dir>`/`-C<dir>`는 cwd 기준으로 풀고, --git-dir·--work-tree는
+// 모델링하지 않으므로 null(엉뚱한 저장소로 판정하지 않는다). env 프리픽스(GIT_DIR= 등)는 호출자가 판단한다.
+// gate-worktree-create.mjs·gate-before-merge.mjs 공용.
 export function gitSegmentDir(rawToks, cwd) {
-  if (rawToks.some((t) => /^(GIT_DIR|GIT_WORK_TREE)=/.test(t))) return null;
   const toks = stripPrefix(rawToks);
   const end = firstSubcommand(toks, 1, GIT_VALUE_GLOBAL);
   for (let g = 1; g < end; g++) {
