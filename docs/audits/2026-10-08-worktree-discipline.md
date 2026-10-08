@@ -217,3 +217,36 @@ private 0MB였다(블록 공유 유지). 같은 클론에 `npm ci`를 돌리면 
   `gh`가 실패해 keep이 되기 때문이다.
 - `warn-partial-checkout.mjs`에 cd/-C 해석의 세 번째 사본이 남아 있다(이 변경 범위 밖).
 
+**eval(AC, 2026-10-08).** Claude Code 2.1.294(기준선은 2.1.291), `claude-opus-5-5`(기본 effort), 판정자
+`claude-sonnet-5`, plugin 0.9.0, `--ablation none`, 각 3회. 커밋 `2ddf818`의 트리.
+
+| 사례 | 통과 | 비용 | 실행별(turns·비용·시간) | 결과 SHA-256 |
+|---|---|---|---|---|
+| hotfix-from-wip-branch | 3/3 (기준선 `b322ddc` 3/3) | $1.21 | 14·$0.43·94s, 15·$0.39·81s, 17·$0.39·82s | `4e79d589613e6b280a72570c41d05d36d2471e9bf9102055d570111c72c197c3` |
+| ship-feature-pr-ready | 3/3 (기준선 2/3) | $7.44 | 13·$2.64·511s, 40·$1.60·285s, 4·$3.21·1233s | `2439cb6b071664f14c5b42faafa9c1df75c01aefaab94b6d04998a57b3856ab3` |
+
+실패한 실행은 없다. 이 3회는 `--keep-temp` 없이 돌려 trace가 지워졌으므로, README 규칙 8의 통과 실행 trace는 사례마다
+1회씩 `--keep-temp`로 더 돌려 읽었다(hotfix 1/1 $0.40, ship-feature 1/1 $1.77). 이 두 실행은 점수에 넣지 않는다.
+
+- hotfix trace: main 기반 워크트리를 만들고 패치를 옮긴 뒤 `verdict-run.sh`로 확인하고 커밋했다. 사용자에게 넘기기 전에
+  `git worktree lock --reason "hotfix … awaiting user push/PR/merge"`로 잠갔다(바뀐 3단계 그대로). eval은
+  `EnterWorktree`를 주지 않으므로 워크트리 절대 경로로 `cd`해 일했다(0단계의 대체 경로). 이 실행은
+  `worktree-prune`을 부르지 않았다.
+- 채점용 3회 중 1회는 최종 답변에서 "`worktree-prune.mjs --apply`는 저장소 가드가 막아서 건너뛰었다"고 했다. 플러그인의
+  PreToolUse 훅 5개는 이 명령(세 가지 형태)을 모두 통과시킨다(scratch fixture로 확인). 반면 남긴 trace에서 node 자식
+  프로세스가 부른 git은 `xcrun … Operation not permitted`로 실패했다. README의 "다른 프로그램이 부르는 git은 shim에
+  걸린다"와 같은 현상이고, `worktree-prune.mjs`도 node에서 git을 부르므로 `skipped (git: error …)`로 끝났을 것으로
+  본다. 그 실행의 trace는 남지 않아 출력 자체는 확인하지 못했다. 절차대로 막히지 않고 계속 진행해 통과했다.
+- ship-feature trace: 이 fixture에서는 셸의 git도 실패해(`xcrun` 캐시 쓰기 거부) 워크트리 없이 제자리에서 일했고,
+  AC·verdict·리뷰 3종을 거쳐 통과했다. 리뷰 에이전트가 `.loop/`를 읽으려다 protect 가드에 막힌 것은 기존 동작이다.
+
+그래서 이 eval은 "새 0단계·잠금 문구가 기존 흐름을 깨지 않는다"까지만 보여 준다. 메인 체크아웃 ask와 prune `--apply`는
+훅·스크립트가 node에서 git을 부르는데 eval 샌드박스에서는 그 git이 실패하므로, 샌드박스 안에서는 ask가 나올 수 없고
+prune은 `skipped`가 된다. 두 동작의 근거는 단위 테스트(`main-checkout-switch.test.sh`, `worktree-prune.test.sh`)와
+이 기기에서의 런타임 확인이다.
+
+**디스크 정리(이 작업 중, 사용자 기기).** 안전한 캐시·고아 워크트리 등록 정리로 4,065MB를 회수하고 등록 16개를
+prune했다. 이어서 `uv cache prune`이 끝났다. uv는 117.7GiB(1,028만 파일)를 지웠다고 보고했지만 실제 늘어난 여유
+공간은 12,725MB였다(다른 곳과 블록을 공유하던 파일이 많아 보고 크기와 실제 회수량이 다르다). 정리 뒤 데이터 볼륨
+여유는 55GiB.
+
