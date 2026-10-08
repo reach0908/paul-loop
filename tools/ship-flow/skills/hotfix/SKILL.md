@@ -68,8 +68,10 @@ verification evidence and obtain the affected merge/action approval when due, no
 
 ### 0. Worktree isolation and scope
 
-Reuse the isolated worktree explicitly assigned by the caller. Otherwise prepare an isolated branch
-from the verified base. Inspect the initial branch, worktree and staged/unstaged changes first; do not
+Reuse the isolated worktree explicitly assigned by the caller. Otherwise create an isolated worktree
+from the verified base as ship-feature step 0 describes, including its `worktree-prune.mjs --apply`,
+and enter it (`EnterWorktree` where the host has it). Inspect the initial branch, worktree and
+staged/unstaged changes first; do not
 assume the main checkout's HEAD or move unrelated user work. If the requested fix needs transferring,
 use a path-limited patch or named stash only for its authorized files, record its exact identity and
 verify the transfer. Never use whichever entry happens to be `stash@{0}` or drop unrelated stashes.
@@ -99,8 +101,10 @@ files if authorized, then push/open the PR only within explicit publication scop
 creation failure prevents dependent comments. A partial result is not completion.
 
 ### 3. **Stop — confirm the merge**
-Prepare the PR/head/base and gate evidence for approval if not already approved exactly. After merge,
-verify remote state. Keep the worktree and evidence until downstream recovery is no longer needed.
+Prepare the PR/head/base and gate evidence for approval if not already approved exactly. Before asking
+for approval, lock the worktree (`git worktree lock --reason "<why>" <path>`) so another session's
+`worktree-prune.mjs` does not remove it once merged. After merge, verify remote state. Keep the
+worktree and evidence until downstream recovery is no longer needed.
 Do not delete a caller-owned worktree or branch without cleanup scope; remove an owned temporary
 worktree before deleting its local branch, since Git will reject the reverse order.
 
@@ -134,7 +138,9 @@ When deployment is requested and the exact artifact/target is approved:
 If deployment ran and produced a health endpoint, verify liveness. Report merge, deployment and
 health evidence separately; a merged PR or successful command is not proof of a live deployment.
 Clean up only owned temporary resources covered by the caller's scope and no longer needed for
-recovery. Do not automatically sync or alter the shared main checkout. On macOS, if an owned temporary
+recovery. Before removing the worktree, leave it if this session entered it (Claude Code:
+`ExitWorktree` with `keep`) and `git worktree unlock <path>` the lock from step 3. Do not
+automatically sync or alter the shared main checkout. On macOS, if an owned temporary
 worktree removal fails due to a demonstrated deny-delete ACL, `chmod -R -N <worktree-path>` may repair
 that specific directory before retrying; never apply it broadly or use it to discard user work.
 

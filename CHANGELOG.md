@@ -5,6 +5,23 @@ Explicit-version channel — see [README § Development status](README.md#develo
 not a SHA channel. Entries below `## loop-engine 0.2.0` and earlier predate the multi-plugin split
 and refer to `loop-engine` only (see the un-prefixed version numbers).
 
+## paul-loop 0.9.0
+
+- The merge gate now asks before a command moves the project's main checkout off its protected
+  branch: `git checkout|switch` to another branch or commit, or `gh pr checkout`. Returning home, file
+  restores, linked worktrees and repositories outside the project pass, and a merge deny still wins.
+  Light work that grew into a branch had been leaving main checkouts on feature branches for later
+  sessions.
+- New `worktree-prune.mjs`: lists a repository's linked worktrees and, with `--apply`, removes only
+  clean, unlocked ones whose HEAD is a merged PR's head (never `--force`), then prunes registrations
+  whose directory is gone. Without `gh` it removes no worktree.
+- `ship-feature` step 0 runs `worktree-prune.mjs --apply`, then enters the new worktree with the host's
+  tool (Claude Code `EnterWorktree`) so the host blocks edits to the main checkout. `hotfix` step 0
+  does the same. `AUTHORIZATION.md` records this as a standing cleanup exception. Worktrees kept for
+  lesson capture or a release are locked so the prune keeps them, and cleanup leaves an entered
+  worktree (`ExitWorktree`) before removing it.
+- The router says to move a local change into a worktree once it needs a branch, commit or PR.
+
 ## paul-loop 0.8.1
 
 - `hotfix`, `retrospect` and `deps-audit` no longer say an empty `pluginBinPrefix` works because the

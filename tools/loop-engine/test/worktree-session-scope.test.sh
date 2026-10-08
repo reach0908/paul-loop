@@ -176,4 +176,11 @@ expect_allow "$PROJ" "sess-legacy" "$(printf "$WT_ADD" feature/first-after-migra
 node -e 'const s=require(process.argv[1]); if(s.schema_version!==2 || s.confirmed.length || s.legacy_unconfirmed[0]!=="feature/legacy-attempt")process.exit(1)' "$PROJ/.loop/worktree-gate.sess-legacy.json" || fail "legacy attempts lack branch/path execution evidence"
 echo "PASS: legacy attempt records remain explicitly unconfirmed"
 
+# ── 14) GIT_DIR= 프리픽스가 붙어도 두 번째 feature 워크트리는 ask다 ─────────────────────────────
+# 공유 -C 헬퍼가 env 프리픽스를 "저장소 미상"으로 돌리면 이 요청이 세션 카운트에서 빠져 ask가 사라진다.
+expect_allow "$PROJ" "sess-gitdir" "$(printf "$WT_ADD" feature/gd-one gd1)"
+create "$PROJ" feature/gd-one gd1
+expect_decision "$PROJ" "sess-gitdir" "GIT_DIR=$PROJ/.git git worktree add -b feature/gd-two \"$DIR/gd2\" origin/main" ask
+echo "PASS: a GIT_DIR= prefix does not hide the second feature worktree from the session escalation"
+
 exit 0

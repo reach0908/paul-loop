@@ -144,12 +144,18 @@ assignee here is the common failure and stays invisible for a long time: merge a
 issue without ever setting one, so it lands in Done owned by nobody.
 
 Unless the user assigned an existing isolated worktree:
-`git fetch origin && git worktree add -b <type>/<slug> <sibling-path-outside-repo> origin/<base>`. Check
-`git worktree list` first if concurrent work is common here. A fresh worktree has no installed
-dependencies — inspect prerequisites and install what is needed within scope. Every following step
-happens inside this worktree. (macOS: if a later
-`git worktree remove` fails with a permission-denied ACL error, `chmod -R -N <path>` first — see
-hotfix's cleanup step for the full note.)
+`git fetch origin && git worktree add -b <type>/<slug> <sibling-path-outside-repo> origin/<base>`. Before
+adding it, run `{{pluginBinPrefix}}worktree-prune.mjs --apply` in the repository: it removes only clean,
+unlocked worktrees whose HEAD is a merged PR's head, and a failure or `skipped` line does not block
+this step. Check `git worktree list` first if concurrent work is common here. Then enter the worktree
+with the host's worktree tool when it has one (Claude Code: `EnterWorktree` with that `path`; a path
+outside `.claude/worktrees/` asks the user once), so the host refuses edits and git commands aimed at
+the main checkout. Without such a tool, or if entry is refused, work through the worktree's absolute
+path. A fresh worktree has no installed dependencies — inspect prerequisites and install what is
+needed within scope (npm on macOS: `cp -c -R <main-checkout>/node_modules .` then `npm install` keeps
+the APFS clone; `npm ci` deletes it first). Every following step happens inside this worktree.
+(macOS: if a later `git worktree remove` fails with a permission-denied ACL error, `chmod -R -N <path>`
+first — see hotfix's cleanup step for the full note.)
 
 ### 1. Implementation plan — `Plan` agent / `grill-with-docs` if there's a design decision
 Plan what to build and how to slice it. Resolve routine reversible choices from requirements and
@@ -304,8 +310,12 @@ for that merge, while ongoing implementation remains authorized.
 → **After an approved merge, if closeout was authorized:** preserve any evidence needed for authorized
 lesson capture before deleting its producer worktree. Verified lesson receipts are bound to that
 checkout; copying them to the canonical checkout does not preserve verification. If capture or
-reverification is still needed, defer that worktree's removal and report it. Then clean up the worktree/branch (remove any dedicated deep-gate resources
-first, confirm no stash leftovers) + update the tracked issue (status, merge SHA) → **step 6**.
+reverification is still needed, defer that worktree's removal and report it. Lock it when you defer —
+before handing off for merge when lesson capture is in scope — with `git worktree lock --reason "<why>"
+<path>`, so `worktree-prune.mjs` keeps it. To remove it, first leave it if this session entered it
+(Claude Code: `ExitWorktree` with `keep`) and `git worktree unlock <path>`. Then clean up the
+worktree/branch (remove any dedicated deep-gate resources first, confirm no stash leftovers) + update
+the tracked issue (status, merge SHA) → **step 6**.
 Release (`integrationBranch → releaseBranch`) is a separate decision — `hotfix`, or this repo's own
 release procedure.
 

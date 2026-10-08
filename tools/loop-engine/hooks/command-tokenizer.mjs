@@ -12,6 +12,8 @@
 // ⚠️ 완전한 셸 파서가 아니다(coarse-net, ADR-0036) — eval/bash -c/따옴표/node -e를 못 흉내낸다. 소비자는
 // 감지 단계를 fail-open으로 다뤄야 한다(파서 하드닝은 won't-fix).
 
+import { resolve } from 'node:path';
+
 // heredoc 시작 마커(`<<EOF`·`<<'EOF'`·`<<"EOF"`·`<<-EOF`, 따옴표·대시 조합 포함)부터, 그 줄과 정확히
 // 일치하는(단 `<<-`는 선행 탭 허용) 종료 줄까지(포함)를 통째로 들어낸다 — 완전한 셸 heredoc 문법이 아니라
 // 이 레포 관용구를 겨냥한 근사치. here-string(`<<<word`)은 시작으로 안 본다(음의 lookbehind로 제외 — 그
@@ -102,3 +104,21 @@ export const GIT_VALUE_GLOBAL = new Set([
   '--exec-path',
   '--super-prefix',
 ]);
+
+// 따옴표 한 쌍으로 감싼 단어는 벗기고, 나머지는 그대로 둔다.
+export const literal = (word) =>
+  word.length >= 2 && ['"', "'"].includes(word[0]) && word.slice(-1) === word[0] ? word.slice(1, -1) : word;
+
+// git 세그먼트가 실제로 도는 디렉터리. `-C <dir>`/`-C<dir>`는 cwd 기준으로 풀고, --git-dir·--work-tree는
+// 모델링하지 않으므로 null(엉뚱한 저장소로 판정하지 않는다). env 프리픽스(GIT_DIR= 등)는 호출자가 판단한다.
+// gate-worktree-create.mjs·gate-before-merge.mjs 공용.
+export function gitSegmentDir(rawToks, cwd) {
+  const toks = stripPrefix(rawToks);
+  const end = firstSubcommand(toks, 1, GIT_VALUE_GLOBAL);
+  for (let g = 1; g < end; g++) {
+    if (toks[g] === '-C') { g++; if (cwd) cwd = resolve(cwd, toks[g]); }
+    else if (cwd && toks[g].startsWith('-C') && toks[g].length > 2) cwd = resolve(cwd, toks[g].slice(2));
+    else if (/^--(git-dir|work-tree)(=|$)/.test(toks[g])) cwd = null;
+  }
+  return cwd;
+}
