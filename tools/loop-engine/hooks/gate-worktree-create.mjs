@@ -73,6 +73,8 @@ import { observationCache, queueRequests, reconcile, requestedWorktree, saveSess
 import {
   firstSubcommand,
   GIT_VALUE_GLOBAL,
+  gitSegmentDir,
+  literal,
   splitSegments,
   stripHeredocs,
   stripPrefix,
@@ -121,7 +123,6 @@ const ask = (reason, code) => decide('ask', reason, code);
 
 // `git worktree add`'s own value flags — -b/-B are the new branch name, --reason is a --lock message.
 const VALUE_WORKTREE_ADD = new Set(['-b', '-B', '--reason']);
-const literal = (word) => word.length >= 2 && ['"', "'"].includes(word[0]) && word.slice(-1) === word[0] ? word.slice(1, -1) : word;
 
 // `git [global opts] worktree add [flags...] <path> [<ref>]` -> { newBranch, ref } | null (not a match).
 function parseWorktreeAdd(rawToks, cwd) {
@@ -129,12 +130,8 @@ function parseWorktreeAdd(rawToks, cwd) {
   if (toks[0] !== 'git') return null;
   const wIdx = firstSubcommand(toks, 1, GIT_VALUE_GLOBAL);
   if (toks[wIdx] !== 'worktree' || toks[wIdx + 1] !== 'add') return null;
-  for (let g = 1; g < wIdx; g++) {
-    if (toks[g] === '-C') { g++; if (cwd) cwd = resolve(cwd, toks[g]); }
-    else if (cwd && toks[g].startsWith('-C') && toks[g].length > 2) cwd = resolve(cwd, toks[g].slice(2));
-    // Unmodelled explicit plumbing must never be attributed to the wrong repository.
-    else if (/^--(git-dir|work-tree)(=|$)/.test(toks[g])) cwd = null;
-  }
+  // Unmodelled explicit plumbing must never be attributed to the wrong repository.
+  cwd = gitSegmentDir(rawToks, cwd);
   let i = wIdx + 2;
   let explicitNewBranch = false;
   let detachOrOrphan = false;

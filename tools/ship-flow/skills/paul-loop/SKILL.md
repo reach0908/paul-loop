@@ -19,13 +19,14 @@ Use existing conversation and repository evidence to choose the endpoint:
 
 | Request | Next action |
 |---|---|
-| Question or a small local change | Answer or implement directly; run the checks appropriate to the change. |
+| Question or a small local change | Answer or implement directly; run the checks appropriate to the change. Once it needs its own branch, commit or PR, move it into a worktree (hotfix step 0's transfer rule) instead of switching the main checkout's branch. |
 | Diagnose a failure | Read [diagnosing-bugs](../diagnosing-bugs/SKILL.md) when a tight reproduction is needed. |
 | Review changes | Read [code-review](../code-review/SKILL.md). |
 | Deliver a feature or issue through an open PR, or make it PR-ready for the user to publish | Read [ship-feature](../ship-feature/SKILL.md). Preserve independent reviews and human merge approval. |
 | Commit, push or synchronize existing work | Use the host's normal authorized Git procedure; publisher is only an explicit delivery handoff. |
 | Configure Paul Loop for this project | Read [setup](../setup/SKILL.md). |
 | Give the project a scripted way to drive and prove the running app | Read [create-verification-skill](../create-verification-skill/SKILL.md). |
+| Clean up merged worktrees | Run the engine's `worktree-prune.mjs` (invoked as in [ship-feature](../ship-feature/SKILL.md)'s `pluginBinPrefix` section): a dry run first, then `--apply`. It removes only clean, unlocked worktrees whose HEAD is a merged PR's head. |
 | Recall or retain a verified fix | Use existing file lessons first. Semantic memory requires explicit opt-in and configured infrastructure. |
 
 For other procedures, consult [the routing map](../ask-paul/SKILL.md) only when needed.

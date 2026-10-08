@@ -99,3 +99,35 @@ test('shell-active branch names cannot widen the literal sync exception', (t) =>
     expect(root, `git merge --ff-only origin/${name}`, 'deny');
   }
 });
+
+test('the main checkout asks before leaving its protected branch; restores and linked worktrees pass', (t) => {
+  const { root, base, initial } = fixture(t), linked = join(base, 'linked');
+  const asked = expect(root, 'git switch -c feature/x', 'ask');
+  assert.match(asked.permissionDecisionReason, /worktree/);
+  git(root, 'switch', '-qc', 'feature/old'); git(root, 'switch', '-q', 'main');
+  for (const move of ['git checkout -b feature/x', 'git checkout release', `git checkout ${initial}`,
+    'git switch -', 'gh pr checkout 12']) expect(root, move, 'ask');
+  expect(root, 'git checkout main', 'allow');
+  mkdirSync(join(root, 'src')); writeFileSync(join(root, 'src/a.ts'), 'a');
+  git(root, 'add', 'src/a.ts'); git(root, 'commit', '-qm', 'file');
+  for (const restore of ['git checkout src/a.ts', 'git checkout --ours src/a.ts', 'git checkout HEAD src/a.ts',
+    'git checkout HEAD~1 src/a.ts', 'git checkout -- src/a.ts', 'git checkout --pathspec-from-file=list.txt',
+    'git checkout HEAD']) expect(root, restore, 'allow');
+
+  git(root, 'worktree', 'add', '-qb', 'feature/wt', linked, 'origin/main');
+  expect(root, 'git switch -c other', 'allow', linked);
+  expect(root, `git -C ${linked} switch -c z`, 'allow', root);
+  expect(root, `cd ${root} && git checkout -b y`, 'ask', linked);
+  expect(root, `git -C ${root} switch -c q`, 'ask', linked);
+  expect(root, 'git checkout release', 'allow', join(base, 'missing'));
+  expect(root, 'GIT_DIR=.git git switch -c g', 'allow');
+
+  // Both commands also switch the main checkout; the merge deny must still win over that ask.
+  for (const merge of ['git checkout -b feat && git merge origin/main', 'git switch -c x; git pull']) expect(root, merge, 'deny');
+
+  git(root, 'remote', 'set-head', 'origin', 'release');
+  expect(root, 'git switch release', 'allow');
+  mkdirSync(join(root, '.claude'));
+  writeFileSync(join(root, '.claude/ship-flow.config.json'), JSON.stringify({ releaseBranch: 'main', integrationBranch: 'develop' }));
+  expect(root, 'git switch develop', 'allow');
+});

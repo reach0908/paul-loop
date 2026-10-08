@@ -35,6 +35,14 @@
 // not merges and are out of scope — a local hook can't cover directly moving a protected branch;
 // server-side branch protection is the backstop there (this hook only watches merge/pull).
 //
+// Second job: the main checkout stays on its protected branch. A `git checkout|switch` that moves the
+// main worktree (git-dir == git-common-dir) to another branch or commit, or a `gh pr checkout` there,
+// leaves every later session starting from that branch, so it gets an "ask" pointing at a linked
+// worktree. Returning home (HEAD, the current branch, a protected branch, origin/HEAD's branch), file
+// restores and linked worktrees pass, and so does anything this coarse parse can't place (fail-open).
+// The ask is judged before the merge path and only emitted from allow(), so a merge deny still wins.
+// Known gaps: a target-less `--detach`, eval/`bash -c`/aliases.
+//
 // Sync uses two separate calls: `git fetch origin`, then `git merge --ff-only origin/<branch>`.
 // The exception checks the local remote-tracking ref, not live server state or PR approval. It is
 // still a local guardrail: same-UID ref/config mutation and concurrent changes are not a trust boundary.
@@ -43,7 +51,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 // The tokenizer is a shared lib (shared with gate-risky-commands.mjs — same implementation, one home).
-import { splitSegments, stripHeredocs, stripPrefix, tokenize } from './command-tokenizer.mjs';
+import { gitSegmentDir, literal, splitSegments, stripHeredocs, stripPrefix, tokenize } from './command-tokenizer.mjs';
 import { logRedEvent } from './red-events-log.mjs';
 
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: Claude Code injects this at hook runtime.
@@ -75,28 +83,56 @@ const EXEC = {
   maxBuffer: 16 * 1024 * 1024,
 };
 
+// Set before the merge path runs; allow() turns it into an ask, deny() never consults it.
+let mainSwitch = null;
 function allow() {
+  if (mainSwitch) {
+    decide(
+      'ask',
+      `This moves the main checkout (${mainSwitch.dir}) off its protected branch to ${mainSwitch.target}, ` +
+        'and every later session starts from that checkout. Do new work in a linked worktree instead: ' +
+        '`git fetch origin && git worktree add -b <branch> <sibling-path> origin/<base>`, then work there ' +
+        '(Claude Code: EnterWorktree). Approve only if a human wants this checkout moved (e.g. for QA).',
+      'main-checkout-switch',
+    );
+  }
   process.exit(0);
 }
-function deny(reason, code) {
+function decide(decision, reason, code) {
   // Best-effort record (reason code included so a false positive, e.g. a direction mis-detection, can
   // later be filtered out when measuring a real deny rate). Keyed to root (the worktree this hook runs
-  // in) — logRedEvent itself is fail-open, so a failure here never affects the deny verdict below.
+  // in) — logRedEvent itself is fail-open, so a failure here never affects the verdict below.
   logRedEvent(root, { kind: 'gate', code });
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
-        permissionDecision: 'deny',
+        permissionDecision: decision,
         permissionDecisionReason: reason,
       },
     }),
   );
   process.exit(0);
 }
+const deny = (reason, code) => decide('deny', reason, code);
 function git(args, cwd = root) {
   return execFileSync('git', args, { ...EXEC, cwd }).trim();
 }
+// `git rev-parse <flag>` as a real path, or null (missing dir, not a repo). Normalized via realpath — a
+// main vs. linked worktree can print these relative or absolute depending on git version/location, and
+// on macOS /var is a symlink to /private/var, so the same path can appear in two forms (measured: a
+// linked worktree case fell through to the fallback and broke a regression test).
+function gitPath(dir, flag) {
+  try {
+    return realpathSync(resolve(dir, git(['rev-parse', flag], dir)));
+  } catch {
+    return null;
+  }
+}
+const isMainWorktree = (dir) => {
+  const own = gitPath(dir, '--git-dir');
+  return own !== null && own === gitPath(dir, '--git-common-dir');
+};
 
 // Flags that take a following value token — skipped along with their value.
 const VALUE_GLOBAL = new Set([
@@ -148,6 +184,41 @@ function checkoutTarget(args) {
   }
   return null;
 }
+// Where `git checkout|switch` moves HEAD in `dir`, or null when it restores files instead. A checkout
+// moves only with a create flag or one positional that names a commit or an origin branch (DWIM);
+// `--`, --ours/--theirs, -p/--patch, --pathspec-from-file and tree-ish + pathspec are restores.
+const RESTORE_CHECKOUT = new Set(['--', '--ours', '--theirs', '-p', '--patch']);
+function branchMove(sub, args, dir) {
+  const positional = [];
+  for (let i = 0; i < args.length; i++) {
+    const t = args[i];
+    if (CREATE_CHECKOUT.has(t)) return args[i + 1] ?? null;
+    if (sub === 'checkout' && (RESTORE_CHECKOUT.has(t) || t.startsWith('--pathspec-from-file'))) return null;
+    if (t !== '-' && t.startsWith('-')) {
+      if (VALUE_CHECKOUT.has(t) && !t.includes('=')) i += 1;
+      continue;
+    }
+    positional.push(t);
+  }
+  const [target] = positional;
+  if (!target || (sub === 'checkout' && positional.length !== 1)) return null;
+  if (target === '-') return git(['rev-parse', '--abbrev-ref', '@{-1}'], dir);
+  if (sub === 'switch') return target;
+  for (const ref of [`${target}^{commit}`, `refs/remotes/origin/${target}`]) {
+    try {
+      git(['rev-parse', '--verify', '-q', ref], dir);
+      return target;
+    } catch { /* not this kind of ref */ }
+  }
+  return null;
+}
+// A move that keeps the checkout home: HEAD, the current branch, a protected branch or origin/HEAD's.
+function staysHome(target, dir) {
+  if (target === 'HEAD' || PROTECTED_BRANCHES.has(target)) return true;
+  const here = (args) => { try { return git(args, dir); } catch { return null; } };
+  return target === here(['branch', '--show-current']) ||
+    `origin/${target}` === here(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
+}
 // -- Merge detection (fails open up to here: an uncertain parse or a non-merge command passes) -------
 let payload;
 try {
@@ -166,6 +237,33 @@ try {
 } catch {
   allow(); // a detection-stage error -> pass (a bug in this hook must not block arbitrary Bash)
 }
+
+// -- Main checkout stays on its protected branch (ask; any doubt passes) ----------------------------
+// Judged per segment against the directory it runs in: payload.cwd, then `cd <dir>` and `git -C`.
+mainSwitch = (() => {
+  try {
+    let cwd = typeof payload.cwd === 'string' && payload.cwd ? payload.cwd : root;
+    for (const seg of splitSegments(strippedCmd)) {
+      const raw = tokenize(seg).map(literal), toks = stripPrefix(raw);
+      if (toks[0] === 'cd' && toks.length === 2) {
+        cwd = resolve(cwd, toks[1]);
+        continue;
+      }
+      if (toks[0] === 'gh' && toks[1] === 'pr' && toks[2] === 'checkout' && isMainWorktree(cwd)) {
+        return { target: `PR ${toks[3] ?? ''}`.trim(), dir: cwd };
+      }
+      const g = parseGit(raw);
+      if (!g || (g.sub !== 'checkout' && g.sub !== 'switch')) continue;
+      const dir = gitSegmentDir(raw, cwd);
+      if (!dir || !isMainWorktree(dir)) continue;
+      const target = branchMove(g.sub, g.args, dir);
+      if (target && !staysHome(target, dir)) return { target, dir };
+    }
+  } catch {
+    /* detection-stage error -> no ask */
+  }
+  return null;
+})();
 
 // Trusting payload.cwd for direction inference kept producing new evasions across review rounds — -C /
 // cd / GIT_DIR= first, then a subshell `(cd ... && merge)`, brace groups, and backslash escapes next
@@ -246,18 +344,7 @@ try {
   // could silently (with no log) pass. Falling back to `root` in both cases below restores the
   // originally-intended safe default.
   const execCwd = typeof payload?.cwd === 'string' && payload.cwd ? payload.cwd : root;
-  const gitCommonDir = (dir) => {
-    try {
-      // Normalize via realpath — a main vs. linked worktree can print --git-common-dir as relative or
-      // absolute depending on git version/location, and on macOS /var is a symlink to /private/var, so
-      // the same path can appear in two forms. Without normalization, a string comparison can wrongly
-      // conclude two paths point at different repos when they're the same one (measured: a linked
-      // worktree case fell through to the fallback and broke a regression test).
-      return realpathSync(resolve(dir, git(['rev-parse', '--git-common-dir'], dir)));
-    } catch {
-      return null; // doesn't exist, or not a git repo
-    }
-  };
+  const gitCommonDir = (dir) => gitPath(dir, '--git-common-dir');
   const sameRepo =
     execCwd === root ||
     (() => {

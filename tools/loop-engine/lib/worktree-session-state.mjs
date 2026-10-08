@@ -25,18 +25,29 @@ export function sessionState(file) {
   } catch { return { schema_version: 2, confirmed: [], pending: [] }; }
 }
 
+// `git worktree list --porcelain -z` -> [{ path, head, branch, locked, prunable }], main worktree first.
+// branch is the refs/heads/ short name, or undefined (detached).
+export function parseWorktreeList(output) {
+  return output.split('\0\0').map((block) => {
+    const fields = block.split('\0');
+    const value = (key) => fields.find((f) => f.startsWith(`${key} `))?.slice(key.length + 1);
+    const has = (key) => fields.some((f) => f === key || f.startsWith(`${key} `));
+    const ref = value('branch');
+    return { path: value('worktree'), head: value('HEAD'),
+      branch: ref?.startsWith('refs/heads/') ? ref.slice(11) : undefined,
+      locked: has('locked'), prunable: has('prunable') };
+  }).filter((w) => w.path);
+}
+
 export function observationCache() {
   const cache = new Map();
   return (repository) => {
     if (!cache.has(repository)) {
       try {
         const output = git(['--git-dir', repository, 'worktree', 'list', '--porcelain', '-z']);
-        const entries = output.split('\0\0').map((block) => {
-          const fields = block.split('\0'), path = fields.find((f) => f.startsWith('worktree '))?.slice(9);
-          const branch = fields.find((f) => f.startsWith('branch refs/heads/'))?.slice(18);
-          return path && branch && existsSync(path) && !fields.some((f) => f.startsWith('prunable'))
-            ? { repository, path: physicalPath(path), branch } : null;
-        }).filter(Boolean);
+        const entries = parseWorktreeList(output)
+          .filter((w) => w.branch && existsSync(w.path) && !w.prunable)
+          .map((w) => ({ repository, path: physicalPath(w.path), branch: w.branch }));
         cache.set(repository, entries);
       } catch { cache.set(repository, null); } // unavailable observation never manufactures success
     }
