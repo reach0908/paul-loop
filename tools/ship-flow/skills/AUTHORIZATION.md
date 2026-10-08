@@ -136,6 +136,10 @@ a PR URL exists. Report success, failure, blocked, and not-run distinctly, with 
 remaining work. Preserve successful steps when resuming; do not duplicate posts or restart a completed
 publish sequence. Stop at the user's requested endpoint. Post-merge cleanup or lesson promotion runs
 only when included in the authorization record, and never implies a new feature, merge, or release.
+One standing exception (user decision, 2026-10-08): before creating a worktree, `ship-feature` and
+`hotfix` step 0 run `worktree-prune.mjs --apply`, which removes only clean, unlocked worktrees whose
+HEAD is exactly a merged PR's head, whoever created them. It also deletes their ignored files, so a
+worktree whose ignored state is still needed (lesson receipts, a release in progress) is locked.
 
 ## Compatibility and authority changes
 

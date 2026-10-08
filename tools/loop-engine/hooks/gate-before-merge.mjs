@@ -36,12 +36,14 @@
 // server-side branch protection is the backstop there (this hook only watches merge/pull).
 //
 // Second job: the main checkout stays on its protected branch. A `git checkout|switch` that moves the
-// main worktree (git-dir == git-common-dir) to another branch or commit, or a `gh pr checkout` there,
-// leaves every later session starting from that branch, so it gets an "ask" pointing at a linked
-// worktree. Returning home (HEAD, the current branch, a protected branch, origin/HEAD's branch), file
-// restores and linked worktrees pass, and so does anything this coarse parse can't place (fail-open).
-// The ask is judged before the merge path and only emitted from allow(), so a merge deny still wins.
-// Known gaps: a target-less `--detach`, eval/`bash -c`/aliases.
+// project's main worktree (git-dir == git-common-dir; this repository or one nested under the project
+// root) to another branch or commit, or a `gh pr checkout` there, leaves every later session starting
+// from that branch, so it gets an "ask" pointing at a linked worktree. Returning home (HEAD, the
+// current branch, a protected branch, origin/HEAD's branch), file restores, linked worktrees and
+// repositories outside the project pass, and so does anything this coarse parse can't place
+// (fail-open). The ask is judged before the merge path and only emitted from allow(), so a merge deny
+// still wins. Known gaps: a target-less `--detach`, combined short flags (`-qb x`, `-bx`),
+// `gh -R <repo> pr checkout`, eval/`bash -c`/aliases.
 //
 // Sync uses two separate calls: `git fetch origin`, then `git merge --ff-only origin/<branch>`.
 // The exception checks the local remote-tracking ref, not live server state or PR approval. It is
@@ -93,16 +95,18 @@ function allow() {
         'and every later session starts from that checkout. Do new work in a linked worktree instead: ' +
         '`git fetch origin && git worktree add -b <branch> <sibling-path> origin/<base>`, then work there ' +
         '(Claude Code: EnterWorktree). Approve only if a human wants this checkout moved (e.g. for QA).',
-      'main-checkout-switch',
+      'switch',
+      'main-checkout',
     );
   }
   process.exit(0);
 }
-function decide(decision, reason, code) {
+function decide(decision, reason, code, kind = 'gate') {
   // Best-effort record (reason code included so a false positive, e.g. a direction mis-detection, can
   // later be filtered out when measuring a real deny rate). Keyed to root (the worktree this hook runs
-  // in) — logRedEvent itself is fail-open, so a failure here never affects the verdict below.
-  logRedEvent(root, { kind: 'gate', code });
+  // in) — logRedEvent itself is fail-open, so a failure here never affects the verdict below. Merge
+  // denies are kind 'gate'; main-checkout asks are their own kind so they don't inflate deny counts.
+  logRedEvent(root, { kind, code });
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
@@ -184,16 +188,23 @@ function checkoutTarget(args) {
   }
   return null;
 }
+const tryGit = (args, dir) => {
+  try {
+    return git(args, dir);
+  } catch {
+    return null;
+  }
+};
 // Where `git checkout|switch` moves HEAD in `dir`, or null when it restores files instead. A checkout
 // moves only with a create flag or one positional that names a commit or an origin branch (DWIM);
-// `--`, --ours/--theirs, -p/--patch, --pathspec-from-file and tree-ish + pathspec are restores.
+// `--`, --ours/--theirs, -p/--patch, a pathspec file and tree-ish + pathspec are restores.
 const RESTORE_CHECKOUT = new Set(['--', '--ours', '--theirs', '-p', '--patch']);
 function branchMove(sub, args, dir) {
   const positional = [];
   for (let i = 0; i < args.length; i++) {
     const t = args[i];
     if (CREATE_CHECKOUT.has(t)) return args[i + 1] ?? null;
-    if (sub === 'checkout' && (RESTORE_CHECKOUT.has(t) || t.startsWith('--pathspec-from-file'))) return null;
+    if (sub === 'checkout' && RESTORE_CHECKOUT.has(t)) return null;
     if (t !== '-' && t.startsWith('-')) {
       if (VALUE_CHECKOUT.has(t) && !t.includes('=')) i += 1;
       continue;
@@ -202,22 +213,25 @@ function branchMove(sub, args, dir) {
   }
   const [target] = positional;
   if (!target || (sub === 'checkout' && positional.length !== 1)) return null;
-  if (target === '-') return git(['rev-parse', '--abbrev-ref', '@{-1}'], dir);
+  if (target === '-') return tryGit(['rev-parse', '--abbrev-ref', '@{-1}'], dir);
   if (sub === 'switch') return target;
-  for (const ref of [`${target}^{commit}`, `refs/remotes/origin/${target}`]) {
-    try {
-      git(['rev-parse', '--verify', '-q', ref], dir);
-      return target;
-    } catch { /* not this kind of ref */ }
-  }
-  return null;
+  return [`${target}^{commit}`, `refs/remotes/origin/${target}`]
+    .some((ref) => tryGit(['rev-parse', '--verify', '-q', ref], dir) !== null) ? target : null;
 }
 // A move that keeps the checkout home: HEAD, the current branch, a protected branch or origin/HEAD's.
 function staysHome(target, dir) {
   if (target === 'HEAD' || PROTECTED_BRANCHES.has(target)) return true;
-  const here = (args) => { try { return git(args, dir); } catch { return null; } };
-  return target === here(['branch', '--show-current']) ||
-    `origin/${target}` === here(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
+  return target === tryGit(['branch', '--show-current'], dir) ||
+    `origin/${target}` === tryGit(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], dir);
+}
+// The main worktree of this project's repository, or of a repository nested under the project root.
+// Scratch and fixture repositories elsewhere (tmp) are not the checkout later sessions start from.
+function isProjectMainCheckout(dir) {
+  if (!isMainWorktree(dir)) return false;
+  const common = gitPath(dir, '--git-common-dir');
+  if (common === gitPath(root, '--git-common-dir')) return true;
+  const top = realpathSync(root);
+  return realpathSync(dir).startsWith(`${top}/`);
 }
 // -- Merge detection (fails open up to here: an uncertain parse or a non-merge command passes) -------
 let payload;
@@ -238,30 +252,34 @@ try {
   allow(); // a detection-stage error -> pass (a bug in this hook must not block arbitrary Bash)
 }
 
+// The session's Bash cwd right before the command runs (see the trust-boundary note further down).
+const execCwd = typeof payload?.cwd === 'string' && payload.cwd ? payload.cwd : root;
+
 // -- Main checkout stays on its protected branch (ask; any doubt passes) ----------------------------
 // Judged per segment against the directory it runs in: payload.cwd, then `cd <dir>` and `git -C`.
 mainSwitch = (() => {
   try {
-    let cwd = typeof payload.cwd === 'string' && payload.cwd ? payload.cwd : root;
+    let cwd = execCwd;
     for (const seg of splitSegments(strippedCmd)) {
       const raw = tokenize(seg).map(literal), toks = stripPrefix(raw);
       if (toks[0] === 'cd' && toks.length === 2) {
         cwd = resolve(cwd, toks[1]);
         continue;
       }
-      if (toks[0] === 'gh' && toks[1] === 'pr' && toks[2] === 'checkout' && isMainWorktree(cwd)) {
+      if (toks[0] === 'gh' && toks[1] === 'pr' && toks[2] === 'checkout' && isProjectMainCheckout(cwd)) {
         return { target: `PR ${toks[3] ?? ''}`.trim(), dir: cwd };
       }
       const g = parseGit(raw);
       if (!g || (g.sub !== 'checkout' && g.sub !== 'switch')) continue;
       if (raw.some((t) => /^(GIT_DIR|GIT_WORK_TREE)=/.test(t))) continue; // not modelled
       const dir = gitSegmentDir(raw, cwd);
-      if (!dir || !isMainWorktree(dir)) continue;
+      if (!dir || !isProjectMainCheckout(dir)) continue;
       const target = branchMove(g.sub, g.args, dir);
       if (target && !staysHome(target, dir)) return { target, dir };
     }
   } catch {
-    /* detection-stage error -> no ask */
+    // Detection fails open (no ask), but leaves a trace so a broken guard is visible.
+    logRedEvent(root, { kind: 'main-checkout', code: 'detect-error' });
   }
   return null;
 })();
@@ -344,7 +362,6 @@ try {
   // effective=null and skip the gate for that op entirely — a real protected-branch-targeting merge
   // could silently (with no log) pass. Falling back to `root` in both cases below restores the
   // originally-intended safe default.
-  const execCwd = typeof payload?.cwd === 'string' && payload.cwd ? payload.cwd : root;
   const gitCommonDir = (dir) => gitPath(dir, '--git-common-dir');
   const sameRepo =
     execCwd === root ||

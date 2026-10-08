@@ -29,6 +29,8 @@ function fixture(t) {
   writeFileSync(join(bin, 'gh'), [
     '#!/bin/sh',
     '[ -n "$FAKE_GH_EXIT" ] && exit "$FAKE_GH_EXIT"',
+    // Only the merged-PR query is answered: the merged filter is the safety rule under test.
+    '[ "$1 $2 $3 $5 $6 $7 $8" = "pr list --head --state merged --json headRefOid" ] || { echo "unexpected gh argv: $*" >&2; exit 2; }',
     '[ -n "$FAKE_GH_BODY" ] && { printf "%s" "$FAKE_GH_BODY"; exit 0; }',
     `f="${prs}/$(printf %s "$4" | tr / _)"`,
     'if [ -f "$f" ]; then cat "$f"; else printf "[]"; fi',
@@ -80,10 +82,14 @@ test('--apply removes only clean, unlocked worktrees at a merged PR head and pru
   const detached = worktree('detached', '--detach');
   const gone = worktree('gone', '-b', 'feature/gone');
   rmSync(gone, { recursive: true, force: true });
+  const lockedGone = worktree('locked-gone', '-b', 'feature/locked-gone'); // e.g. on an unmounted volume
+  git(root, 'worktree', 'lock', lockedGone); rmSync(lockedGone, { recursive: true, force: true });
 
   const res = run(['--apply']);
   assert.equal(res.status, 0, res.stderr);
   assert.ok(!existsSync(done), 'a clean worktree at its merged PR head is removed');
+  assert.match(listed(root), /feature\/locked-gone/, 'a locked registration survives even without its directory');
+  assert.match(res.stdout, /keep\t.*locked-gone\tlocked/);
   for (const kept of [fresh, ahead, other, tracked, untracked, locked, detached]) assert.ok(existsSync(kept), `${kept} must be kept`);
   assert.ok(existsSync(join(untracked, 'new.txt')) && existsSync(root), 'the main checkout is never a candidate');
   assert.doesNotMatch(listed(root), /feature\/gone/, 'a registration without its directory is pruned');
@@ -93,7 +99,6 @@ test('--apply removes only clean, unlocked worktrees at a merged PR head and pru
   merged('feature/current', head(current));
   assert.equal(run(['--apply'], { cwd: current }).status, 0);
   assert.ok(existsSync(current), 'the worktree the command runs in is kept');
-  assert.ok(existsSync(base));
 });
 
 test('when gh fails or answers garbage, nothing is removed', (t) => {

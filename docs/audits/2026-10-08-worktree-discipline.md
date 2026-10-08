@@ -31,8 +31,9 @@ Claude Code는 `--worktree`나 `EnterWorktree`로 들어간 세션에서만 메�
 
 ### 2.1 메인 체크아웃 브랜치 전환 확인 (`hooks/gate-before-merge.mjs`)
 
-메인 워크트리(`--git-dir`과 `--git-common-dir`의 실제 경로가 같은 곳)에서 HEAD를 다른 브랜치나 커밋으로 옮기는
-명령이면 `ask`를 낸다. `deny`가 우선한다. 전환 판정은 merge 경로보다 먼저, 그 `try` 밖에서 계산해 두고,
+프로젝트의 메인 워크트리(`--git-dir`과 `--git-common-dir`의 실제 경로가 같은 곳이면서, 프로젝트 루트와 common dir이
+같거나 프로젝트 루트 아래에 있는 저장소)에서 HEAD를 다른 브랜치나 커밋으로 옮기는 명령이면 `ask`를 낸다. tmp의
+scratch·fixture 저장소처럼 프로젝트 밖 저장소는 통과다. `deny`가 우선한다. 전환 판정은 merge 경로보다 먼저, 그 `try` 밖에서 계산해 두고,
 `allow()`가 그 값이 있을 때만 `ask`로 바꿔 내보낸다. 그래서 `git checkout feat && git merge origin/main`은
 지금처럼 `deny`다. 판정 중 오류(존재하지 않는 cwd, 저장소 아님, git 실패)는 통과다.
 
@@ -60,7 +61,8 @@ Claude Code는 `--worktree`나 `EnterWorktree`로 들어간 세션에서만 메�
 
 알려진 빈틈(가드레일이지 경계가 아니다): 대상 없는 `--detach`, `eval`/`bash -c`/alias, 따옴표 안의 명령.
 
-테스트: `test/merge-sync.test.mjs`에 `test()` 하나를 더한다. 기존 5개는 바꾸지 않는다.
+테스트: 새 `test/main-checkout-switch.test.sh`(node:test 인라인, §4의 snapshot 한도 참고)에 `test()` 하나를 둔다.
+`merge-sync.test.mjs`의 기존 5개는 바꾸지 않는다.
 
 - ask: `git switch -c feature/x`, `git checkout -b feature/x`, `git checkout release`(origin DWIM),
   `git checkout <sha>`, `git switch -`, `gh pr checkout 12`, 연결된 워크트리 cwd에서
@@ -80,9 +82,9 @@ Claude Code는 `--worktree`나 `EnterWorktree`로 들어간 세션에서만 메�
 
 | 상태 | 판정 |
 |---|---|
-| 디렉터리 없음 | `prune` (`--apply`일 때만 끝에서 `git worktree prune` 한 번) |
+| `git worktree list`가 prunable로 표시(디렉터리 없음, 잠금 없음) | `prune` (`--apply`일 때 끝에서 `git worktree prune` 한 번) |
 | 현재 워크트리 | keep |
-| `locked` | keep |
+| `locked`(디렉터리가 없어도) | keep |
 | detached HEAD | keep |
 | `git status --porcelain`이 비어 있지 않음(추적 변경, 추적 안 된 파일), 또는 status 실패 | keep |
 | `gh pr list --head <branch> --state merged --json headRefOid` 실패·없음·잘못된 JSON | keep |
@@ -96,7 +98,7 @@ Claude Code는 `--worktree`나 `EnterWorktree`로 들어간 세션에서만 메�
 `git worktree remove`는 gitignore된 파일(예: `.loop/`의 검증 영수증)도 지운다. ship-feature 5단계가 교훈 기록을
 위해 제거를 미루는 워크트리는 `git worktree lock --reason ...`으로 잠가서 prune이 남기게 한다.
 
-테스트: `test/worktree-prune.test.mjs` + `.test.sh` 래퍼, `test()` 5개(dry-run, `--apply` 판정 전체,
+테스트: `test/worktree-prune.test.sh` 안에 node:test를 인라인으로 둔다(§4의 snapshot 한도 참고), `test()` 5개(dry-run, `--apply` 판정 전체,
 `gh` 실패 형태, 제거 실패 시 계속, 저장소 밖 skipped). 가짜 `gh`를 PATH 앞에 둔다(`runtime-packages.test.mjs`
 방식). 케이스: dry-run은 아무것도 안 지우고 prune도 안 함, `gh` 비정상 종료, 잘못된 JSON, `[]`(origin/main에서
 막 만든 워크트리), HEAD가 PR head보다 앞섬, 같은 브랜치 이름의 다른 `headRefOid`, 추적 변경, 추적 안 된 파일,
@@ -136,7 +138,7 @@ locked, detached, 현재 워크트리, 메인 워크트리 비후보, 병합·�
 Node 22(`/Users/paul/.nvm/versions/node/v22.14.0/bin`)로 실행한다. 이 기기의 기본 Node 26.8.1에서는 base도
 `run.sh` 82/87이다(`DEP0205` 경고 등 환경 요인, 계획 검증 때 실측).
 
-- AC: 메인 워크트리 브랜치 전환은 ask, 복귀·파일 복원·연결된 워크트리는 통과, merge deny 우선 | verify: node --test tools/loop-engine/test/merge-sync.test.mjs | expect: pass 6
+- AC: 메인 워크트리 브랜치 전환은 ask, 복귀·파일 복원·연결된 워크트리는 통과, merge deny 우선 | verify: bash tools/loop-engine/test/main-checkout-switch.test.sh | expect: pass 1
 - AC: worktree-prune은 병합된 깨끗한 워크트리만 지우고 나머지는 남긴다 | verify: bash tools/loop-engine/test/worktree-prune.test.sh | expect: pass 5
 - AC: ship-feature 0단계가 EnterWorktree 진입을 지시한다 | artifacts: tools/ship-flow/skills/ship-feature/SKILL.md | expect: EnterWorktree
 - AC: ship-feature 0단계가 worktree-prune을 실행한다 | artifacts: tools/ship-flow/skills/ship-feature/SKILL.md | expect: {{pluginBinPrefix}}worktree-prune.mjs --apply
@@ -147,6 +149,10 @@ Node 22(`/Users/paul/.nvm/versions/node/v22.14.0/bin`)로 실행한다. 이 기�
 - AC: CHANGELOG에 0.9.0 항목 | artifacts: CHANGELOG.md | expect: ## paul-loop 0.9.0
 - AC: hotfix가 병합된 워크트리를 정리 전까지 잠가 둔다 | artifacts: tools/ship-flow/skills/hotfix/SKILL.md | expect: git worktree lock
 - AC: 라우터에 워크트리 정리 행이 있다 | artifacts: tools/ship-flow/skills/paul-loop/SKILL.md | expect: worktree-prune
+- AC: 권한 계약이 0단계 prune 예외를 적는다 | artifacts: tools/ship-flow/skills/AUTHORIZATION.md | expect: worktree-prune.mjs --apply
+- AC: hotfix 0단계가 prune을 실행한다 | artifacts: tools/ship-flow/skills/hotfix/SKILL.md | expect: worktree-prune.mjs --apply
+- AC: hotfix 정리가 워크트리에서 먼저 나온다 | artifacts: tools/ship-flow/skills/hotfix/SKILL.md | expect: ExitWorktree
+- AC: ship-feature 정리가 워크트리에서 먼저 나온다 | artifacts: tools/ship-flow/skills/ship-feature/SKILL.md | expect: ExitWorktree
 - AC: eval 두 케이스를 기준선 설정으로 3회씩 다시 돌려 통과 수·비용·결과 파일 SHA-256을 §4에 기록한다. 기준선에서 통과하던 grader가 실패하면 README 규칙 8대로 원인을 읽고, 스킬 문구를 고치거나 사용자가 받아들인 회귀로 기록한다. fixture와 grader는 케이스 자체의 결함이 입증될 때만 바꾼다
 - AC: 엔진 전체 테스트 통과(Node 22) | verify: env PATH=/Users/paul/.nvm/versions/node/v22.14.0/bin:/opt/homebrew/bin:/usr/bin:/bin bash tools/loop-engine/test/run.sh | expect: selftest:
 
@@ -155,4 +161,59 @@ Node 22(`/Users/paul/.nvm/versions/node/v22.14.0/bin`)로 실행한다. 이 기�
 **npm `node_modules` 클론(2026-10-08, scratch).** `typescript@5.6.3`과 `lodash@4.17.21`을 설치한 디렉터리의
 `node_modules`(1,176파일, 26MB)를 다른 디렉터리로 `cp -c -R`한 뒤 `npm install`을 돌렸다. 두 디렉터리 모두
 private 0MB였다(블록 공유 유지). 같은 클론에 `npm ci`를 돌리면 private 26MB였다(전체 재설치).
+
+**`run.sh` snapshot 한도.** prune 테스트를 처음에 `worktree-prune.test.mjs`로 두자 `verdict-run.sh -- run.sh`가
+`EXIT: 2`로 실패했다("test-entry snapshot exceeds inline loader limit"). `run.sh`는 최상위 `.mjs` 테스트를 gzip해
+`NODE_OPTIONS`의 data URL로 고정하고, 60,000바이트를 넘으면 실행 전에 멈춘다. 한도를 올리면 verifier를 바꾸게
+되므로, 테스트를 `private-hook-artifacts.test.sh`와 같은 방식(`node --input-type=module - "$HERE" <<'JS'`)으로
+`.test.sh` 안에 넣었다. `run.sh`는 모든 `*.test.sh`를 실행 전에 메모리로 읽으므로 보호 수준은 같다.
+
+실제 여유는 60,000에서 바깥 preload를 뺀 값보다 작다. 모든 `.test.sh`가 바깥 preload를 `NODE_OPTIONS`로 물려받고,
+`toctou-node-entry-overwrite.test.sh`의 fixture 안 `run.sh`가 그 위에 자기 preload(약 2.6KB)를 더해 같은 한도로
+검사하기 때문이다. 리뷰 반영 뒤 `merge-sync.test.mjs`에 케이스를 더하자 바깥 preload가 57,456바이트가 되어 전체
+실행이 87/88로 실패했다(이 fixture). 그래서 메인 체크아웃 테스트도 `main-checkout-switch.test.sh`로 옮기고
+`merge-sync.test.mjs`는 base 그대로 두었다. 이때 바깥 preload는 56,388바이트(base와 같은 수준)이고, 최상위 `.mjs`
+테스트가 더 늘 수 있는 여유는 약 0.9KB뿐이다. 이 한도는 이 변경과 별개로 다음 `.mjs` 테스트를 막을 것이므로 따로
+다룰 일이다.
+
+이 이동으로 §3 첫 AC의 verify 명령이 `node --test …merge-sync.test.mjs | pass 6`에서
+`bash …main-checkout-switch.test.sh | pass 1`로 바뀌었다(같은 검사를 옮기고 리뷰 케이스를 더함). planner 재확인(PASS)의
+비차단 제안에 따라 §2.1 범위 문구와 §2.2 표를 코드에 맞추고, 권한 예외·hotfix prune·`ExitWorktree` AC 4개를 더했다.
+
+**런타임 확인(2026-10-08).**
+
+- `glucofit-landing`에서 실제 `gh`로 dry-run: 워크트리 12개 모두 keep(열린 PR이거나 병합 PR이 없음). 아무것도
+  바뀌지 않았다.
+- 이 기기의 paul-loop 메인 체크아웃을 `payload.cwd`로 훅을 직접 실행: `git switch -c feature/qa-check`는 ask,
+  `git checkout -- README.md`와 연결된 워크트리 안의 `git switch -c feature/other`는 통과.
+- 이 작업 자체를 `.claude/worktrees/worktree-discipline`에 만들고 `EnterWorktree`로 들어가 진행했다. `.claude/worktrees/`
+  안 경로라 승인 창 없이 들어갔고, 이후 변수로 조립한 명령, git을 언급하는 heredoc 같은 형태는 호스트가 거부했다.
+  저장소 밖 경로의 1회 승인은 이 세션에서 직접 확인하지 못했다(공식 문서 기준).
+
+**리뷰(4단계).** code-reviewer, test-hunter, verifier-integrity-hunter 모두 BLOCK, ponytail-review는 11줄 축소 제안.
+반영한 것:
+
+- 공유 `gitSegmentDir`이 `GIT_DIR=` 프리픽스를 null로 돌려 `gate-worktree-create`의 두 번째 feature 워크트리
+  ask를 우회시켰다(커밋 보안 리뷰도 같은 지적). env 판단을 `gate-before-merge`로 되돌리고
+  `worktree-session-scope.test.sh`에 회귀 케이스를 넣었다. 이 케이스는 `84bc511`의 tokenizer에서 실패한다.
+- 가짜 `gh`가 인자를 검사하지 않아 `--state merged`를 빼도 테스트가 통과했다. 정확한 argv만 답하게 했다.
+- `git switch <기존 브랜치>`, `--`/`--ours`/`-p` 복원, `git switch -` 복귀, 연결된 워크트리의 `gh pr checkout`,
+  따옴표 경로, `git switch main` 케이스를 더했다. 복원 플래그 제거·평범한 switch 무시·범위 제한 제거 변이는 모두
+  실패한다.
+- ask는 프로젝트 저장소(같은 common dir)나 프로젝트 루트 아래 저장소의 메인 워크트리에만 낸다. tmp의 scratch·fixture
+  저장소는 통과한다.
+- 감지 오류는 통과하되 `main-checkout`/`detect-error` red event를 남긴다. ask는 merge deny와 다른 kind로 기록한다.
+- prune: 디렉터리 확인을 `prunable`로 바꿔 잠긴 채 디렉터리가 없는 등록을 keep으로 보고, `gh`에 30초 timeout과
+  stderr 첫 줄을 사유로 남긴다.
+- 0단계의 `--apply`가 다른 세션의 워크트리를 지우는 것은 `AUTHORIZATION.md`의 정리 규칙과 충돌했다. 사용자가
+  예외를 명시하는 쪽을 골랐다(2026-10-08). hotfix는 병합 승인을 요청하기 전에 잠그고, 정리 전에 `ExitWorktree`로
+  나온다.
+
+남은 한계:
+
+- 감지는 가드레일이다. `-qb`/`-bx` 같은 묶음 짧은 플래그, `gh -R`, `eval`/`bash -c`/alias는 통과한다.
+- `git worktree remove --force`를 쓰지 않는다는 점과 detached HEAD keep 규칙은 테스트로 구분되지 않는다.
+  변경·잠금 검사가 이미 `--force`가 필요한 경우를 걸러 내고, detached HEAD는 규칙이 없어도 브랜치 없이 부른
+  `gh`가 실패해 keep이 되기 때문이다.
+- `warn-partial-checkout.mjs`에 cd/-C 해석의 세 번째 사본이 남아 있다(이 변경 범위 밖).
 

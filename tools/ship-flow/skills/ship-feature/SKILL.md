@@ -153,9 +153,9 @@ outside `.claude/worktrees/` asks the user once), so the host refuses edits and 
 the main checkout. Without such a tool, or if entry is refused, work through the worktree's absolute
 path. A fresh worktree has no installed dependencies — inspect prerequisites and install what is
 needed within scope (npm on macOS: `cp -c -R <main-checkout>/node_modules .` then `npm install` keeps
-the APFS clone; `npm ci` deletes it first). Every following step happens inside this worktree. (macOS: if a later
-`git worktree remove` fails with a permission-denied ACL error, `chmod -R -N <path>` first — see
-hotfix's cleanup step for the full note.)
+the APFS clone; `npm ci` deletes it first). Every following step happens inside this worktree.
+(macOS: if a later `git worktree remove` fails with a permission-denied ACL error, `chmod -R -N <path>`
+first — see hotfix's cleanup step for the full note.)
 
 ### 1. Implementation plan — `Plan` agent / `grill-with-docs` if there's a design decision
 Plan what to build and how to slice it. Resolve routine reversible choices from requirements and
@@ -312,8 +312,10 @@ lesson capture before deleting its producer worktree. Verified lesson receipts a
 checkout; copying them to the canonical checkout does not preserve verification. If capture or
 reverification is still needed, defer that worktree's removal and report it. Lock it when you defer —
 before handing off for merge when lesson capture is in scope — with `git worktree lock --reason "<why>"
-<path>`, so `worktree-prune.mjs` keeps it; `git worktree unlock <path>` before removing it. Then clean up the worktree/branch (remove any dedicated deep-gate resources
-first, confirm no stash leftovers) + update the tracked issue (status, merge SHA) → **step 6**.
+<path>`, so `worktree-prune.mjs` keeps it. To remove it, first leave it if this session entered it
+(Claude Code: `ExitWorktree` with `keep`) and `git worktree unlock <path>`. Then clean up the
+worktree/branch (remove any dedicated deep-gate resources first, confirm no stash leftovers) + update
+the tracked issue (status, merge SHA) → **step 6**.
 Release (`integrationBranch → releaseBranch`) is a separate decision — `hotfix`, or this repo's own
 release procedure.
 

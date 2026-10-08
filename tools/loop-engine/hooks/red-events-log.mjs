@@ -10,7 +10,8 @@ import { join, resolve } from 'node:path';
 
 /**
  * @param {string} root - 이벤트가 발생한 워크트리(CLAUDE_PROJECT_DIR).
- * @param {{kind: string, code?: string}} event - kind: 'gate'(머지 게이트 deny). code: deny의 사유 코드
+ * @param {{kind: string, code?: string}} event - kind: 'gate'(머지 게이트 deny), 'main-checkout'(메인
+ *   체크아웃 브랜치 전환 ask와 그 감지 오류), 'worktree-create-guard' 등. code: deny의 사유 코드
  *   (오탐 필터용 — 예: BAC-364 방향-오판 deny를 나중에 골라내기 위함).
  */
 export function logRedEvent(root, event) {
